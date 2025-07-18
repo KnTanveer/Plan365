@@ -5,6 +5,7 @@
   <title>Plan365</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -132,6 +133,21 @@ const months = [...Array(12)].map((_, i) =>
   new Date(2000, i).toLocaleString('default', { month: 'long' })
 );
 let lastUsedColor = localStorage.getItem('lastUsedColor') || '#b6eeb6';
+let gapiInited = false;
+let tokenClient;
+let calendarId = localStorage.getItem('plan365_calendar_id') || null;
+
+function gapiLoad() {
+  gapi.load('client', initializeGapiClient);
+}
+
+async function initializeGapiClient() {
+  await gapi.client.init({
+    apiKey: '',
+    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+  });
+  gapiInited = true;
+}
 
 function changeYear(offset) {
   currentYear += offset;
@@ -181,8 +197,7 @@ function createCalendar() {
       ) {
         cell.classList.add("today");
       }
-      const dateKey = `${currentYear}-${month}-${day}`;
-      const isoDate = `${currentYear}-${String(index + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dateKey = `${currentYear}-${String(index+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       cell.innerHTML = `<div class="day-label">${day}</div>`;
 
       const events = (calendarData[dateKey] || []);
@@ -198,7 +213,7 @@ function createCalendar() {
         cell.appendChild(note);
       });
 
-      cell.onclick = () => openModal(null, isoDate);
+      cell.onclick = () => openModal(null, dateKey);
       col.appendChild(cell);
     }
 
@@ -255,13 +270,14 @@ function saveNote() {
   saveData();
   closeModal();
   createCalendar();
+  if (calendarId) syncEventToGoogle(newEvent);
 }
 
 function addToRange(event) {
   const from = new Date(event.range.start);
   const to = new Date(event.range.end);
   while (from <= to) {
-    const key = `${from.getFullYear()}-${from.toLocaleString('default',{month:'long'})}-${from.getDate()}`;
+    const key = `${from.getFullYear()}-${String(from.getMonth()+1).padStart(2,'0')}-${String(from.getDate()).padStart(2,'0')}`;
     if (!calendarData[key]) calendarData[key] = [];
     calendarData[key].push(event);
     from.setDate(from.getDate() + 1);
@@ -272,7 +288,7 @@ function deleteFromRange(event) {
   const from = new Date(event.range.start);
   const to = new Date(event.range.end);
   while (from <= to) {
-    const key = `${from.getFullYear()}-${from.toLocaleString('default',{month:'long'})}-${from.getDate()}`;
+    const key = `${from.getFullYear()}-${String(from.getMonth()+1).padStart(2,'0')}-${String(from.getDate()).padStart(2,'0')}`;
     if (calendarData[key]) {
       calendarData[key] = calendarData[key].filter(e => e.text !== event.text);
     }
@@ -297,10 +313,22 @@ function getDuration(start, end) {
 function handleSignIn() {
   google.accounts.id.initialize({
     client_id: "943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com",
-    callback: response => {
+    callback: async (response) => {
       document.getElementById('signin-btn').style.display = 'none';
       document.getElementById('signout-btn').style.display = 'inline-block';
-      console.log("Signed in", response);
+      await gapiLoad();
+      await gapi.auth2.getAuthInstance().signIn();
+      if (!calendarId) {
+        const result = await gapi.client.calendar.calendarList.list();
+        const exists = result.result.items.find(c => c.summary === "Plan365");
+        if (exists) {
+          calendarId = exists.id;
+        } else {
+          const res = await gapi.client.calendar.calendars.insert({ summary: "Plan365" });
+          calendarId = res.result.id;
+        }
+        localStorage.setItem("plan365_calendar_id", calendarId);
+      }
     }
   });
   google.accounts.id.prompt();
@@ -310,7 +338,19 @@ function handleSignOut() {
   google.accounts.id.disableAutoSelect();
   document.getElementById('signin-btn').style.display = 'inline-block';
   document.getElementById('signout-btn').style.display = 'none';
-  console.log("Signed out");
+  calendarId = null;
+}
+
+function syncEventToGoogle(event) {
+  const request = {
+    calendarId,
+    resource: {
+      summary: event.text,
+      start: { date: event.range.start },
+      end: { date: event.range.end }
+    }
+  };
+  gapi.client.calendar.events.insert(request);
 }
 
 initData();
