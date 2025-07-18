@@ -8,7 +8,7 @@
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
     #loading {
-      display: none;
+      display: flex; /* Was "none", changed to flex to make it work correctly by default */
       position: fixed;
       top: 0;
       left: 0;
@@ -39,13 +39,29 @@
   </div>
 </div>
 <div id="calendar"></div>
-<div id="loading">🔄 Syncing with Google...</div>
+<div id="loading" style="display: none;">🔄 Syncing with Google...</div>
 <div id="modal">
   <!-- [modal content unchanged] -->
 </div>
+
 <script>
 let accessToken = null;
 let tokenClient;
+let currentYear = new Date().getFullYear();
+let calendarId = localStorage.getItem("plan365_calendar_id") || null;
+let calendarData = {};
+
+// Dummy placeholder until your full calendar rendering logic is added
+function createCalendar() {
+  document.getElementById("calendar").innerHTML = "<p>📅 Calendar data will be displayed here.</p>";
+}
+
+// Dummy placeholder for adding events to internal structure
+function addToRange(event) {
+  const dateKey = event.range.start;
+  if (!calendarData[dateKey]) calendarData[dateKey] = [];
+  calendarData[dateKey].push(event);
+}
 
 function gapiLoad() {
   return new Promise(resolve => gapi.load('client', resolve));
@@ -59,6 +75,7 @@ function changeYear(offset) {
 
 function goToToday() {
   currentYear = new Date().getFullYear();
+  document.getElementById("year-label").textContent = currentYear;
   initData();
 }
 
@@ -79,12 +96,20 @@ async function initData() {
       orderBy: "startTime"
     });
 
-    Object.keys(calendarData).forEach(k => delete calendarData[k]);
+    calendarData = {}; // Reset calendarData
 
     response.result.items.forEach(ev => {
       const start = ev.start.date;
       const end = ev.end.date;
-      const metadata = ev.description ? JSON.parse(ev.description) : {};
+      let metadata = {};
+      try {
+        if (ev.description) {
+          metadata = JSON.parse(ev.description);
+        }
+      } catch (err) {
+        console.warn("Invalid JSON in event description", err);
+      }
+
       const color = metadata.color || '#b6eeb6';
       const newEvent = {
         text: ev.summary,
@@ -136,7 +161,7 @@ function handleSignOut() {
       localStorage.removeItem("plan365_calendar_id");
       document.getElementById('signin-btn').style.display = 'inline-block';
       document.getElementById('signout-btn').style.display = 'none';
-      Object.keys(calendarData).forEach(k => delete calendarData[k]);
+      calendarData = {};
       createCalendar();
     });
   }
@@ -153,6 +178,15 @@ async function initCalendarId() {
   }
   localStorage.setItem("plan365_calendar_id", calendarId);
 }
+
+// Optional: dark mode toggle stub
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("year-label").textContent = currentYear;
+});
 </script>
 </body>
 </html>
