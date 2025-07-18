@@ -232,7 +232,13 @@ function toggleDarkMode() {
   document.body.classList.toggle("dark");
 }
 
-window.addEventListener('load', initGoogleAuth);
+window.onload = () => {
+  if (window.gapi) {
+    initGoogleAuth();
+  } else {
+    console.error("Google API script not loaded properly.");
+  }
+};
 </script>
 </body>
 </html>
