@@ -161,6 +161,12 @@ function createCalendar() {
           n.className = "note-text";
           n.style.background = e.color;
           n.textContent = e.text;
+
+          n.onclick = (event) => {
+            event.stopPropagation();
+            openModal(dateStr, e);
+          };
+
           cell.appendChild(n);
         });
       }
@@ -172,13 +178,23 @@ function createCalendar() {
   }
 }
 
-function openModal(dateStr) {
-  currentEditingEvent = null;
-  document.getElementById("start-date").value = dateStr;
-  document.getElementById("end-date").value = dateStr;
-  document.getElementById("note-text").value = "";
-  document.getElementById("event-color").value = "#b6eeb6";
-  document.getElementById("delete-btn").style.display = "none";
+function openModal(dateStr, event = null) {
+  if (event) {
+    currentEditingEvent = event;
+    document.getElementById("start-date").value = event.range.start;
+    document.getElementById("end-date").value = event.range.end;
+    document.getElementById("note-text").value = event.text;
+    document.getElementById("event-color").value = event.color;
+    document.getElementById("delete-btn").style.display = "inline-block";
+  } else {
+    currentEditingEvent = null;
+    document.getElementById("start-date").value = dateStr;
+    document.getElementById("end-date").value = dateStr;
+    document.getElementById("note-text").value = "";
+    document.getElementById("event-color").value = "#b6eeb6";
+    document.getElementById("delete-btn").style.display = "none";
+  }
+
   document.getElementById("modal").style.display = "flex";
 }
 
