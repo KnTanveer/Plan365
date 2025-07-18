@@ -150,12 +150,13 @@ function updateSigninStatus(isSignedIn) {
   if (isSignedIn) {
     signInBtn.style.display = "none";
     signOutBtn.style.display = "inline-block";
-    renderCalendar();
   } else {
     signInBtn.style.display = "inline-block";
     signOutBtn.style.display = "none";
-    document.getElementById('calendar').innerHTML = '';
   }
+
+  // Always render the calendar regardless of sign-in state
+  renderCalendar();
 }
 
 function handleSignIn() {
