@@ -23,17 +23,24 @@ function gapiLoad() {
 
 function handleSignIn() {
   tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
-    scope: 'https://www.googleapis.com/auth/calendar',
-    callback: async (tokenResponse) => {
-      accessToken = tokenResponse.access_token;
-      gapi.client.setToken({ access_token: accessToken });
-      document.getElementById('signin-btn').style.display = 'none';
-      document.getElementById('signout-btn').style.display = 'inline-block';
-      await initCalendarId();
-      await initData();
-    }
-  });
+  client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+  scope: 'https://www.googleapis.com/auth/calendar',
+  callback: async (tokenResponse) => {
+    accessToken = tokenResponse.access_token;
+
+    await gapiLoad(); // Wait until gapi client is ready
+
+    await gapi.client.init({
+      discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+    });
+
+    gapi.client.setToken({ access_token: accessToken });
+
+    await initCalendarId(); // Optional: create or fetch "Plan365"
+    await initData(); // Load events
+  }
+});
+
   tokenClient.requestAccessToken();
 }
 
