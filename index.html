@@ -172,7 +172,88 @@ function handleSignOut() {
 }
 
 function renderCalendar() {
-  document.getElementById('calendar').innerHTML = '<p>🗓 Calendar Loaded</p>';
+  const calendarDiv = document.getElementById('calendar');
+  calendarDiv.innerHTML = '';
+
+  const year = new Date().getFullYear();
+  document.getElementById('year-label').textContent = year;
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  for (let m = 0; m < 12; m++) {
+    const monthCol = document.createElement('div');
+    monthCol.className = 'month-column';
+
+    const monthTitle = document.createElement('h3');
+    monthTitle.textContent = monthNames[m];
+    monthCol.appendChild(monthTitle);
+
+    const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const day = new Date(year, m, d);
+      const dayCell = document.createElement('div');
+      dayCell.className = 'day-cell';
+      if (isToday(day)) dayCell.classList.add('today');
+
+      const label = document.createElement('div');
+      label.className = 'day-label';
+      label.textContent = `${day.getDate()} ${day.toLocaleDateString('en-US', { weekday: 'short' })}`;
+      dayCell.appendChild(label);
+
+      const key = formatDate(day) + '_' + formatDate(day);
+      const note = localStorage.getItem(key);
+      if (note) {
+        const noteObj = JSON.parse(note);
+        const noteEl = document.createElement('div');
+        noteEl.className = 'note-text';
+        noteEl.style.background = noteObj.color;
+        noteEl.textContent = noteObj.text;
+        dayCell.appendChild(noteEl);
+      }
+
+      dayCell.onclick = () => openModal(day);
+      monthCol.appendChild(dayCell);
+    }
+
+    calendarDiv.appendChild(monthCol);
+  }
+}
+
+function formatDate(date) {
+  return date.toISOString().split('T')[0];
+}
+
+function isToday(date) {
+  const today = new Date();
+  return date.getDate() === today.getDate() &&
+         date.getMonth() === today.getMonth() &&
+         date.getFullYear() === today.getFullYear();
+}
+
+function openModal(date) {
+  document.getElementById('modal').style.display = 'flex';
+  const dateStr = formatDate(date);
+  document.getElementById('start-date').value = dateStr;
+  document.getElementById('end-date').value = dateStr;
+
+  const key = dateStr + '_' + dateStr;
+  const saved = localStorage.getItem(key);
+  if (saved) {
+    const event = JSON.parse(saved);
+    document.getElementById('note-text').value = event.text;
+    document.getElementById('event-color').value = event.color;
+    document.getElementById('delete-btn').style.display = 'inline-block';
+  } else {
+    document.getElementById('note-text').value = '';
+    document.getElementById('event-color').value = '#ffeb3b';
+    document.getElementById('delete-btn').style.display = 'none';
+  }
+
+  updateDurationDisplay();
 }
 
 function saveNote() {
