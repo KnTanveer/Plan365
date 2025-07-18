@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Plan365</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,12 +12,10 @@
       overflow-x: auto;
       transition: background 0.3s, color 0.3s;
     }
-
     body.dark {
       background: #121212;
       color: white;
     }
-
     #header {
       display: flex;
       justify-content: space-between;
@@ -26,12 +25,11 @@
       position: sticky;
       top: 0;
       z-index: 999;
+      flex-wrap: wrap;
     }
-
     body.dark #header {
       background: #1f1f1f;
     }
-
     #calendar {
       display: flex;
       flex-wrap: nowrap;
@@ -39,11 +37,9 @@
       padding: 10px;
       background: #f4f4f4;
     }
-
     body.dark #calendar {
       background: #1a1a1a;
     }
-
     .month-column {
       flex: 0 0 auto;
       width: 130px;
@@ -53,17 +49,14 @@
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
       padding: 5px;
     }
-
     body.dark .month-column {
       background: #2c2c2c;
     }
-
     .month-column h3 {
       text-align: center;
       font-size: 16px;
       margin-bottom: 5px;
     }
-
     .day-cell {
       border: 1px solid #ddd;
       margin: 2px 0;
@@ -73,16 +66,13 @@
       border-radius: 4px;
       min-height: 45px;
     }
-
     .today {
       border: 2px solid red;
     }
-
     .day-label {
       font-weight: bold;
       margin-bottom: 3px;
     }
-
     .note-text {
       font-size: 12px;
       border-radius: 4px;
@@ -90,53 +80,34 @@
       margin-top: 2px;
       color: black;
     }
-
-    #modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
+    #google-auth {
+      display: flex;
+      gap: 8px;
       align-items: center;
-      z-index: 1000;
+      flex-wrap: wrap;
     }
-
-    #modal-content {
+    #sign-out-btn {
+      display: none;
+    }
+    #event-modal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -20%);
       background: white;
       padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 300px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 9999;
     }
-
-    #modal-content input,
-    #modal-content textarea {
+    body.dark #event-modal {
+      background: #333;
+      color: white;
+    }
+    #event-modal input, #event-modal textarea {
       width: 100%;
-      margin-top: 5px;
-    }
-
-    #modal-content .actions {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    @media (max-width: 500px) {
-      .month-column {
-        width: 100px;
-      }
-      .day-cell {
-        font-size: 12px;
-        min-height: 40px;
-      }
-      .month-column h3 {
-        font-size: 14px;
-      }
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -148,206 +119,179 @@
       <button onclick="changeYear(1)">Next ⏩</button>
     </div>
     <h2>📅 Plan365 - <span id="year-label"></span></h2>
-    <button onclick="toggleDarkMode()">🌓 Theme</button>
+    <div id="google-auth">
+      <div id="g_id_onload"
+           data-client_id="943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com"
+           data-callback="onGoogleSignIn"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin" data-type="icon"></div>
+      <button id="sign-out-btn" onclick="signOut()">Sign Out</button>
+      <button onclick="toggleDarkMode()">🌓 Theme</button>
+    </div>
   </div>
 
   <div id="calendar"></div>
 
-  <div id="modal">
-    <div id="modal-content">
-      <label><strong>Start:</strong> <input type="date" id="start-date"></label>
-      <label><strong>End:</strong> <input type="date" id="end-date"></label>
-      <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
-      <label><strong>Color:</strong> <input type="color" id="event-color"></label>
-      <p id="duration-display"></p>
-      <div class="actions">
-        <button onclick="saveNote()">Save</button>
-        <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
-        <button onclick="closeModal()">Cancel</button>
-      </div>
-    </div>
+  <div id="event-modal">
+    <h3>Edit Event</h3>
+    <input type="date" id="start-date" />
+    <input type="date" id="end-date" />
+    <textarea id="note-text" placeholder="Event details"></textarea>
+    <input type="color" id="event-color" />
+    <button onclick="saveNote()">Save</button>
+    <button onclick="closeModal()">Cancel</button>
   </div>
 
   <script>
+    let googleToken = null;
+    let calendarId = null;
     let currentYear = new Date().getFullYear();
-    const calendarData = {};
-    const months = [...Array(12)].map((_, i) =>
-      new Date(2000, i).toLocaleString('default', { month: 'long' })
-    );
+    let editingDate = null;
 
-    let selectedEvent = null;
-    let lastUsedColor = localStorage.getItem('lastUsedColor') || '#b6eeb6';
-
-    function changeYear(offset) {
-      currentYear += offset;
-      document.getElementById("year-label").textContent = currentYear;
-      createCalendar();
+    async function fetchEventsFromGoogle() {
+      if (!googleToken || !calendarId) return;
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?singleEvents=true&orderBy=startTime`, {
+        headers: { Authorization: `Bearer ${googleToken}` }
+      });
+      const data = await res.json();
+      const events = data.items || [];
+      events.forEach(event => {
+        const date = event.start?.date;
+        const dayCell = document.querySelector(`.day-cell[data-date='${date}']`);
+        if (dayCell && !dayCell.querySelector('.note-text')) {
+          const note = document.createElement('div');
+          note.className = 'note-text';
+          note.textContent = event.summary || '(No Title)';
+          note.style.background = '#ffcc80';
+          dayCell.appendChild(note);
+        }
+      });
     }
 
-    function goToToday() {
-      currentYear = new Date().getFullYear();
-      createCalendar();
-    }
+    function generateCalendar(year) {
+      const calendar = document.getElementById('calendar');
+      calendar.innerHTML = '';
+      document.getElementById('year-label').textContent = year;
+      const todayStr = new Date().toISOString().split('T')[0];
 
-    function initData() {
-      const saved = localStorage.getItem("calendarData");
-      if (saved) Object.assign(calendarData, JSON.parse(saved));
-    }
+      for (let month = 0; month < 12; month++) {
+        const col = document.createElement('div');
+        col.className = 'month-column';
 
-    function saveData() {
-      localStorage.setItem("calendarData", JSON.stringify(calendarData));
-    }
-
-    function createCalendar() {
-      document.getElementById("year-label").textContent = currentYear;
-      const calendar = document.getElementById("calendar");
-      calendar.innerHTML = "";
-      const today = new Date();
-
-      months.forEach((month, index) => {
-        const col = document.createElement("div");
-        col.className = "month-column";
-        const title = document.createElement("h3");
-        title.textContent = month;
+        const title = document.createElement('h3');
+        title.textContent = new Date(year, month).toLocaleString('default', { month: 'short' });
         col.appendChild(title);
 
-        const days = new Date(currentYear, index + 1, 0).getDate();
-        for (let day = 1; day <= days; day++) {
-          const cell = document.createElement("div");
-          cell.className = "day-cell";
-          if (
-            today.getFullYear() === currentYear &&
-            today.getMonth() === index &&
-            today.getDate() === day
-          ) {
-            cell.classList.add("today");
-          }
-
-          cell.innerHTML = `<div class="day-label">${day}</div>`;
-
-          const dateKey = `${currentYear}-${month}-${day}`;
-          const events = (calendarData[dateKey] || []);
-
-          events.forEach((event, idx) => {
-            const note = document.createElement("div");
-            note.className = "note-text";
-            note.textContent = event.text;
-            note.style.background = event.color;
-            note.onclick = e => {
-              e.stopPropagation();
-              openModal(event, dateKey, idx);
-            };
-            cell.appendChild(note);
-          });
-
-          const isoDate = `${currentYear}-${String(index + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          cell.onclick = () => openModal(null, isoDate);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const cell = document.createElement('div');
+          cell.className = 'day-cell';
+          cell.dataset.date = dateStr;
+          if (dateStr === todayStr) cell.classList.add('today');
+          cell.textContent = day;
+          cell.onclick = () => openModal(dateStr);
           col.appendChild(cell);
         }
 
         calendar.appendChild(col);
-      });
-    }
-
-    function openModal(event = null, date, index = null) {
-      selectedEvent = { event, date, index };
-      const modal = document.getElementById("modal");
-      const startInput = document.getElementById("start-date");
-      const endInput = document.getElementById("end-date");
-      const noteInput = document.getElementById("note-text");
-      const colorInput = document.getElementById("event-color");
-      const duration = document.getElementById("duration-display");
-      const deleteBtn = document.getElementById("delete-btn");
-
-      if (event) {
-        startInput.value = event.range.start;
-        endInput.value = event.range.end;
-        noteInput.value = event.text;
-        colorInput.value = event.color;
-        duration.textContent = `Duration: ${getDuration(event.range.start, event.range.end)} day(s)`;
-        deleteBtn.style.display = 'inline-block';
-      } else {
-        startInput.value = date;
-        endInput.value = date;
-        noteInput.value = "";
-        colorInput.value = lastUsedColor;
-        duration.textContent = "";
-        deleteBtn.style.display = 'none';
       }
 
-      modal.style.display = "flex";
+      fetchEventsFromGoogle();
     }
 
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-      selectedEvent = null;
+    function changeYear(offset) {
+      currentYear += offset;
+      generateCalendar(currentYear);
     }
 
-    function saveNote() {
-      const start = document.getElementById("start-date").value;
-      const end = document.getElementById("end-date").value;
-      const text = document.getElementById("note-text").value.trim();
-      const color = document.getElementById("event-color").value;
-      if (!text) return;
-
-      lastUsedColor = color;
-      localStorage.setItem('lastUsedColor', color);
-
-      const newEvent = { text, color, range: { start, end } };
-
-      if (selectedEvent?.event) {
-        deleteFromRange(selectedEvent.event);
-      }
-
-      addToRange(newEvent);
-      saveData();
-      closeModal();
-      createCalendar();
-    }
-
-    function deleteFromRange(event) {
-      const from = new Date(event.range.start);
-      const to = new Date(event.range.end);
-      while (from <= to) {
-        const key = `${from.getFullYear()}-${from.toLocaleString('default',{month:'long'})}-${from.getDate()}`;
-        if (calendarData[key]) {
-          calendarData[key] = calendarData[key].filter(e => e.text !== event.text);
-        }
-        from.setDate(from.getDate() + 1);
-      }
-    }
-
-    function addToRange(event) {
-      const from = new Date(event.range.start);
-      const to = new Date(event.range.end);
-      while (from <= to) {
-        const key = `${from.getFullYear()}-${from.toLocaleString('default',{month:'long'})}-${from.getDate()}`;
-        if (!calendarData[key]) calendarData[key] = [];
-        calendarData[key].push(event);
-        from.setDate(from.getDate() + 1);
-      }
-    }
-
-    function deleteCurrentEvent() {
-      if (!selectedEvent?.event) return;
-      deleteFromRange(selectedEvent.event);
-      saveData();
-      closeModal();
-      createCalendar();
-    }
-
-    function getDuration(start, end) {
-      const s = new Date(start);
-      const e = new Date(end);
-      return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
+    function goToToday() {
+      currentYear = new Date().getFullYear();
+      generateCalendar(currentYear);
     }
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark');
     }
 
-    initData();
-    createCalendar();
+    function openModal(dateStr) {
+      editingDate = dateStr;
+      document.getElementById('start-date').value = dateStr;
+      document.getElementById('end-date').value = dateStr;
+      document.getElementById('note-text').value = '';
+      document.getElementById('event-color').value = '#2196f3';
+      document.getElementById('event-modal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('event-modal').style.display = 'none';
+    }
+
+    function onGoogleSignIn(response) {
+      googleToken = response.credential;
+      document.getElementById('sign-out-btn').style.display = 'inline-block';
+      createCalendarIfNotExists().then(fetchEventsFromGoogle);
+    }
+
+    function signOut() {
+      googleToken = null;
+      calendarId = null;
+      document.getElementById('sign-out-btn').style.display = 'none';
+      alert("Signed out");
+    }
+
+    async function createCalendarIfNotExists() {
+      const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+        headers: { Authorization: `Bearer ${googleToken}` }
+      });
+      const data = await res.json();
+      const existing = data.items?.find(cal => cal.summary === 'Plan365');
+      if (existing) {
+        calendarId = existing.id;
+      } else {
+        const created = await fetch('https://www.googleapis.com/calendar/v3/calendars', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${googleToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ summary: 'Plan365' })
+        });
+        const cal = await created.json();
+        calendarId = cal.id;
+      }
+    }
+
+    async function syncEventToGoogle(event) {
+      if (!googleToken || !calendarId) return;
+      await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${googleToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          summary: event.text,
+          start: { date: event.range.start },
+          end: { date: new Date(new Date(event.range.end).getTime() + 86400000).toISOString().split('T')[0] },
+        })
+      });
+    }
+
+    function saveNote() {
+      const start = document.getElementById("start-date")?.value;
+      const end = document.getElementById("end-date")?.value;
+      const text = document.getElementById("note-text")?.value.trim();
+      const color = document.getElementById("event-color")?.value;
+      if (!text) return;
+      const newEvent = { text, color, range: { start, end } };
+      syncEventToGoogle(newEvent);
+      closeModal();
+      generateCalendar(currentYear);
+    }
+
+    generateCalendar(currentYear);
   </script>
 </body>
 </html>
