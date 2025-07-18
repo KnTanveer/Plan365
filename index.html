@@ -93,6 +93,13 @@
       gap: 5px;
     }
     #signin-btn, #signout-btn { margin: 5px; }
+    #signin-message {
+      display: none;
+      text-align: center;
+      padding: 50px;
+      font-size: 18px;
+      color: gray;
+    }
   </style>
 </head>
 <body>
@@ -109,6 +116,7 @@
     <button onclick="toggleDarkMode()">🌓 Theme</button>
   </div>
 </div>
+<div id="signin-message">🔐 Please sign in to view your Plan365 calendar.</div>
 <div id="calendar"></div>
 <div id="modal">
   <div id="modal-content">
@@ -146,16 +154,21 @@ function initGoogleAuth() {
 function updateSigninStatus(isSignedIn) {
   const signInBtn = document.getElementById("signin-btn");
   const signOutBtn = document.getElementById("signout-btn");
+  const calendarDiv = document.getElementById("calendar");
+  const signInMsg = document.getElementById("signin-message");
 
   if (isSignedIn) {
     signInBtn.style.display = "none";
     signOutBtn.style.display = "inline-block";
+    calendarDiv.style.display = "flex";
+    signInMsg.style.display = "none";
   } else {
     signInBtn.style.display = "inline-block";
     signOutBtn.style.display = "none";
+    calendarDiv.style.display = "none";
+    signInMsg.style.display = "block";
   }
 
-  // Always render the calendar regardless of sign-in state
   renderCalendar();
 }
 
