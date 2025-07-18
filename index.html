@@ -126,15 +126,42 @@
 </div>
 
 <script>
+let calendarId = localStorage.getItem('plan365_calendar_id') || null;
+
+function saveNote() {
+  const start = document.getElementById('start-date').value;
+  const end = document.getElementById('end-date').value;
+  const text = document.getElementById('note-text').value;
+  const color = document.getElementById('event-color').value;
+  if (!start || !end || !text) return;
+
+  const event = { start, end, text, color };
+  localStorage.setItem(start + '_' + end, JSON.stringify(event));
+  syncEventToGoogle(event);
+  renderCalendar();
+  closeModal();
+}
+
 function syncEventToGoogle(event) {
-  if (!calendarId) return;
+  const authResponse = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse();
   fetch('/api/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ event, calendarId })
+    body: JSON.stringify({
+      tokens: authResponse,
+      event: event,
+      calendarId: calendarId
+    })
   })
-  .then(res => res.ok ? console.log("Synced via API") : console.error("API sync failed"))
-  .catch(err => console.error("Sync error", err));
+  .then(res => res.json())
+  .then(data => {
+    if (data.calendarId) {
+      calendarId = data.calendarId;
+      localStorage.setItem('plan365_calendar_id', calendarId);
+    }
+    console.log("Synced to Google via API", data);
+  })
+  .catch(err => console.error("API Sync error", err));
 }
 </script>
 </body>
