@@ -1,45 +1,58 @@
-// /api/sync.js
-
 import { google } from 'googleapis';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+  if (req.method !== 'POST') return res.status(405).send('Method not allowed');
 
-  const { event, calendarId: storedId } = req.body;
+  const { tokens, event, calendarId } = req.body;
 
-  const auth = new google.auth.OAuth2(
+  const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
   );
 
-  auth.setCredentials({ access_token: req.body.tokens.access_token });
+  oauth2Client.setCredentials(tokens);
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-  const calendar = google.calendar({ version: 'v3', auth });
+  let plan365CalendarId = calendarId;
 
-  let calendarId = storedId;
-
-  // Step 1: Create Plan365 calendar if needed
-  if (!calendarId) {
-    const calendars = await calendar.calendarList.list();
-    const existing = calendars.data.items.find(c => c.summary === 'Plan365');
-    if (existing) {
-      calendarId = existing.id;
-    } else {
-      const created = await calendar.calendars.insert({ requestBody: { summary: 'Plan365' } });
-      calendarId = created.data.id;
+  try {
+    if (!plan365CalendarId) {
+      // Try to find an existing "Plan365" calendar
+      const list = await calendar.calendarList.list();
+      const existing = list.data.items.find(c => c.summary === 'Plan365');
+      if (existing) {
+        plan365CalendarId = existing.id;
+      } else {
+        // Create a new calendar
+        const newCal = await calendar.calendars.insert({
+          requestBody: {
+            summary: 'Plan365',
+            timeZone: 'UTC'
+          }
+        });
+        plan365CalendarId = newCal.data.id;
+      }
     }
-  }
 
-  // Step 2: Insert Event
-  await calendar.events.insert({
-    calendarId,
-    requestBody: {
-      summary: event.title || 'Plan365 Event',
-      description: event.note || '',
+    // Create or update the event in Plan365 calendar
+    const newEvent = {
+      summary: event.text,
+      description: 'Do not edit this directly in Google Calendar. Edit in Plan365.',
       start: { date: event.start },
       end: { date: event.end },
-    }
-  });
+      colorId: '5'
+    };
 
-  res.status(200).json({ calendarId });
+    await calendar.events.insert({
+      calendarId: plan365CalendarId,
+      requestBody: newEvent
+    });
+
+    res.status(200).json({ success: true, calendarId: plan365CalendarId });
+
+  } catch (error) {
+    console.error('Google Calendar Sync Error:', error);
+    res.status(500).json({ error: error.message });
+  }
 }
