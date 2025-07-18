@@ -7,7 +7,6 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
-    /* [existing styles remain unchanged] */
     #loading {
       display: none;
       position: fixed;
@@ -45,7 +44,8 @@
   <!-- [modal content unchanged] -->
 </div>
 <script>
-// [variables declared as-is]
+let accessToken = null;
+let tokenClient;
 
 function changeYear(offset) {
   currentYear += offset;
@@ -103,7 +103,50 @@ async function initData() {
   }
 }
 
-// [rest of code remains unchanged]
+function handleSignIn() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    callback: async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      gapi.client.setToken({ access_token: accessToken });
+      document.getElementById('signin-btn').style.display = 'none';
+      document.getElementById('signout-btn').style.display = 'inline-block';
+      await gapiLoad();
+      await initializeGapiClient();
+      await initCalendarId();
+      await initData();
+    }
+  });
+  tokenClient.requestAccessToken();
+}
+
+function handleSignOut() {
+  if (accessToken) {
+    gapi.client.setToken(null);
+    google.accounts.oauth2.revoke(accessToken, () => {
+      accessToken = null;
+      calendarId = null;
+      localStorage.removeItem("plan365_calendar_id");
+      document.getElementById('signin-btn').style.display = 'inline-block';
+      document.getElementById('signout-btn').style.display = 'none';
+      Object.keys(calendarData).forEach(k => delete calendarData[k]);
+      createCalendar();
+    });
+  }
+}
+
+async function initCalendarId() {
+  const result = await gapi.client.calendar.calendarList.list();
+  const exists = result.result.items.find(c => c.summary === "Plan365");
+  if (exists) {
+    calendarId = exists.id;
+  } else {
+    const res = await gapi.client.calendar.calendars.insert({ summary: "Plan365" });
+    calendarId = res.result.id;
+  }
+  localStorage.setItem("plan365_calendar_id", calendarId);
+}
 </script>
 </body>
 </html>
