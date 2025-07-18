@@ -47,6 +47,10 @@
 let accessToken = null;
 let tokenClient;
 
+function gapiLoad() {
+  return new Promise(resolve => gapi.load('client', resolve));
+}
+
 function changeYear(offset) {
   currentYear += offset;
   document.getElementById("year-label").textContent = currentYear;
@@ -109,11 +113,13 @@ function handleSignIn() {
     scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
     callback: async (tokenResponse) => {
       accessToken = tokenResponse.access_token;
+      await gapiLoad();
+      await gapi.client.init({
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+      });
       gapi.client.setToken({ access_token: accessToken });
       document.getElementById('signin-btn').style.display = 'none';
       document.getElementById('signout-btn').style.display = 'inline-block';
-      await gapiLoad();
-      await initializeGapiClient();
       await initCalendarId();
       await initData();
     }
