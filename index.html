@@ -123,7 +123,8 @@
       <div id="g_id_onload"
            data-client_id="943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com"
            data-callback="onGoogleSignIn"
-           data-auto_prompt="false">
+           data-auto_prompt="false"
+           data-scope="https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events">
       </div>
       <div class="g_id_signin" data-type="icon"></div>
       <button id="sign-out-btn" onclick="signOut()">Sign Out</button>
@@ -159,11 +160,11 @@
       events.forEach(event => {
         const date = event.start?.date;
         const dayCell = document.querySelector(`.day-cell[data-date='${date}']`);
-        if (dayCell && !dayCell.querySelector('.note-text')) {
+        if (dayCell) {
           const note = document.createElement('div');
           note.className = 'note-text';
           note.textContent = event.summary || '(No Title)';
-          note.style.background = '#ffcc80';
+          note.style.background = '#ffd54f';
           dayCell.appendChild(note);
         }
       });
@@ -230,15 +231,21 @@
 
     function onGoogleSignIn(response) {
       googleToken = response.credential;
+      document.getElementById('g_id_onload').style.display = 'none';
+      document.querySelector('.g_id_signin').style.display = 'none';
       document.getElementById('sign-out-btn').style.display = 'inline-block';
-      createCalendarIfNotExists().then(fetchEventsFromGoogle);
+      createCalendarIfNotExists().then(() => {
+        generateCalendar(currentYear);
+      });
     }
 
     function signOut() {
       googleToken = null;
       calendarId = null;
       document.getElementById('sign-out-btn').style.display = 'none';
-      alert("Signed out");
+      document.getElementById('g_id_onload').style.display = 'block';
+      document.querySelector('.g_id_signin').style.display = 'block';
+      generateCalendar(currentYear);
     }
 
     async function createCalendarIfNotExists() {
