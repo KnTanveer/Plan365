@@ -12,24 +12,16 @@
       overflow-x: auto;
       transition: background 0.3s, color 0.3s;
     }
-    body.dark {
-      background: #121212;
-      color: white;
-    }
+    body.dark { background: #121212; color: white; }
     #header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 10px;
       background: #f0f0f0;
-      position: sticky;
-      top: 0;
-      z-index: 999;
       flex-wrap: wrap;
     }
-    body.dark #header {
-      background: #1f1f1f;
-    }
+    body.dark #header { background: #1f1f1f; }
     #calendar {
       display: flex;
       flex-wrap: nowrap;
@@ -37,9 +29,7 @@
       padding: 10px;
       background: #f4f4f4;
     }
-    body.dark #calendar {
-      background: #1a1a1a;
-    }
+    body.dark #calendar { background: #1a1a1a; }
     .month-column {
       flex: 0 0 auto;
       width: 130px;
@@ -49,9 +39,7 @@
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
       padding: 5px;
     }
-    body.dark .month-column {
-      background: #2c2c2c;
-    }
+    body.dark .month-column { background: #2c2c2c; }
     .month-column h3 {
       text-align: center;
       font-size: 16px;
@@ -66,13 +54,8 @@
       border-radius: 4px;
       min-height: 45px;
     }
-    .today {
-      border: 2px solid red;
-    }
-    .day-label {
-      font-weight: bold;
-      margin-bottom: 3px;
-    }
+    .today { border: 2px solid red; }
+    .day-label { font-weight: bold; margin-bottom: 3px; }
     .note-text {
       font-size: 12px;
       border-radius: 4px;
@@ -80,225 +63,258 @@
       margin-top: 2px;
       color: black;
     }
-    #google-auth {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    #sign-out-btn {
-      display: none;
-    }
-    #event-modal {
-      display: none;
+    #modal {
       position: fixed;
-      top: 20%;
-      left: 50%;
-      transform: translate(-50%, -20%);
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #modal-content {
       background: white;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      z-index: 9999;
+      border-radius: 10px;
+      width: 300px;
     }
-    body.dark #event-modal {
-      background: #333;
-      color: white;
-    }
-    #event-modal input, #event-modal textarea {
+    #modal-content input,
+    #modal-content textarea {
       width: 100%;
-      margin-bottom: 10px;
+      margin-top: 5px;
     }
+    #modal-content .actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    #signin-btn, #signout-btn { margin: 5px; }
   </style>
 </head>
 <body>
-  <div id="header">
-    <div>
-      <button onclick="changeYear(-1)">⏪ Prev</button>
-      <button onclick="goToToday()">📅 Today</button>
-      <button onclick="changeYear(1)">Next ⏩</button>
-    </div>
-    <h2>📅 Plan365 - <span id="year-label"></span></h2>
-    <div id="google-auth">
-      <div id="g_id_onload"
-           data-client_id="943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com"
-           data-callback="onGoogleSignIn"
-           data-auto_prompt="false"
-           data-scope="https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events">
-      </div>
-      <div class="g_id_signin" data-type="icon"></div>
-      <button id="sign-out-btn" onclick="signOut()">Sign Out</button>
-      <button onclick="toggleDarkMode()">🌓 Theme</button>
+<div id="header">
+  <div>
+    <button onclick="changeYear(-1)">⏪ Prev</button>
+    <button onclick="goToToday()">📅 Today</button>
+    <button onclick="changeYear(1)">Next ⏩</button>
+  </div>
+  <h2>📅 Plan365 - <span id="year-label"></span></h2>
+  <div>
+    <button id="signin-btn" onclick="handleSignIn()">🔐 Sign In</button>
+    <button id="signout-btn" style="display:none" onclick="handleSignOut()">🚪 Log Out</button>
+    <button onclick="toggleDarkMode()">🌓 Theme</button>
+  </div>
+</div>
+<div id="calendar"></div>
+<div id="modal">
+  <div id="modal-content">
+    <label><strong>Start:</strong> <input type="date" id="start-date"></label>
+    <label><strong>End:</strong> <input type="date" id="end-date"></label>
+    <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
+    <label><strong>Color:</strong> <input type="color" id="event-color"></label>
+    <p id="duration-display"></p>
+    <div class="actions">
+      <button onclick="saveNote()">Save</button>
+      <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
+      <button onclick="closeModal()">Cancel</button>
     </div>
   </div>
+</div>
 
-  <div id="calendar"></div>
+<script>
+let currentYear = new Date().getFullYear();
+let selectedEvent = null;
+const calendarData = {};
+const months = [...Array(12)].map((_, i) =>
+  new Date(2000, i).toLocaleString('default', { month: 'long' })
+);
+let lastUsedColor = localStorage.getItem('lastUsedColor') || '#b6eeb6';
 
-  <div id="event-modal">
-    <h3>Edit Event</h3>
-    <input type="date" id="start-date" />
-    <input type="date" id="end-date" />
-    <textarea id="note-text" placeholder="Event details"></textarea>
-    <input type="color" id="event-color" />
-    <button onclick="saveNote()">Save</button>
-    <button onclick="closeModal()">Cancel</button>
-  </div>
+function changeYear(offset) {
+  currentYear += offset;
+  document.getElementById("year-label").textContent = currentYear;
+  createCalendar();
+}
 
-  <script>
-    let googleToken = null;
-    let calendarId = null;
-    let currentYear = new Date().getFullYear();
-    let editingDate = null;
+function goToToday() {
+  currentYear = new Date().getFullYear();
+  createCalendar();
+}
 
-    async function fetchEventsFromGoogle() {
-      if (!googleToken || !calendarId) return;
-      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?singleEvents=true&orderBy=startTime`, {
-        headers: { Authorization: `Bearer ${googleToken}` }
-      });
-      const data = await res.json();
-      const events = data.items || [];
-      events.forEach(event => {
-        const date = event.start?.date;
-        const dayCell = document.querySelector(`.day-cell[data-date='${date}']`);
-        if (dayCell) {
-          const note = document.createElement('div');
-          note.className = 'note-text';
-          note.textContent = event.summary || '(No Title)';
-          note.style.background = '#ffd54f';
-          dayCell.appendChild(note);
-        }
-      });
-    }
+function toggleDarkMode() {
+  document.body.classList.toggle('dark');
+}
 
-    function generateCalendar(year) {
-      const calendar = document.getElementById('calendar');
-      calendar.innerHTML = '';
-      document.getElementById('year-label').textContent = year;
-      const todayStr = new Date().toISOString().split('T')[0];
+function initData() {
+  const saved = localStorage.getItem("calendarData");
+  if (saved) Object.assign(calendarData, JSON.parse(saved));
+}
 
-      for (let month = 0; month < 12; month++) {
-        const col = document.createElement('div');
-        col.className = 'month-column';
+function saveData() {
+  localStorage.setItem("calendarData", JSON.stringify(calendarData));
+}
 
-        const title = document.createElement('h3');
-        title.textContent = new Date(year, month).toLocaleString('default', { month: 'short' });
-        col.appendChild(title);
+function createCalendar() {
+  document.getElementById("year-label").textContent = currentYear;
+  const calendar = document.getElementById("calendar");
+  calendar.innerHTML = "";
+  const today = new Date();
 
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        for (let day = 1; day <= daysInMonth; day++) {
-          const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const cell = document.createElement('div');
-          cell.className = 'day-cell';
-          cell.dataset.date = dateStr;
-          if (dateStr === todayStr) cell.classList.add('today');
-          cell.textContent = day;
-          cell.onclick = () => openModal(dateStr);
-          col.appendChild(cell);
-        }
+  months.forEach((month, index) => {
+    const col = document.createElement("div");
+    col.className = "month-column";
+    const title = document.createElement("h3");
+    title.textContent = month;
+    col.appendChild(title);
 
-        calendar.appendChild(col);
+    const days = new Date(currentYear, index + 1, 0).getDate();
+    for (let day = 1; day <= days; day++) {
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      if (
+        today.getFullYear() === currentYear &&
+        today.getMonth() === index &&
+        today.getDate() === day
+      ) {
+        cell.classList.add("today");
       }
+      const dateKey = `${currentYear}-${month}-${day}`;
+      const isoDate = `${currentYear}-${String(index + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      cell.innerHTML = `<div class="day-label">${day}</div>`;
 
-      fetchEventsFromGoogle();
-    }
-
-    function changeYear(offset) {
-      currentYear += offset;
-      generateCalendar(currentYear);
-    }
-
-    function goToToday() {
-      currentYear = new Date().getFullYear();
-      generateCalendar(currentYear);
-    }
-
-    function toggleDarkMode() {
-      document.body.classList.toggle('dark');
-    }
-
-    function openModal(dateStr) {
-      editingDate = dateStr;
-      document.getElementById('start-date').value = dateStr;
-      document.getElementById('end-date').value = dateStr;
-      document.getElementById('note-text').value = '';
-      document.getElementById('event-color').value = '#2196f3';
-      document.getElementById('event-modal').style.display = 'block';
-    }
-
-    function closeModal() {
-      document.getElementById('event-modal').style.display = 'none';
-    }
-
-    function onGoogleSignIn(response) {
-      googleToken = response.credential;
-      document.getElementById('g_id_onload').style.display = 'none';
-      document.querySelector('.g_id_signin').style.display = 'none';
-      document.getElementById('sign-out-btn').style.display = 'inline-block';
-      createCalendarIfNotExists().then(() => {
-        generateCalendar(currentYear);
+      const events = (calendarData[dateKey] || []);
+      events.forEach((event, idx) => {
+        const note = document.createElement("div");
+        note.className = "note-text";
+        note.textContent = event.text;
+        note.style.background = event.color;
+        note.onclick = e => {
+          e.stopPropagation();
+          openModal(event, dateKey, idx);
+        };
+        cell.appendChild(note);
       });
+
+      cell.onclick = () => openModal(null, isoDate);
+      col.appendChild(cell);
     }
 
-    function signOut() {
-      googleToken = null;
-      calendarId = null;
-      document.getElementById('sign-out-btn').style.display = 'none';
-      document.getElementById('g_id_onload').style.display = 'block';
-      document.querySelector('.g_id_signin').style.display = 'block';
-      generateCalendar(currentYear);
-    }
+    calendar.appendChild(col);
+  });
+}
 
-    async function createCalendarIfNotExists() {
-      const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
-        headers: { Authorization: `Bearer ${googleToken}` }
-      });
-      const data = await res.json();
-      const existing = data.items?.find(cal => cal.summary === 'Plan365');
-      if (existing) {
-        calendarId = existing.id;
-      } else {
-        const created = await fetch('https://www.googleapis.com/calendar/v3/calendars', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${googleToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ summary: 'Plan365' })
-        });
-        const cal = await created.json();
-        calendarId = cal.id;
-      }
-    }
+function openModal(event = null, date, index = null) {
+  selectedEvent = { event, date, index };
+  const modal = document.getElementById("modal");
+  const startInput = document.getElementById("start-date");
+  const endInput = document.getElementById("end-date");
+  const noteInput = document.getElementById("note-text");
+  const colorInput = document.getElementById("event-color");
+  const duration = document.getElementById("duration-display");
+  const deleteBtn = document.getElementById("delete-btn");
 
-    async function syncEventToGoogle(event) {
-      if (!googleToken || !calendarId) return;
-      await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${googleToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          summary: event.text,
-          start: { date: event.range.start },
-          end: { date: new Date(new Date(event.range.end).getTime() + 86400000).toISOString().split('T')[0] },
-        })
-      });
-    }
+  if (event) {
+    startInput.value = event.range.start;
+    endInput.value = event.range.end;
+    noteInput.value = event.text;
+    colorInput.value = event.color;
+    duration.textContent = `Duration: ${getDuration(event.range.start, event.range.end)} day(s)`;
+    deleteBtn.style.display = 'inline-block';
+  } else {
+    startInput.value = date;
+    endInput.value = date;
+    noteInput.value = "";
+    colorInput.value = lastUsedColor;
+    duration.textContent = "";
+    deleteBtn.style.display = 'none';
+  }
 
-    function saveNote() {
-      const start = document.getElementById("start-date")?.value;
-      const end = document.getElementById("end-date")?.value;
-      const text = document.getElementById("note-text")?.value.trim();
-      const color = document.getElementById("event-color")?.value;
-      if (!text) return;
-      const newEvent = { text, color, range: { start, end } };
-      syncEventToGoogle(newEvent);
-      closeModal();
-      generateCalendar(currentYear);
-    }
+  modal.style.display = "flex";
+}
 
-    generateCalendar(currentYear);
-  </script>
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  selectedEvent = null;
+}
+
+function saveNote() {
+  const start = document.getElementById("start-date").value;
+  const end = document.getElementById("end-date").value;
+  const text = document.getElementById("note-text").value.trim();
+  const color = document.getElementById("event-color").value;
+  if (!text) return;
+
+  lastUsedColor = color;
+  localStorage.setItem('lastUsedColor', color);
+  const newEvent = { text, color, range: { start, end } };
+  if (selectedEvent?.event) deleteFromRange(selectedEvent.event);
+  addToRange(newEvent);
+  saveData();
+  closeModal();
+  createCalendar();
+}
+
+function addToRange(event) {
+  const from = new Date(event.range.start);
+  const to = new Date(event.range.end);
+  while (from <= to) {
+    const key = `${from.getFullYear()}-${from.toLocaleString('default',{month:'long'})}-${from.getDate()}`;
+    if (!calendarData[key]) calendarData[key] = [];
+    calendarData[key].push(event);
+    from.setDate(from.getDate() + 1);
+  }
+}
+
+function deleteFromRange(event) {
+  const from = new Date(event.range.start);
+  const to = new Date(event.range.end);
+  while (from <= to) {
+    const key = `${from.getFullYear()}-${from.toLocaleString('default',{month:'long'})}-${from.getDate()}`;
+    if (calendarData[key]) {
+      calendarData[key] = calendarData[key].filter(e => e.text !== event.text);
+    }
+    from.setDate(from.getDate() + 1);
+  }
+}
+
+function deleteCurrentEvent() {
+  if (!selectedEvent?.event) return;
+  deleteFromRange(selectedEvent.event);
+  saveData();
+  closeModal();
+  createCalendar();
+}
+
+function getDuration(start, end) {
+  const s = new Date(start);
+  const e = new Date(end);
+  return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+function handleSignIn() {
+  google.accounts.id.initialize({
+    client_id: "943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com",
+    callback: response => {
+      document.getElementById('signin-btn').style.display = 'none';
+      document.getElementById('signout-btn').style.display = 'inline-block';
+      console.log("Signed in", response);
+    }
+  });
+  google.accounts.id.prompt();
+}
+
+function handleSignOut() {
+  google.accounts.id.disableAutoSelect();
+  document.getElementById('signin-btn').style.display = 'inline-block';
+  document.getElementById('signout-btn').style.display = 'none';
+  console.log("Signed out");
+}
+
+initData();
+createCalendar();
+</script>
 </body>
 </html>
