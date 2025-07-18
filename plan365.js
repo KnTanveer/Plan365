@@ -16,7 +16,6 @@ function gapiLoad() {
   });
 }
 
-
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
 }
@@ -39,10 +38,14 @@ function handleSignIn() {
     scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
     callback: async (tokenResponse) => {
       accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+
       await gapiLoad();
       gapi.client.setToken({ access_token: accessToken });
+
       document.getElementById('signin-btn').style.display = 'none';
       document.getElementById('signout-btn').style.display = 'inline-block';
+
       await initCalendarId();
       await initData();
     }
@@ -56,6 +59,7 @@ function handleSignOut() {
     google.accounts.oauth2.revoke(accessToken, () => {
       accessToken = null;
       calendarId = null;
+      localStorage.removeItem("accessToken");
       document.getElementById('signin-btn').style.display = 'inline-block';
       document.getElementById('signout-btn').style.display = 'none';
       calendarData = {};
@@ -220,3 +224,16 @@ function deleteCurrentEvent() {
   }
   closeModal();
 }
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const savedToken = localStorage.getItem("accessToken");
+  if (savedToken) {
+    accessToken = savedToken;
+    await gapiLoad();
+    gapi.client.setToken({ access_token: accessToken });
+    document.getElementById('signin-btn').style.display = 'none';
+    document.getElementById('signout-btn').style.display = 'inline-block';
+    await initCalendarId();
+    await initData();
+  }
+});
