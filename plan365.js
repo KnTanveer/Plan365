@@ -234,3 +234,6 @@ async function deleteCurrentEvent() {
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
 }
+
+window.addEventListener("load", gapiLoad);
+
