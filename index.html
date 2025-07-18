@@ -128,6 +128,53 @@
 <script>
 let calendarId = localStorage.getItem('plan365_calendar_id') || null;
 
+const CLIENT_ID = '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile';
+
+function initGoogleAuth() {
+  gapi.load('client:auth2', () => {
+    gapi.client.init({
+      clientId: CLIENT_ID,
+      scope: SCOPES
+    }).then(() => {
+      const isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
+      updateSigninStatus(isSignedIn);
+    });
+  });
+}
+
+function updateSigninStatus(isSignedIn) {
+  const signInBtn = document.getElementById("signin-btn");
+  const signOutBtn = document.getElementById("signout-btn");
+
+  if (isSignedIn) {
+    signInBtn.style.display = "none";
+    signOutBtn.style.display = "inline-block";
+    renderCalendar();
+  } else {
+    signInBtn.style.display = "inline-block";
+    signOutBtn.style.display = "none";
+    document.getElementById('calendar').innerHTML = '';
+  }
+}
+
+function handleSignIn() {
+  gapi.auth2.getAuthInstance().signIn().then(() => {
+    updateSigninStatus(true);
+  });
+}
+
+function handleSignOut() {
+  gapi.auth2.getAuthInstance().signOut().then(() => {
+    localStorage.removeItem('plan365_calendar_id');
+    updateSigninStatus(false);
+  });
+}
+
+function renderCalendar() {
+  document.getElementById('calendar').innerHTML = '<p>🗓 Calendar Loaded</p>';
+}
+
 function saveNote() {
   const start = document.getElementById('start-date').value;
   const end = document.getElementById('end-date').value;
@@ -163,6 +210,8 @@ function syncEventToGoogle(event) {
   })
   .catch(err => console.error("API Sync error", err));
 }
+
+window.addEventListener('load', initGoogleAuth);
 </script>
 </body>
 </html>
