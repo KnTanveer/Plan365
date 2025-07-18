@@ -6,12 +6,16 @@ let tokenClient;
 let currentEditingEvent = null;
 
 function gapiLoad() {
-  gapi.load("client", async () => {
-    await gapi.client.init({
-      discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+  return new Promise((resolve) => {
+    gapi.load("client", async () => {
+      await gapi.client.init({
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+      });
+      resolve();
     });
   });
 }
+
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
