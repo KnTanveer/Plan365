@@ -23,7 +23,7 @@ function refreshAccessTokenAndRetry(callback) {
       localStorage.setItem("accessToken", accessToken);
       gapi.client.setToken({ access_token: accessToken });
       try {
-        await callback(); // retry the original action
+        await callback();
         resolve();
       } catch (err) {
         console.error("Retry failed after token refresh:", err);
@@ -31,7 +31,7 @@ function refreshAccessTokenAndRetry(callback) {
         handleSignOut();
       }
     };
-    tokenClient.requestAccessToken({ prompt: '' }); // silent refresh
+    tokenClient.requestAccessToken({ prompt: '' });
   });
 }
 
@@ -72,7 +72,7 @@ function handleSignIn() {
 
       setInterval(() => {
         tokenClient.requestAccessToken({ prompt: '' });
-      }, 55 * 60 * 1000); // Refresh every 55 minutes
+      }, 55 * 60 * 1000); // auto-refresh every 55 mins
 
       await initCalendarId();
       await initData();
@@ -125,6 +125,12 @@ async function initData() {
     calendarData = {};
 
     response.result.items.forEach(ev => {
+      // Skip non-all-day events
+      if (!ev.start?.date || !ev.end?.date) {
+        console.warn("Skipping non-all-day event:", ev);
+        return;
+      }
+
       const start = ev.start.date;
       const endDateObj = new Date(ev.end.date);
       endDateObj.setDate(endDateObj.getDate() - 1);
@@ -132,6 +138,7 @@ async function initData() {
 
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
+
       const newEvent = {
         text: ev.summary,
         color,
@@ -284,7 +291,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('signin-btn').style.display = 'none';
     document.getElementById('signout-btn').style.display = 'inline-block';
 
-    // Auto-refresh token every 55 minutes (optional)
     setInterval(() => {
       tokenClient?.requestAccessToken({ prompt: '' });
     }, 55 * 60 * 1000);
