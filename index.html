@@ -88,13 +88,35 @@
       width: 100%;
       margin-top: 5px;
     }
-    body.dark #modal-content input, #modal-content textarea { background: #2c2c2c; }
     #modal-content .actions {
       margin-top: 10px;
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 5px;
+    }
+    body.dark #modal-content {
+      background: #2c2c2c;
+      color: white; 
+    }
+    
+    body.dark #modal-content input,
+    body.dark #modal-content textarea,
+    body.dark #modal-content select {
+      background-color: #3a3a3a; 
+      color: white;
+      border: 1px solid #555; 
+    }
+    
+    body.dark #modal-content input[type="color"] {
+      background-color: transparent; 
+      padding: 2px;
+    }
+    
+    body.dark #modal-content button {
+      background-color: #444;
+      color: white;
+      border: 1px solid #666;
     }
     #signin-btn, #signout-btn { margin: 5px; }
   </style>
