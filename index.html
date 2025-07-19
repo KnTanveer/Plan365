@@ -152,6 +152,15 @@
       <label><strong>End:</strong> <input type="date" id="end-date"></label>
       <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
       <label><strong>Color:</strong> <input type="color" id="event-color"></label>
+      <label><strong>Repeat:</strong>
+      <select id="repeat-select">
+        <option value="">None</option>
+        <option value="DAILY">Daily</option>
+        <option value="WEEKLY">Weekly</option>
+        <option value="MONTHLY">Monthly</option>
+        <option value="YEARLY">Yearly</option>
+      </select>
+      </label>
       <p id="duration-display"></p>
       <div class="actions">
         <button onclick="saveNote()">Save</button>
