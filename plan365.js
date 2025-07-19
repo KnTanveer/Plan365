@@ -54,41 +54,50 @@ async function saveNote() {
   const recurrence = document.getElementById("repeat-select").value;
 
   if (!start || !end || !text) return alert("Please fill all fields");
-  const metadata = JSON.stringify({ color });
+
+  const metadata = JSON.stringify({ color, recurrence });
   const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
   localStorage.setItem("lastColor", color);
 
   if (currentEditingEvent) {
     try {
+      const baseId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
       await gapi.client.calendar.events.delete({
         calendarId,
-        eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
+        eventId: baseId
       });
     } catch (e) {
       console.error("Failed to delete existing event:", e);
     }
+  }
 
-    await gapi.client.calendar.events.insert({
+  await gapi.client.calendar.events.insert({
+    calendarId,
+    resource: {
+      summary: recurrence ? `🔁 ${text}` : text,
+      description: metadata,
+      start: { date: start },
+      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
+      recurrence: recurrenceRule || []
+    }
+  });
+
+  closeModal();
+  await initData();
+}
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
+
+  try {
+    const baseId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
+    await gapi.client.calendar.events.delete({
       calendarId,
-      resource: {
-        summary: text,
-        description: metadata,
-        start: { date: start },
-        end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-        recurrence: recurrenceRule || []
-      }
+      eventId: baseId
     });
-  } else {
-    await gapi.client.calendar.events.insert({
-      calendarId,
-      resource: {
-        summary: text,
-        description: metadata,
-        start: { date: start },
-        end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-        recurrence: recurrenceRule || []
-      }
-    });
+  } catch (e) {
+    console.error("Failed to delete event:", e);
+    alert("Could not delete event.");
   }
 
   closeModal();
