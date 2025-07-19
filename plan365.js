@@ -326,3 +326,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     await initData();
   }
 });
+
+window.toggleRecurringEvents = toggleRecurringEvents;
+window.handleSignIn = handleSignIn;
+window.handleSignOut = handleSignOut;
