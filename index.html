@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body {
       font-family: Roboto, Arial, sans-serif;
@@ -15,6 +16,24 @@
       transition: background 0.3s, color 0.3s;
     }
     body.dark { background: #121212; color: white; }
+
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background-color: #ddd; }
+    body.dark button {
+      background-color: #333;
+      color: white;
+    }
+    body.dark button:hover {
+      background-color: #444;
+    }
+
     #header {
       display: flex;
       justify-content: space-between;
@@ -24,6 +43,7 @@
       flex-wrap: wrap;
     }
     body.dark #header { background: #1f1f1f; }
+
     #calendar {
       display: flex;
       flex-wrap: nowrap;
@@ -32,6 +52,7 @@
       background: #f4f4f4;
     }
     body.dark #calendar { background: #1a1a1a; }
+
     .month-column {
       flex: 0 0 auto;
       width: 130px;
@@ -42,11 +63,13 @@
       padding: 5px;
     }
     body.dark .month-column { background: #2c2c2c; }
+
     .month-column h3 {
       text-align: center;
       font-size: 16px;
       margin-bottom: 5px;
     }
+
     .day-cell {
       border: 1px solid #ddd;
       margin: 2px 0;
@@ -56,10 +79,13 @@
       border-radius: 4px;
       min-height: 45px;
     }
-    body.dark .day-cell { border: 1px solid #666;}  
+    body.dark .day-cell { border: 1px solid #666; }
+
     .today { border: 2px solid red; }
     body.dark .today { border: 2px solid #ff4d4d; }
+
     .day-label { font-weight: bold; margin-bottom: 3px; }
+
     .note-text {
       font-size: 12px;
       border-radius: 4px;
@@ -67,6 +93,7 @@
       margin-top: 2px;
       color: black;
     }
+
     #modal {
       position: fixed;
       top: 0; left: 0;
@@ -77,6 +104,7 @@
       align-items: center;
       z-index: 1000;
     }
+
     #modal-content {
       background: white;
       padding: 20px;
@@ -84,11 +112,13 @@
       width: 300px;
     }
     body.dark #modal-content { background: #2c2c2c; color: white; }
+
     #modal-content input,
     #modal-content textarea {
       width: 100%;
       margin-top: 5px;
     }
+
     #modal-content .actions {
       margin-top: 10px;
       display: flex;
@@ -96,6 +126,7 @@
       flex-wrap: wrap;
       gap: 5px;
     }
+
     body.dark #modal-content input,
     body.dark #modal-content textarea,
     body.dark #modal-content select {
@@ -103,15 +134,18 @@
       color: white;
       border: 1px solid #555; 
     }
+
     body.dark #modal-content input[type="color"] {
       background-color: transparent; 
       padding: 2px;
     }
+
     body.dark #modal-content button {
       background-color: #444;
       color: white;
       border: 1px solid #666;
     }
+
     body.dark input[type="date"] {
       background-color: #3a3a3a !important;
       color: white !important;
@@ -119,28 +153,66 @@
       padding: 5px;
       border-radius: 4px;
     }
+
     body.dark input[type="date"]::-webkit-calendar-picker-indicator {
       background: transparent;
       filter: invert(1);
       cursor: pointer;
     }
-    #signin-btn, #signout-btn, #toggle-recurring-btn { margin: 5px; }
+
+    #settings-panel {
+      background: #fafafa;
+      padding: 15px;
+      margin: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 300px;
+      display: none;
+    }
+    body.dark #settings-panel {
+      background: #1e1e1e;
+      color: white;
+    }
+
+    #settings-panel h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    #settings-panel .info {
+      font-size: 13px;
+      margin-top: 10px;
+      color: #666;
+    }
+    body.dark #settings-panel .info {
+      color: #aaa;
+    }
+
   </style>
 </head>
 <body>
   <div id="header">
     <div>
-      <button onclick="changeYear(-1)">⏪ Prev</button>
-      <button onclick="goToToday()">📅 Today</button>
-      <button onclick="changeYear(1)">Next ⏩</button>
+      <button onclick="changeYear(-1)"><i class="fas fa-backward"></i> Prev</button>
+      <button onclick="goToToday()"><i class="fas fa-calendar-day"></i> Today</button>
+      <button onclick="changeYear(1)">Next <i class="fas fa-forward"></i></button>
     </div>
-    <h2>📅 Plan365 - <span id="year-label"></span></h2>
+    <h2><i class="fas fa-calendar-alt"></i> Plan365 - <span id="year-label"></span></h2>
     <div>
-      <button id="signin-btn" onclick="handleSignIn()">🔐 Sign In</button>
-      <button id="signout-btn" style="display:none" onclick="handleSignOut()">🚪 Log Out</button>
-      <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()">Hide Recurring</button>
-      <button onclick="toggleDarkMode()">🌓 Theme</button>
+      <button id="signin-btn" onclick="handleSignIn()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <button id="signout-btn" style="display:none" onclick="handleSignOut()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+      <button onclick="toggleSettings()"><i class="fas fa-cog"></i></button>
     </div>
+  </div>
+
+  <div id="settings-panel">
+    <h3><i class="fas fa-cog"></i> Settings</h3>
+    <button onclick="toggleDarkMode()"><i class="fas fa-moon"></i> Toggle Theme</button>
+    <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()"><i class="fas fa-sync-alt"></i> Show/Hide Recurring</button>
+    <label><i class="fas fa-palette"></i> Today Color:
+      <input type="color" onchange="changeTodayColor(this.value)" />
+    </label>
+    <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events (like "3x a week") from Google Calendar aren't supported and won't sync.</p>
   </div>
 
   <div id="calendar"></div>
@@ -169,7 +241,19 @@
     </div>
   </div>
 
-  <!-- JavaScript is loaded last -->
+  <script>
+    function toggleSettings() {
+      const panel = document.getElementById('settings-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function changeTodayColor(color) {
+      document.querySelectorAll('.today').forEach(el => {
+        el.style.borderColor = color;
+      });
+    }
+  </script>
+
   <script src="plan365.js"></script>
 </body>
 </html>
