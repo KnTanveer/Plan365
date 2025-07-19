@@ -7,7 +7,6 @@ let accessToken = null;
 let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
-let lastUsedColor = localStorage.getItem("lastUsedColor") || "#b6eeb6";
 
 function showSpinner(show) {
   const spinner = document.getElementById("spinner");
@@ -28,10 +27,8 @@ function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
   document.getElementById("note-text").value = event ? event.text : "";
-  document.getElementById("event-color").value = event ? event.color : lastUsedColor;
+  document.getElementById("event-color").value = event ? event.color : "#b6eeb6";
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
-  document.getElementById("repeat-interval").value = event?.recurrenceInterval || 1;
-  document.getElementById("repeat-until").value = event?.recurrenceUntil || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
@@ -49,21 +46,10 @@ async function saveNote() {
   const text = document.getElementById("note-text").value;
   const color = document.getElementById("event-color").value;
   const recurrence = document.getElementById("repeat-select").value;
-  const interval = parseInt(document.getElementById("repeat-interval").value) || 1;
-  const until = document.getElementById("repeat-until").value;
 
   if (!start || !end || !text) return alert("Please fill all fields");
-  localStorage.setItem("lastUsedColor", color);
   const metadata = JSON.stringify({ color });
-
-  let recurrenceRule;
-  if (recurrence) {
-    recurrenceRule = `RRULE:FREQ=${recurrence};INTERVAL=${interval}`;
-    if (until) {
-      recurrenceRule += `;UNTIL=${until.replace(/-/g, '')}T000000Z`;
-    }
-    recurrenceRule = [recurrenceRule];
-  }
+  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
 
   if (currentEditingEvent) {
     await gapi.client.calendar.events.update({
@@ -96,13 +82,12 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
-  const confirmDelete = confirm("Delete just this event? Press 'Cancel' to delete the entire series.");
-  const eventId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
+  const confirmDelete = confirm("Delete this event?");
+  if (!confirmDelete) return;
 
   await gapi.client.calendar.events.delete({
     calendarId,
-    eventId,
-    ...(confirmDelete ? {} : { sendUpdates: "all" })
+    eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
   });
 
   closeModal();
