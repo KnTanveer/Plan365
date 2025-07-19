@@ -11,7 +11,7 @@ let showRecurringEvents = true;
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle("dark");
   const icon = document.getElementById("theme-toggle-icon");
-  if (icon) icon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
+  if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
   localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 
@@ -361,7 +361,20 @@ if (storedColor) {
 
 window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") document.body.classList.add("dark");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+  }
+
+  const themeIcon = document.getElementById("theme-toggle-icon");
+  if (themeIcon) {
+    themeIcon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
+  }
+
+  const storedColor = localStorage.getItem("todayColor");
+  if (storedColor) {
+    changeTodayColor(storedColor);
+    document.getElementById("today-color-input").value = storedColor;
+  }
 
   const btn = document.createElement("button");
   btn.id = "toggle-recurring-btn";
@@ -374,16 +387,17 @@ window.addEventListener("DOMContentLoaded", async () => {
     accessToken = savedToken;
     await gapiLoad();
     gapi.client.setToken({ access_token: accessToken });
+
     document.getElementById("signin-btn").style.display = "none";
     document.getElementById("signout-btn").style.display = "inline-block";
+
     setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+
     await initCalendarId();
     await initData();
-
-  const icon = document.getElementById("theme-toggle-icon");
-  if (icon) icon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
   }
 });
+
 
 function showDeleteChoiceModal() {
   return new Promise(resolve => {
