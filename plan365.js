@@ -379,6 +379,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
     await initCalendarId();
     await initData();
+
+  const icon = document.getElementById("theme-toggle-icon");
+  if (icon) icon.className = savedTheme === "dark" ? "fas fa-sun" : "fas fa-moon";
   }
 });
 
