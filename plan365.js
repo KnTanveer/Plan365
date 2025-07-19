@@ -13,24 +13,6 @@ function showSpinner(show) {
   if (spinner) spinner.style.display = show ? "block" : "none";
 }
 
-function showPopupChoice(title, options) {
-  return new Promise(resolve => {
-    const popup = document.createElement("div");
-    popup.className = "popup-choice";
-    popup.innerHTML = `<div class="popup-inner">
-      <h3>${title}</h3>
-      ${options.map(o => `<button>${o}</button>`).join('')}
-    </div>`;
-    popup.querySelectorAll("button").forEach((btn, i) => {
-      btn.onclick = () => {
-        document.body.removeChild(popup);
-        resolve(options[i]);
-      };
-    });
-    document.body.appendChild(popup);
-  });
-}
-
 function smoothScrollCalendar(delta) {
   const container = document.getElementById("calendar");
   if (!container) return;
@@ -77,32 +59,6 @@ async function saveNote() {
   localStorage.setItem("lastColor", color);
 
   if (currentEditingEvent) {
-    const choice = await showPopupChoice("Update recurring event?", ["All", "Future", "Only this"]);
-    if (choice === "Only this") return alert("Editing only one instance isn't supported with Google Calendar API");
-    if (choice === "Future") return alert("Editing future events requires custom logic and isn't fully supported yet");
-
-    if (currentEditingEvent.recurrenceType && recurrence !== currentEditingEvent.recurrenceType) {
-      await gapi.client.calendar.events.delete({
-        calendarId,
-        eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
-      });
-
-      await gapi.client.calendar.events.insert({
-        calendarId,
-        resource: {
-          summary: text,
-          description: metadata,
-          start: { date: start },
-          end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-          recurrence: recurrenceRule || []
-        }
-      });
-
-      closeModal();
-      await initData();
-      return;
-    }
-
     await gapi.client.calendar.events.update({
       calendarId,
       eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, ""),
@@ -133,15 +89,12 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
-  const choice = await showPopupChoice("Delete recurring event?", ["All", "Future", "Only this"]);
-  if (choice === "Only this") return alert("Deleting one instance not supported directly by Google Calendar API.");
-  if (choice === "Future") return alert("Deleting future events is not supported without more advanced logic.");
-
-  const baseId = currentEditingEvent.googleId.split("_repeat_")[0];
+  const confirmDelete = confirm("Delete this event and all recurrences?");
+  if (!confirmDelete) return;
 
   await gapi.client.calendar.events.delete({
     calendarId,
-    eventId: baseId
+    eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
   });
 
   closeModal();
