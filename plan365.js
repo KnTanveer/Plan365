@@ -18,7 +18,14 @@ function gapiLoad() {
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
+  
+  if (document.body.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
 }
+
 
 function changeYear(offset) {
   currentYear += offset;
