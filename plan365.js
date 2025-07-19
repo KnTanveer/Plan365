@@ -81,6 +81,28 @@ async function saveNote() {
     if (choice === "Only this") return alert("Editing only one instance isn't supported with Google Calendar API");
     if (choice === "Future") return alert("Editing future events requires custom logic and isn't fully supported yet");
 
+    if (currentEditingEvent.recurrenceType && recurrence !== currentEditingEvent.recurrenceType) {
+      await gapi.client.calendar.events.delete({
+        calendarId,
+        eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
+      });
+
+      await gapi.client.calendar.events.insert({
+        calendarId,
+        resource: {
+          summary: text,
+          description: metadata,
+          start: { date: start },
+          end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
+          recurrence: recurrenceRule || []
+        }
+      });
+
+      closeModal();
+      await initData();
+      return;
+    }
+
     await gapi.client.calendar.events.update({
       calendarId,
       eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, ""),
