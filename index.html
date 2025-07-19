@@ -8,7 +8,6 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
-    /* === Your existing styles from the previous HTML === */
     body {
       font-family: Roboto, Arial, sans-serif;
       margin: 0;
@@ -152,22 +151,14 @@
       <label><strong>End:</strong> <input type="date" id="end-date"></label>
       <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
       <label><strong>Color:</strong> <input type="color" id="event-color"></label>
-      <label><strong>Repeat:</strong> 
-  <select id="repeat-select">
-    <option value="">None</option>
-    <option value="DAILY">Daily</option>
-    <option value="WEEKLY">Weekly</option>
-    <option value="MONTHLY">Monthly</option>
-  </select>
-      </label>
-      <label><strong>Every (N):</strong> 
-        <input type="number" id="repeat-interval" min="1" value="1">
-      </label>
-      <label><strong>Until (date):</strong> 
-        <input type="date" id="repeat-until">
-      </label>
-      <label><strong>Or Count:</strong> 
-        <input type="number" id="repeat-count" min="1">
+      <label><strong>Repeat:</strong>
+      <select id="repeat-select">
+        <option value="">None</option>
+        <option value="DAILY">Daily</option>
+        <option value="WEEKLY">Weekly</option>
+        <option value="MONTHLY">Monthly</option>
+        <option value="YEARLY">Yearly</option>
+      </select>
       </label>
       <p id="duration-display"></p>
       <div class="actions">
