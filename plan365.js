@@ -1,4 +1,5 @@
 let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
 let calendarData = {};
 let calendarId = null;
 let accessToken = null;
@@ -97,45 +98,61 @@ function createCalendar() {
   if (!container) return;
 
   container.innerHTML = "";
-  document.getElementById("year-label").textContent = currentYear;
+  document.getElementById("year-label").textContent = `${currentYear} - ${new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" })}`;
 
-  for (let month = 0; month < 12; month++) {
-    const col = document.createElement("div");
-    col.className = "month-column";
-    const label = document.createElement("h3");
-    label.textContent = new Date(currentYear, month).toLocaleString("default", { month: "long" });
-    col.appendChild(label);
+  const col = document.createElement("div");
+  col.className = "month-column";
+  const label = document.createElement("h3");
+  label.textContent = new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" });
+  col.appendChild(label);
 
-    const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const cell = document.createElement("div");
-      cell.className = "day-cell";
-      if (dateStr === new Date().toISOString().split("T")[0]) {
-        cell.classList.add("today");
-      }
-      cell.innerHTML = `<div class='day-label'>${day}</div>`;
-      if (calendarData[dateStr]) {
-        calendarData[dateStr].forEach(e => {
-          const n = document.createElement("div");
-          n.className = "note-text";
-          n.style.background = e.color;
-          n.textContent = e.text;
-
-          n.onclick = (event) => {
-            event.stopPropagation();
-            openModal(dateStr, e);
-          };
-
-          cell.appendChild(n);
-        });
-      }
-      cell.onclick = () => openModal(dateStr);
-      col.appendChild(cell);
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const cell = document.createElement("div");
+    cell.className = "day-cell";
+    if (dateStr === new Date().toISOString().split("T")[0]) {
+      cell.classList.add("today");
     }
+    cell.innerHTML = `<div class='day-label'>${day}</div>`;
+    if (calendarData[dateStr]) {
+      calendarData[dateStr].forEach(e => {
+        const n = document.createElement("div");
+        n.className = "note-text";
+        n.style.background = e.color;
+        n.textContent = e.text;
 
-    container.appendChild(col);
+        n.onclick = (event) => {
+          event.stopPropagation();
+          openModal(dateStr, e);
+        };
+
+        cell.appendChild(n);
+      });
+    }
+    cell.onclick = () => openModal(dateStr);
+    col.appendChild(cell);
   }
+
+  container.appendChild(col);
+}
+
+function prevMonth() {
+  currentMonth--;
+  if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
+  }
+  createCalendar();
+}
+
+function nextMonth() {
+  currentMonth++;
+  if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
+  }
+  createCalendar();
 }
 
 async function initData() {
