@@ -118,6 +118,15 @@
       color: white;
       border: 1px solid #666;
     }
+    body.dark #modal-content input[type="date"] {
+      background-color: #3a3a3a;
+      color: white;
+      border: 1px solid #555;
+    }
+    
+    body.dark input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1); 
+    }
     #signin-btn, #signout-btn { margin: 5px; }
   </style>
 </head>
