@@ -414,6 +414,10 @@ function showDeleteChoiceModal() {
   });
 }
 
+function closeDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'none';
+}
+
 window.toggleRecurringEvents = toggleRecurringEvents;
 window.handleSignIn = handleSignIn;
 window.handleSignOut = handleSignOut;
