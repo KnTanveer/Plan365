@@ -92,6 +92,10 @@ function handleSignOut() {
   }
 }
 
+function createCalendar() {
+  console.log("createCalendar() called — implement your calendar rendering logic here.");
+}
+
 async function initData() {
   if (!calendarId) return;
   const timeMin = new Date(currentYear, 0, 1).toISOString();
