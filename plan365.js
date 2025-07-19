@@ -126,10 +126,7 @@ async function initData() {
 
     response.result.items.forEach(ev => {
       // Skip non-all-day events
-      if (!ev.start?.date || !ev.end?.date) {
-        console.warn("Skipping non-all-day event:", ev);
-        return;
-      }
+      if (!ev.start?.date || !ev.end?.date) return;
 
       const start = ev.start.date;
       const endDateObj = new Date(ev.end.date);
