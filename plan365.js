@@ -248,6 +248,13 @@ function deleteCurrentEvent() {
   closeModal();
 }
 
+window.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+  }
+});
+
 window.addEventListener("DOMContentLoaded", async () => {
   const savedToken = localStorage.getItem("accessToken");
   if (savedToken) {
