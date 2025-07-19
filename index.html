@@ -122,7 +122,7 @@
       color: black;
     }
 
-    /* Modal + Settings Shared Styles */
+    /* Shared Modal Styles */
     .popup-overlay {
       position: fixed;
       top: 0; left: 0;
@@ -158,11 +158,6 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Modal */
-    #modal {
-      z-index: 1000;
-    }
-
     #modal-content input,
     #modal-content textarea,
     #modal-content select {
@@ -196,15 +191,15 @@
     }
 
     #delete-btn:hover {
-      background-color: #c2323250;            
+      background-color: #c2323250;
     }
 
     #save-btn:hover {
-      background-color: #28a74550; 
+      background-color: #28a74550;
     }
-    
+
     #cancel-btn:hover {
-      background-color: #6c757d50; 
+      background-color: #6c757d50;
     }
 
     /* Settings */
@@ -246,10 +241,11 @@
     .close-settings:hover {
       color: red;
     }
+
     .fade-out {
       animation: fadeOut 0.3s forwards;
     }
-    
+
     @keyframes fadeOut {
       to {
         opacity: 0;
@@ -257,25 +253,29 @@
       }
     }
 
-    /* Delete modal */
+    /* Delete Modal */
     #delete-modal {
       display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
       z-index: 1001;
     }
-    
+
     #delete-modal .popup-content {
       text-align: center;
     }
-    
+
     #delete-modal .button-row {
       margin-top: 1em;
       display: flex;
       justify-content: space-between;
       gap: 10px;
     }
-    
+
     #delete-modal .button-row button {
       padding: 8px 12px;
       border: none;
@@ -286,19 +286,18 @@
       flex: 1;
       transition: background-color 0.2s ease;
     }
-    
+
     #delete-modal .button-row button:hover {
       background-color: #a93226;
     }
-    
+
     body.dark #delete-modal .button-row button {
       background-color: #e74c3c;
     }
-    
+
     body.dark #delete-modal .button-row button:hover {
       background-color: #c0392b;
     }
-    
   </style>
 </head>
 <body>
@@ -357,15 +356,16 @@
     </div>
   </div>
 
-  <div id="delete-modal" class="popup-overlay" onclick="closeDeleteModal()" style="display: none;">
-      <div class="popup-content" onclick="event.stopPropagation()">
-        <p><strong>Choose delete type:</strong></p>
-        <div class="button-row">
-          <button id="delete-all-btn">All occurrences</button>
-          <button id="delete-instance-btn">This event</button>
-        </div>
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="popup-overlay" onclick="closeDeleteModal()">
+    <div class="popup-content" onclick="event.stopPropagation()">
+      <p><strong>Choose delete type:</strong></p>
+      <div class="button-row">
+        <button id="delete-all-btn">All occurrences</button>
+        <button id="delete-instance-btn">This event</button>
       </div>
     </div>
+  </div>
 
   <script>
     function openSettings() {
@@ -383,7 +383,7 @@
 
     function toggleDarkMode() {
       const dark = document.body.classList.toggle('dark');
-      document.getElementById('theme-icon').className = dark ? 'fas fa-moonn' : 'fas fa-sun';
+      document.getElementById('theme-icon').className = dark ? 'fas fa-moon' : 'fas fa-sun';
       document.getElementById('theme-toggle-icon').className = dark ? 'fas fa-moon' : 'fas fa-sun';
       localStorage.setItem('darkMode', dark);
     }
@@ -400,25 +400,29 @@
       const isHidden = btn.textContent.includes("Show");
       btn.innerHTML = `<i class="fas fa-sync-alt"></i> ${isHidden ? "Hide" : "Show"} Recurring`;
       localStorage.setItem('hideRecurring', isHidden ? "false" : "true");
-      // Add actual logic to hide/show recurring events
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').style.display = 'none';
+    }
+
+    function openDeleteModal() {
+      document.getElementById('delete-modal').style.display = 'flex';
     }
 
     window.onload = () => {
-      // Theme
       const darkMode = localStorage.getItem('darkMode') === 'true';
       if (darkMode) document.body.classList.add('dark');
       const icon = darkMode ? 'fas fa-sun' : 'fas fa-moon';
       document.getElementById('theme-icon').className = icon;
       document.getElementById('theme-toggle-icon').className = icon;
 
-      // Today color
       const storedColor = localStorage.getItem('todayColor');
       if (storedColor) {
         changeTodayColor(storedColor);
         document.getElementById('today-color-input').value = storedColor;
       }
 
-      // Recurring toggle
       const hideRecurring = localStorage.getItem('hideRecurring');
       if (hideRecurring === "true") {
         document.getElementById('toggle-recurring-btn').innerHTML = `<i class="fas fa-sync-alt"></i> Show Recurring`;
