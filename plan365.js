@@ -27,6 +27,15 @@ function gapiLoad() {
   });
 }
 
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+  if (document.body.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+}
+
 function toggleRecurringEvents() {
   showRecurringEvents = !showRecurringEvents;
   document.getElementById("toggle-recurring-btn").textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
@@ -133,3 +142,28 @@ async function initData() {
     }
   }
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+  }
+});
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const savedToken = localStorage.getItem("accessToken");
+  if (savedToken) {
+    accessToken = savedToken;
+    await gapiLoad();
+    gapi.client.setToken({ access_token: accessToken });
+    document.getElementById('signin-btn').style.display = 'none';
+    document.getElementById('signout-btn').style.display = 'inline-block';
+
+    setInterval(() => {
+      tokenClient?.requestAccessToken({ prompt: '' });
+    }, 55 * 60 * 1000);
+
+    await initCalendarId();
+    await initData();
+  }
+});
