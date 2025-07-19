@@ -7,7 +7,7 @@ let accessToken = null;
 let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
-let lastUsedColor = localStorage.getItem("lastColor") || "#b6eeb6";
+let lastUsedColor = localStorage.getItem("lastUsedColor") || "#b6eeb6";
 
 function showSpinner(show) {
   const spinner = document.getElementById("spinner");
@@ -32,7 +32,6 @@ function openModal(dateStr, event = null) {
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("repeat-interval").value = event?.recurrenceInterval || 1;
   document.getElementById("repeat-until").value = event?.recurrenceUntil || "";
-  document.getElementById("repeat-count").value = event?.recurrenceCount || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
@@ -52,10 +51,9 @@ async function saveNote() {
   const recurrence = document.getElementById("repeat-select").value;
   const interval = parseInt(document.getElementById("repeat-interval").value) || 1;
   const until = document.getElementById("repeat-until").value;
-  const count = parseInt(document.getElementById("repeat-count").value);
 
   if (!start || !end || !text) return alert("Please fill all fields");
-  localStorage.setItem("lastColor", color);
+  localStorage.setItem("lastUsedColor", color);
   const metadata = JSON.stringify({ color });
 
   let recurrenceRule;
@@ -63,30 +61,32 @@ async function saveNote() {
     recurrenceRule = `RRULE:FREQ=${recurrence};INTERVAL=${interval}`;
     if (until) {
       recurrenceRule += `;UNTIL=${until.replace(/-/g, '')}T000000Z`;
-    } else if (!isNaN(count)) {
-      recurrenceRule += `;COUNT=${count}`;
     }
     recurrenceRule = [recurrenceRule];
   }
-
-  const eventPayload = {
-    summary: text,
-    description: metadata,
-    start: { date: start },
-    end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
-    recurrence: recurrenceRule
-  };
 
   if (currentEditingEvent) {
     await gapi.client.calendar.events.update({
       calendarId,
       eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, ""),
-      resource: eventPayload
+      resource: {
+        summary: text,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule
+      }
     });
   } else {
     await gapi.client.calendar.events.insert({
       calendarId,
-      resource: eventPayload
+      resource: {
+        summary: text,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule
+      }
     });
   }
 
@@ -96,16 +96,14 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
+  const confirmDelete = confirm("Delete just this event? Press 'Cancel' to delete the entire series.");
+  const eventId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
 
-  const choice = confirm("Delete the entire series?\nClick OK for full series, Cancel for only this event.");
-  if (choice) {
-    await gapi.client.calendar.events.delete({
-      calendarId,
-      eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
-    });
-  } else {
-    alert("To delete a single instance of a recurring event, please delete it directly from Google Calendar.");
-  }
+  await gapi.client.calendar.events.delete({
+    calendarId,
+    eventId,
+    ...(confirmDelete ? {} : { sendUpdates: "all" })
+  });
 
   closeModal();
   await initData();
