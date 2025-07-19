@@ -97,6 +97,24 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
+
+  try {
+    const baseId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
+    await gapi.client.calendar.events.delete({
+      calendarId,
+      eventId: baseId
+    });
+  } catch (e) {
+    console.error("Failed to delete event:", e);
+    alert("Could not delete event.");
+  }
+
+  closeModal();
+  await initData();
+}
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
   const confirmDelete = confirm("Delete this event and all recurrences?");
   if (!confirmDelete) return;
 
