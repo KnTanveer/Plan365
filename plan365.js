@@ -11,7 +11,7 @@ let showRecurringEvents = true;
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle("dark");
   const icon = document.getElementById("theme-toggle-icon");
-  if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
+  if (icon) icon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
   localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 
