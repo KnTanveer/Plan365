@@ -42,6 +42,32 @@ function toggleRecurringEvents() {
   initData();
 }
 
+async function initCalendarId() {
+  const result = await gapi.client.calendar.calendarList.list();
+  const exists = result.result.items.find(c => c.summary === "Plan365");
+  if (exists) {
+    calendarId = exists.id;
+  } else {
+    const res = await gapi.client.calendar.calendars.insert({ summary: "Plan365" });
+    calendarId = res.result.id;
+  }
+}
+
+function handleSignOut() {
+  if (accessToken) {
+    gapi.client.setToken(null);
+    google.accounts.oauth2.revoke(accessToken, () => {
+      accessToken = null;
+      calendarId = null;
+      localStorage.removeItem("accessToken");
+      document.getElementById('signin-btn').style.display = 'inline-block';
+      document.getElementById('signout-btn').style.display = 'none';
+      calendarData = {};
+      createCalendar();
+    });
+  }
+}
+
 async function initData() {
   if (!calendarId) return;
   const timeMin = new Date(currentYear, 0, 1).toISOString();
