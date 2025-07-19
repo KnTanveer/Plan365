@@ -55,8 +55,35 @@ function openModal(dateStr, event = null) {
 }
 
 function closeModal() {
-  document.getElementById("modal").style.display = "none";
-  currentEditingEvent = null;
+  const modal = document.getElementById("modal");
+  const content = document.getElementById("modal-content"); // Ensure modal-content exists
+  if (modal && content) {
+    content.classList.add("fade-out");
+    modal.classList.add("fade-out");
+    content.addEventListener("animationend", () => {
+      content.classList.remove("fade-out");
+      modal.classList.remove("fade-out");
+      modal.style.display = "none";
+      currentEditingEvent = null;
+    }, { once: true });
+  } else {
+    modal.style.display = "none";
+    currentEditingEvent = null;
+  }
+}
+
+function closeSettings() {
+  const panel = document.getElementById("settings-panel");
+  const overlay = document.getElementById("settings-overlay");
+  if (panel && overlay) {
+    panel.classList.add("fade-out");
+    overlay.classList.add("fade-out");
+    panel.addEventListener("animationend", () => {
+      panel.classList.remove("fade-out");
+      overlay.classList.remove("fade-out");
+      overlay.style.display = "none";
+    }, { once: true });
+  }
 }
 
 async function saveNote() {
