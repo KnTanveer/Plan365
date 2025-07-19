@@ -33,7 +33,7 @@ function addToRange(event) {
 function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
-  document.getElementById("note-text").value = event ? event.text.replace(/^🔁 /, '') : "";
+  document.getElementById("note-text").value = event ? event.text.replace(/^↻ /, '') : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
