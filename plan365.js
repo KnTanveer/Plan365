@@ -16,16 +16,33 @@ function gapiLoad() {
   });
 }
 
+function refreshAccessTokenAndRetry(callback) {
+  return new Promise((resolve) => {
+    tokenClient.callback = async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      gapi.client.setToken({ access_token: accessToken });
+      try {
+        await callback(); // retry the original action
+        resolve();
+      } catch (err) {
+        console.error("Retry failed after token refresh:", err);
+        alert("Session expired. Please log in again.");
+        handleSignOut();
+      }
+    };
+    tokenClient.requestAccessToken({ prompt: '' }); // silent refresh
+  });
+}
+
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
-  
   if (document.body.classList.contains("dark")) {
     localStorage.setItem("theme", "dark");
   } else {
     localStorage.setItem("theme", "light");
   }
 }
-
 
 function changeYear(offset) {
   currentYear += offset;
@@ -52,6 +69,10 @@ function handleSignIn() {
 
       document.getElementById('signin-btn').style.display = 'none';
       document.getElementById('signout-btn').style.display = 'inline-block';
+
+      setInterval(() => {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }, 55 * 60 * 1000); // Refresh every 55 minutes
 
       await initCalendarId();
       await initData();
@@ -105,7 +126,6 @@ async function initData() {
 
     response.result.items.forEach(ev => {
       const start = ev.start.date;
-
       const endDateObj = new Date(ev.end.date);
       endDateObj.setDate(endDateObj.getDate() - 1);
       const end = endDateObj.toISOString().split("T")[0];
@@ -125,8 +145,8 @@ async function initData() {
   } catch (e) {
     console.error("Failed to fetch events:", e);
     if (e.status === 401) {
-      alert("Session expired. Please sign in again.");
-      handleSignOut();
+      console.log("Access token may have expired. Trying silent refresh...");
+      await refreshAccessTokenAndRetry(initData);
     }
   }
 }
@@ -263,6 +283,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     gapi.client.setToken({ access_token: accessToken });
     document.getElementById('signin-btn').style.display = 'none';
     document.getElementById('signout-btn').style.display = 'inline-block';
+
+    // Auto-refresh token every 55 minutes (optional)
+    setInterval(() => {
+      tokenClient?.requestAccessToken({ prompt: '' });
+    }, 55 * 60 * 1000);
+
     await initCalendarId();
     await initData();
   }
