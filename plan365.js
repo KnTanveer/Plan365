@@ -96,25 +96,46 @@ function createCalendar() {
   const container = document.getElementById("calendar");
   if (!container) return;
 
-  container.innerHTML = ""; // clear existing content
+  container.innerHTML = "";
+  document.getElementById("year-label").textContent = currentYear;
 
-  const sortedDates = Object.keys(calendarData).sort();
-  sortedDates.forEach(date => {
-    const events = calendarData[date];
-    const dayDiv = document.createElement("div");
-    dayDiv.className = "calendar-day";
-    dayDiv.innerHTML = `<strong>${date}</strong>`;
+  for (let month = 0; month < 12; month++) {
+    const col = document.createElement("div");
+    col.className = "month-column";
+    const label = document.createElement("h3");
+    label.textContent = new Date(currentYear, month).toLocaleString("default", { month: "long" });
+    col.appendChild(label);
 
-    events.forEach(ev => {
-      const evDiv = document.createElement("div");
-      evDiv.className = "calendar-event";
-      evDiv.textContent = ev.text;
-      evDiv.style.backgroundColor = ev.color || "#ccc";
-      dayDiv.appendChild(evDiv);
-    });
+    const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      if (dateStr === new Date().toISOString().split("T")[0]) {
+        cell.classList.add("today");
+      }
+      cell.innerHTML = `<div class='day-label'>${day}</div>`;
+      if (calendarData[dateStr]) {
+        calendarData[dateStr].forEach(e => {
+          const n = document.createElement("div");
+          n.className = "note-text";
+          n.style.background = e.color;
+          n.textContent = e.text;
 
-    container.appendChild(dayDiv);
-  });
+          n.onclick = (event) => {
+            event.stopPropagation();
+            openModal(dateStr, e);
+          };
+
+          cell.appendChild(n);
+        });
+      }
+      cell.onclick = () => openModal(dateStr);
+      col.appendChild(cell);
+    }
+
+    container.appendChild(col);
+  }
 }
 
 async function initData() {
