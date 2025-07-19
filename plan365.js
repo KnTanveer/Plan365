@@ -1,13 +1,12 @@
 // --- Constants and State ---
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
-let calendarData = new Map(); // ✅ Use Map
+const calendarData = new Map();
 let calendarId = null;
 let accessToken = null;
 let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
-let lastScroll = 0;
 
 function showSpinner(show) {
   const spinner = document.getElementById("spinner");
@@ -18,14 +17,6 @@ function smoothScrollCalendar(delta) {
   const container = document.getElementById("calendar");
   if (!container) return;
   container.scrollBy({ left: delta, behavior: "smooth" });
-}
-
-function throttledScroll(delta) {
-  const now = Date.now();
-  if (now - lastScroll > 100) {
-    smoothScrollCalendar(delta);
-    lastScroll = now;
-  }
 }
 
 function addToRange(event) {
@@ -39,30 +30,83 @@ function addToRange(event) {
   }
 }
 
-function renderDaysForMonth(wrapper, year, month) {
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const todayStr = new Date().toISOString().split("T")[0];
+function openModal(dateStr, event = null) {
+  document.getElementById("start-date").value = event ? event.range.start : dateStr;
+  document.getElementById("end-date").value = event ? event.range.end : dateStr;
+  document.getElementById("note-text").value = event ? event.text.replace(/↻$/, '').trim() : "";
+  document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
+  document.getElementById("repeat-select").value = event?.recurrenceType || "";
+  document.getElementById("duration-display").textContent = "";
+  document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
+  currentEditingEvent = event;
+  document.getElementById("modal").style.display = "flex";
+}
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const cell = document.createElement("div");
-    cell.className = "day-cell";
-    if (dateStr === todayStr) cell.classList.add("today");
-    cell.innerHTML = `<div class='day-label'>${day}</div>`;
-    const events = calendarData.get(dateStr);
-    if (events) {
-      events.forEach(e => {
-        const n = document.createElement("div");
-        n.className = "note-text";
-        n.style.background = e.color;
-        n.textContent = e.text;
-        n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
-        cell.appendChild(n);
-      });
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  currentEditingEvent = null;
+}
+
+async function saveNote() {
+  const start = document.getElementById("start-date").value;
+  const end = document.getElementById("end-date").value;
+  const text = document.getElementById("note-text").value;
+  const color = document.getElementById("event-color").value;
+  const recurrence = document.getElementById("repeat-select").value;
+
+  if (!start || !end || !text) return alert("Please fill all fields");
+
+  const metadata = JSON.stringify({ color, recurrence });
+  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
+  localStorage.setItem("lastColor", color);
+
+  const cleanText = text.replace(/↻/g, "").trim();
+  const displayText = recurrence ? `${cleanText} ↻` : cleanText;
+
+  if (currentEditingEvent) {
+    try {
+      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: currentEditingEvent.googleId });
+      const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
+      await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
+    } catch (e) {
+      console.error("Failed to delete previous event:", e);
     }
-    cell.onclick = () => openModal(dateStr);
-    wrapper.appendChild(cell);
   }
+
+  await gapi.client.calendar.events.insert({
+    calendarId,
+    resource: {
+      summary: displayText,
+      description: metadata,
+      start: { date: start },
+      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
+      recurrence: recurrenceRule || []
+    }
+  });
+
+  closeModal();
+  await initData();
+}
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
+  const isRecurring = currentEditingEvent.recurrenceType != null;
+  const deleteWholeSeries = isRecurring && confirm("Delete the entire recurring series? Click 'Cancel' to delete just this instance.");
+  try {
+    let eventIdToDelete = currentEditingEvent.googleId;
+    if (deleteWholeSeries) {
+      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: eventIdToDelete });
+      if (fullEvent.result.recurringEventId) {
+        eventIdToDelete = fullEvent.result.recurringEventId;
+      }
+    }
+    await gapi.client.calendar.events.delete({ calendarId, eventId: eventIdToDelete });
+  } catch (e) {
+    console.error("Failed to delete event:", e);
+    alert("Could not delete event.");
+  }
+  closeModal();
+  await initData();
 }
 
 function createCalendar() {
@@ -70,7 +114,6 @@ function createCalendar() {
   if (!container) return;
   container.innerHTML = "";
   document.getElementById("year-label").textContent = `${currentYear}`;
-  const calendarFragment = document.createDocumentFragment();
 
   for (let month = 0; month < 12; month++) {
     const col = document.createElement("div");
@@ -82,36 +125,188 @@ function createCalendar() {
 
     const daysWrapper = document.createElement("div");
     daysWrapper.className = "days-wrapper";
-    daysWrapper.style.display = "none";
 
     header.onclick = () => {
-      if (daysWrapper.children.length === 0) {
-        renderDaysForMonth(daysWrapper, currentYear, month); // ✅ Lazy rendering
-      }
       daysWrapper.style.display = daysWrapper.style.display === "none" ? "block" : "none";
     };
 
+    const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
+      cell.innerHTML = `<div class='day-label'>${day}</div>`;
+      if (calendarData.has(dateStr)) {
+        calendarData.get(dateStr).forEach(e => {
+          const n = document.createElement("div");
+          n.className = "note-text";
+          n.style.background = e.color;
+          n.textContent = e.text;
+          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
+          cell.appendChild(n);
+        });
+      }
+      cell.onclick = () => openModal(dateStr);
+      daysWrapper.appendChild(cell);
+    }
+
     col.appendChild(header);
     col.appendChild(daysWrapper);
-    calendarFragment.appendChild(col);
+    container.appendChild(col);
   }
+}
 
-  container.appendChild(calendarFragment);
+function changeYear(delta) {
+  currentYear += delta;
+  initData();
+}
+
+function goToToday() {
+  currentYear = new Date().getFullYear();
+  currentMonth = new Date().getMonth();
+  initData();
+}
+
+async function initCalendarId() {
+  const result = await gapi.client.calendar.calendarList.list();
+  const exists = result.result.items.find(c => c.summary === "Plan365");
+  calendarId = exists ? exists.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
+}
+
+async function initData() {
+  if (!calendarId) return;
+  showSpinner(true);
+  const timeMin = new Date(currentYear, 0, 1).toISOString();
+  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
+
+  try {
+    const response = await gapi.client.calendar.events.list({
+      calendarId, timeMin, timeMax, showDeleted: false,
+      singleEvents: true, orderBy: "startTime"
+    });
+
+    calendarData.clear();
+
+    response.result.items.forEach(ev => {
+      const start = ev.start?.date;
+      const endRaw = ev.end?.date;
+      if (!start || !endRaw) return;
+
+      const rrule = ev.recurrence?.[0] || "";
+      if (!showRecurringEvents && rrule) return;
+      const metadata = ev.description ? JSON.parse(ev.description) : {};
+      const color = metadata.color || '#b6eeb6';
+
+      const staticize = (count, adjustFunc) => {
+        for (let i = 0; i < count; i++) {
+          const startDate = new Date(start);
+          const endDate = new Date(endRaw);
+          adjustFunc(startDate, i);
+          adjustFunc(endDate, i);
+          endDate.setDate(endDate.getDate() - 1);
+          const eventCopy = {
+            text: ev.summary,
+            color,
+            range: {
+              start: startDate.toISOString().split("T")[0],
+              end: endDate.toISOString().split("T")[0]
+            },
+            googleId: ev.id + `_repeat_${i}`,
+            recurrenceType: metadata.recurrence || null
+          };
+          addToRange(eventCopy);
+        }
+      };
+
+      if (rrule.startsWith("RRULE:FREQ=YEARLY")) return staticize(5, (d, i) => d.setFullYear(d.getFullYear() + i));
+      if (rrule.startsWith("RRULE:FREQ=MONTHLY")) return staticize(6, (d, i) => d.setMonth(d.getMonth() + i));
+      if (rrule.startsWith("RRULE:FREQ=WEEKLY")) return staticize(8, (d, i) => d.setDate(d.getDate() + 7 * i));
+      if (rrule) return;
+
+      const endDateObj = new Date(endRaw);
+      if (isNaN(endDateObj.getTime())) return;
+      endDateObj.setDate(endDateObj.getDate() - 1);
+      const newEvent = {
+        text: ev.summary,
+        color,
+        range: { start, end: endDateObj.toISOString().split("T")[0] },
+        googleId: ev.id,
+        recurrenceType: metadata.recurrence || null
+      };
+      addToRange(newEvent);
+    });
+
+    createCalendar();
+  } catch (e) {
+    console.error("Failed to fetch events:", e);
+    if (e.status === 401) {
+      alert("Session expired. Please sign in again.");
+      handleSignOut();
+    }
+  } finally {
+    showSpinner(false);
+  }
+}
+
+function toggleRecurringEvents() {
+  showRecurringEvents = !showRecurringEvents;
+  document.getElementById("toggle-recurring-btn").textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
+  initData();
+}
+
+// --- Auth and Startup ---
+function handleSignIn() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    callback: async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      await gapiLoad();
+      gapi.client.setToken({ access_token: accessToken });
+      document.getElementById("signin-btn").style.display = "none";
+      document.getElementById("signout-btn").style.display = "inline-block";
+      setInterval(() => tokenClient.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+      await initCalendarId();
+      await initData();
+    },
+  });
+  tokenClient.requestAccessToken();
+}
+
+function handleSignOut() {
+  if (accessToken) {
+    gapi.client.setToken(null);
+    google.accounts.oauth2.revoke(accessToken, () => {
+      accessToken = null;
+      calendarId = null;
+      localStorage.removeItem("accessToken");
+      document.getElementById("signin-btn").style.display = "inline-block";
+      document.getElementById("signout-btn").style.display = "none";
+      calendarData.clear();
+      createCalendar();
+    });
+  }
+}
+
+function gapiLoad() {
+  return new Promise(resolve => {
+    gapi.load("client", async () => {
+      await gapi.client.init({ discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"] });
+      resolve();
+    });
+  });
 }
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowRight") throttledScroll(100);
-  if (e.key === "ArrowLeft") throttledScroll(-100);
+  if (e.key === "ArrowRight") smoothScrollCalendar(100);
+  if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
 });
 
 window.addEventListener("DOMContentLoaded", async () => {
-  const config = {
-    theme: localStorage.getItem("theme"),
-    accessToken: localStorage.getItem("accessToken"),
-    lastColor: localStorage.getItem("lastColor")
-  };
-
-  if (config.theme === "dark") document.body.classList.add("dark");
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") document.body.classList.add("dark");
 
   const btn = document.createElement("button");
   btn.id = "toggle-recurring-btn";
@@ -119,12 +314,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   btn.onclick = toggleRecurringEvents;
   document.body.insertBefore(btn, document.body.firstChild);
 
-  if (config.accessToken) {
-    accessToken = config.accessToken;
+  const savedToken = localStorage.getItem("accessToken");
+  if (savedToken) {
+    accessToken = savedToken;
     await gapiLoad();
     gapi.client.setToken({ access_token: accessToken });
-    document.getElementById('signin-btn').style.display = 'none';
-    document.getElementById('signout-btn').style.display = 'inline-block';
+    document.getElementById("signin-btn").style.display = "none";
+    document.getElementById("signout-btn").style.display = "inline-block";
     setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
     await initCalendarId();
     await initData();
