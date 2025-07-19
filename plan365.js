@@ -71,16 +71,36 @@ async function saveNote() {
     }
   }
 
+  const displayText = recurrence ? `${text} 🔁` : text;
+
   await gapi.client.calendar.events.insert({
     calendarId,
     resource: {
-      summary: recurrence ? `🔁 ${text}` : text,
+      summary: displayText,
       description: metadata,
       start: { date: start },
       end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
       recurrence: recurrenceRule || []
     }
   });
+
+  closeModal();
+  await initData();
+}
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
+
+  try {
+    const baseId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
+    await gapi.client.calendar.events.delete({
+      calendarId,
+      eventId: baseId
+    });
+  } catch (e) {
+    console.error("Failed to delete event:", e);
+    alert("Could not delete event.");
+  }
 
   closeModal();
   await initData();
