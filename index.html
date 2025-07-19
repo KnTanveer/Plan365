@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Plan365</title>
-  <link rel="icon" href="/favicon.png" type="image/png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <style>
+    /* === Your existing styles from the previous HTML === */
     body {
       font-family: Roboto, Arial, sans-serif;
       margin: 0;
@@ -83,7 +84,7 @@
       border-radius: 10px;
       width: 300px;
     }
-    body.dark #modal-content { background: #2c2c2c; }
+    body.dark #modal-content { background: #2c2c2c; color: white; }
     #modal-content input,
     #modal-content textarea {
       width: 100%;
@@ -96,11 +97,6 @@
       flex-wrap: wrap;
       gap: 5px;
     }
-    body.dark #modal-content {
-      background: #2c2c2c;
-      color: white; 
-    }
-    
     body.dark #modal-content input,
     body.dark #modal-content textarea,
     body.dark #modal-content select {
@@ -108,12 +104,10 @@
       color: white;
       border: 1px solid #555; 
     }
-    
     body.dark #modal-content input[type="color"] {
       background-color: transparent; 
       padding: 2px;
     }
-    
     body.dark #modal-content button {
       background-color: #444;
       color: white;
@@ -126,48 +120,48 @@
       padding: 5px;
       border-radius: 4px;
     }
-    
     body.dark input[type="date"]::-webkit-calendar-picker-indicator {
       background: transparent;
       filter: invert(1);
       cursor: pointer;
     }
-    #signin-btn, #signout-btn { margin: 5px; }
+    #signin-btn, #signout-btn, #toggle-recurring-btn { margin: 5px; }
   </style>
 </head>
 <body>
-<div id="header">
-  <div>
-    <button onclick="changeYear(-1)">⏪ Prev</button>
-    <button onclick="goToToday()">📅 Today</button>
-    <button onclick="changeYear(1)">Next ⏩</button>
-  </div>
-  <h2>📅 Plan365 - <span id="year-label"></span></h2>
-  <div>
-    <button id="signin-btn" onclick="handleSignIn()">🔐 Sign In</button>
-    <button id="signout-btn" style="display:none" onclick="handleSignOut()">🚪 Log Out</button>
-    <button onclick="toggleDarkMode()">🌓 Theme</button>
-  </div>
-</div>
-<div id="calendar"></div>
-<div id="modal">
-  <div id="modal-content">
-    <label><strong>Start:</strong> <input type="date" id="start-date"></label>
-    <label><strong>End:</strong> <input type="date" id="end-date"></label>
-    <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
-    <label><strong>Color:</strong> <input type="color" id="event-color"></label>
-    <p id="duration-display"></p>
-    <div class="actions">
-      <button onclick="saveNote()">Save</button>
-      <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
-      <button onclick="closeModal()">Cancel</button>
+  <div id="header">
+    <div>
+      <button onclick="changeYear(-1)">⏪ Prev</button>
+      <button onclick="goToToday()">📅 Today</button>
+      <button onclick="changeYear(1)">Next ⏩</button>
+    </div>
+    <h2>📅 Plan365 - <span id="year-label"></span></h2>
+    <div>
+      <button id="signin-btn" onclick="handleSignIn()">🔐 Sign In</button>
+      <button id="signout-btn" style="display:none" onclick="handleSignOut()">🚪 Log Out</button>
+      <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()">Hide Recurring</button>
+      <button onclick="toggleDarkMode()">🌓 Theme</button>
     </div>
   </div>
-</div>
-<script>
-  // All JavaScript functionality is now properly defined and included at the bottom of this HTML file.
-</script>
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="plan365.js"></script>
+
+  <div id="calendar"></div>
+
+  <div id="modal">
+    <div id="modal-content">
+      <label><strong>Start:</strong> <input type="date" id="start-date"></label>
+      <label><strong>End:</strong> <input type="date" id="end-date"></label>
+      <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
+      <label><strong>Color:</strong> <input type="color" id="event-color"></label>
+      <p id="duration-display"></p>
+      <div class="actions">
+        <button onclick="saveNote()">Save</button>
+        <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
+        <button onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript is loaded last -->
+  <script src="plan365.js"></script>
 </body>
 </html>
