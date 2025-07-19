@@ -28,6 +28,7 @@ function openModal(dateStr, event = null) {
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
   document.getElementById("note-text").value = event ? event.text : "";
   document.getElementById("event-color").value = event ? event.color : "#b6eeb6";
+  document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
@@ -44,9 +45,11 @@ async function saveNote() {
   const end = document.getElementById("end-date").value;
   const text = document.getElementById("note-text").value;
   const color = document.getElementById("event-color").value;
+  const recurrence = document.getElementById("repeat-select").value;
 
   if (!start || !end || !text) return alert("Please fill all fields");
   const metadata = JSON.stringify({ color });
+  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
 
   if (currentEditingEvent) {
     await gapi.client.calendar.events.update({
@@ -56,7 +59,8 @@ async function saveNote() {
         summary: text,
         description: metadata,
         start: { date: start },
-        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] }
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule
       }
     });
   } else {
@@ -66,7 +70,8 @@ async function saveNote() {
         summary: text,
         description: metadata,
         start: { date: start },
-        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] }
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule
       }
     });
   }
