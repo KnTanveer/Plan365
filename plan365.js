@@ -60,15 +60,13 @@ async function saveNote() {
   const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
   localStorage.setItem("lastColor", color);
 
-  const displayText = recurrence ? `↻ ${text}` : text;
+  const displayText = recurrence ? `🔁 ${text}` : text;
 
-  // 🧹 Delete all matching events if editing
   if (currentEditingEvent) {
-    const recurringId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, '');
     try {
       await gapi.client.calendar.events.delete({
         calendarId,
-        eventId: recurringId
+        eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, '')
       });
     } catch (e) {
       console.error("Failed to delete previous recurring events:", e);
@@ -93,25 +91,19 @@ async function saveNote() {
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
 
-  const deleteChoice = confirm("Delete the entire recurring series? Click 'Cancel' to delete just this instance.");
+  const isRecurring = currentEditingEvent.recurrenceType != null;
+  let deleteChoice = true;
+
+  if (isRecurring) {
+    deleteChoice = confirm("Delete the entire recurring series? Click 'Cancel' to delete just this instance.");
+  }
 
   try {
-    if (deleteChoice) {
-      // 🔁 Delete recurring master event
-      const recurringId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, '');
-
-      await gapi.client.calendar.events.delete({
-        calendarId,
-        eventId: recurringId
-      });
-
-    } else {
-      // 🗑️ Delete single event instance
-      await gapi.client.calendar.events.delete({
-        calendarId,
-        eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, '')
-      });
-    }
+    const eventIdToDelete = currentEditingEvent.googleId.replace(/_repeat_\d+$/, '');
+    await gapi.client.calendar.events.delete({
+      calendarId,
+      eventId: eventIdToDelete
+    });
   } catch (e) {
     console.error("Failed to delete event:", e);
     alert("Could not delete event.");
