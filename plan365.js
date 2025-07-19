@@ -63,32 +63,36 @@ async function saveNote() {
   const cleanText = text.replace(/↻/g, "").trim();
   const displayText = recurrence ? `${cleanText} ↻` : cleanText;
 
-  if (currentEditingEvent) {
-    try {
+  try {
+    if (currentEditingEvent) {
       const fullEvent = await gapi.client.calendar.events.get({
         calendarId,
         eventId: currentEditingEvent.googleId
       });
       const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
       await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
-    } catch (e) {
-      console.error("Failed to delete previous event:", e);
+    }
+
+    await gapi.client.calendar.events.insert({
+      calendarId,
+      resource: {
+        summary: displayText,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule || []
+      }
+    });
+
+    closeModal();
+    await initData();
+  } catch (e) {
+    console.error("Error saving event:", e);
+    if (e.status === 401) {
+      alert("Session expired. Please sign in again.");
+      handleSignOut();
     }
   }
-
-  await gapi.client.calendar.events.insert({
-    calendarId,
-    resource: {
-      summary: displayText,
-      description: metadata,
-      start: { date: start },
-      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-      recurrence: recurrenceRule || []
-    }
-  });
-
-  closeModal();
-  await initData();
 }
 
 async function deleteCurrentEvent() {
@@ -107,12 +111,15 @@ async function deleteCurrentEvent() {
       }
     }
     await gapi.client.calendar.events.delete({ calendarId, eventId: eventIdToDelete });
+    closeModal();
+    await initData();
   } catch (e) {
     console.error("Failed to delete event:", e);
     alert("Could not delete event.");
+    if (e.status === 401) {
+      handleSignOut();
+    }
   }
-  closeModal();
-  await initData();
 }
 
 function toggleRecurringEvents() {
@@ -296,6 +303,7 @@ async function initData() {
   } catch (e) {
     console.error("Failed to fetch events:", e);
     if (e.status === 401) {
+      gapi.client.setToken(null);
       alert("Session expired. Please sign in again.");
       handleSignOut();
     }
@@ -309,7 +317,8 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
 });
 
-window.addEventListener("DOMContentLoaded", () => {
+// ✅ Combined DOMContentLoaded
+window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") document.body.classList.add("dark");
 
@@ -318,9 +327,7 @@ window.addEventListener("DOMContentLoaded", () => {
   btn.textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
   btn.onclick = toggleRecurringEvents;
   document.body.insertBefore(btn, document.body.firstChild);
-});
 
-window.addEventListener("DOMContentLoaded", async () => {
   const savedToken = localStorage.getItem("accessToken");
   if (savedToken) {
     accessToken = savedToken;
