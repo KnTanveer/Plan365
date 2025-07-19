@@ -23,6 +23,72 @@ function addToRange(event) {
   }
 }
 
+function openModal(dateStr, event = null) {
+  document.getElementById("start-date").value = event ? event.range.start : dateStr;
+  document.getElementById("end-date").value = event ? event.range.end : dateStr;
+  document.getElementById("note-text").value = event ? event.text : "";
+  document.getElementById("event-color").value = event ? event.color : "#b6eeb6";
+  document.getElementById("duration-display").textContent = "";
+  document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
+  currentEditingEvent = event;
+  document.getElementById("modal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  currentEditingEvent = null;
+}
+
+async function saveNote() {
+  const start = document.getElementById("start-date").value;
+  const end = document.getElementById("end-date").value;
+  const text = document.getElementById("note-text").value;
+  const color = document.getElementById("event-color").value;
+
+  if (!start || !end || !text) return alert("Please fill all fields");
+  const metadata = JSON.stringify({ color });
+
+  if (currentEditingEvent) {
+    await gapi.client.calendar.events.update({
+      calendarId,
+      eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, ""),
+      resource: {
+        summary: text,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] }
+      }
+    });
+  } else {
+    await gapi.client.calendar.events.insert({
+      calendarId,
+      resource: {
+        summary: text,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] }
+      }
+    });
+  }
+
+  closeModal();
+  await initData();
+}
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
+  const confirmDelete = confirm("Delete this event?");
+  if (!confirmDelete) return;
+
+  await gapi.client.calendar.events.delete({
+    calendarId,
+    eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
+  });
+
+  closeModal();
+  await initData();
+}
+
 function gapiLoad() {
   return new Promise((resolve) => {
     gapi.load("client", async () => {
