@@ -27,7 +27,7 @@ function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
   document.getElementById("note-text").value = event ? event.text : "";
-  document.getElementById("event-color").value = event ? event.color : "#b6eeb6";
+  document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
@@ -51,6 +51,8 @@ async function saveNote() {
   const metadata = JSON.stringify({ color });
   const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
 
+  localStorage.setItem("lastColor", color);
+
   if (currentEditingEvent) {
     await gapi.client.calendar.events.update({
       calendarId,
@@ -60,7 +62,7 @@ async function saveNote() {
         description: metadata,
         start: { date: start },
         end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
-        recurrence: recurrenceRule
+        recurrence: recurrenceRule || []
       }
     });
   } else {
@@ -71,7 +73,7 @@ async function saveNote() {
         description: metadata,
         start: { date: start },
         end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
-        recurrence: recurrenceRule
+        recurrence: recurrenceRule || []
       }
     });
   }
@@ -82,12 +84,14 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
-  const confirmDelete = confirm("Delete this event?");
+  const confirmDelete = confirm("Delete this event and all its recurrences?");
   if (!confirmDelete) return;
+
+  const baseId = currentEditingEvent.googleId.split("_repeat_")[0];
 
   await gapi.client.calendar.events.delete({
     calendarId,
-    eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
+    eventId: baseId
   });
 
   closeModal();
@@ -239,11 +243,11 @@ async function initData() {
       if (!start || !endRaw) return skippedCount++;
 
       const rrule = ev.recurrence?.[0] || "";
-      if (!showRecurringEvents && rrule) return;
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
 
       const staticize = (count, adjustFunc) => {
+        if (!showRecurringEvents) return;
         for (let i = 0; i < count; i++) {
           const startDate = new Date(start);
           const endDate = new Date(endRaw);
@@ -266,7 +270,7 @@ async function initData() {
       if (rrule.startsWith("RRULE:FREQ=YEARLY")) return staticize(5, (d, i) => d.setFullYear(d.getFullYear() + i));
       if (rrule.startsWith("RRULE:FREQ=MONTHLY")) return staticize(6, (d, i) => d.setMonth(d.getMonth() + i));
       if (rrule.startsWith("RRULE:FREQ=WEEKLY")) return staticize(8, (d, i) => d.setDate(d.getDate() + 7 * i));
-      if (rrule) return skippedCount++;
+      if (rrule && !showRecurringEvents) return;
 
       const endDateObj = new Date(endRaw);
       if (isNaN(endDateObj.getTime())) return skippedCount++;
@@ -309,4 +313,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     await initCalendarId();
     await initData();
   }
+});
+
+// Keyboard horizontal scrolling with < and >
+window.addEventListener("keydown", (e) => {
+  const container = document.getElementById("calendar");
+  if (!container) return;
+  if (e.key === "ArrowRight") container.scrollLeft += 100;
+  if (e.key === "ArrowLeft") container.scrollLeft -= 100;
 });
