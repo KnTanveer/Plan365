@@ -130,7 +130,7 @@ async function saveNote() {
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
   const isRecurring = currentEditingEvent.recurrenceType != null;
-  const deleteWholeSeries = isRecurring && confirm("Delete the entire recurring series? Click 'Cancel' to delete just this instance.");
+  const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
   try {
     let eventIdToDelete = currentEditingEvent.googleId;
     if (deleteWholeSeries) {
@@ -384,6 +384,35 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (icon) icon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
   }
 });
+
+function showDeleteChoiceModal() {
+  return new Promise(resolve => {
+    const modal = document.getElementById("delete-modal");
+    const deleteAllBtn = document.getElementById("delete-all-btn");
+    const deleteInstanceBtn = document.getElementById("delete-instance-btn");
+
+    modal.style.display = "flex";
+
+    const cleanup = () => {
+      modal.style.display = "none";
+      deleteAllBtn.removeEventListener("click", handleAll);
+      deleteInstanceBtn.removeEventListener("click", handleInstance);
+    };
+
+    const handleAll = () => {
+      cleanup();
+      resolve(true); // delete all
+    };
+
+    const handleInstance = () => {
+      cleanup();
+      resolve(false); // delete only one
+    };
+
+    deleteAllBtn.addEventListener("click", handleAll);
+    deleteInstanceBtn.addEventListener("click", handleInstance);
+  });
+}
 
 window.toggleRecurringEvents = toggleRecurringEvents;
 window.handleSignIn = handleSignIn;
