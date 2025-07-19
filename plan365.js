@@ -59,13 +59,15 @@ async function saveNote() {
   localStorage.setItem("lastColor", color);
 
   if (currentEditingEvent) {
-    // Fully delete old recurring event
-    await gapi.client.calendar.events.delete({
-      calendarId,
-      eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
-    });
+    try {
+      await gapi.client.calendar.events.delete({
+        calendarId,
+        eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
+      });
+    } catch (e) {
+      console.error("Failed to delete existing event:", e);
+    }
 
-    // Then reinsert as new event
     await gapi.client.calendar.events.insert({
       calendarId,
       resource: {
@@ -87,6 +89,26 @@ async function saveNote() {
         recurrence: recurrenceRule || []
       }
     });
+  }
+
+  closeModal();
+  await initData();
+}
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
+  const confirmDelete = confirm("Delete this event and all recurrences?");
+  if (!confirmDelete) return;
+
+  try {
+    const baseId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
+    await gapi.client.calendar.events.delete({
+      calendarId,
+      eventId: baseId
+    });
+  } catch (e) {
+    console.error("Failed to delete event:", e);
+    alert("Could not delete event.");
   }
 
   closeModal();
