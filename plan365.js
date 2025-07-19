@@ -93,7 +93,28 @@ function handleSignOut() {
 }
 
 function createCalendar() {
-  console.log("createCalendar() called — implement your calendar rendering logic here.");
+  const container = document.getElementById("calendar");
+  if (!container) return;
+
+  container.innerHTML = ""; // clear existing content
+
+  const sortedDates = Object.keys(calendarData).sort();
+  sortedDates.forEach(date => {
+    const events = calendarData[date];
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "calendar-day";
+    dayDiv.innerHTML = `<strong>${date}</strong>`;
+
+    events.forEach(ev => {
+      const evDiv = document.createElement("div");
+      evDiv.className = "calendar-event";
+      evDiv.textContent = ev.text;
+      evDiv.style.backgroundColor = ev.color || "#ccc";
+      dayDiv.appendChild(evDiv);
+    });
+
+    container.appendChild(dayDiv);
+  });
 }
 
 async function initData() {
