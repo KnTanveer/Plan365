@@ -1,3 +1,4 @@
+// --- Constants and State ---
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 let calendarData = {};
@@ -35,11 +36,7 @@ function gapiLoad() {
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
-  if (document.body.classList.contains("dark")) {
-    localStorage.setItem("theme", "dark");
-  } else {
-    localStorage.setItem("theme", "light");
-  }
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
 }
 
 function toggleRecurringEvents() {
@@ -51,12 +48,7 @@ function toggleRecurringEvents() {
 async function initCalendarId() {
   const result = await gapi.client.calendar.calendarList.list();
   const exists = result.result.items.find(c => c.summary === "Plan365");
-  if (exists) {
-    calendarId = exists.id;
-  } else {
-    const res = await gapi.client.calendar.calendars.insert({ summary: "Plan365" });
-    calendarId = res.result.id;
-  }
+  calendarId = exists ? exists.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
 }
 
 function handleSignIn() {
@@ -72,10 +64,7 @@ function handleSignIn() {
       document.getElementById('signin-btn').style.display = 'none';
       document.getElementById('signout-btn').style.display = 'inline-block';
 
-      setInterval(() => {
-        tokenClient.requestAccessToken({ prompt: '' });
-      }, 55 * 60 * 1000);
-
+      setInterval(() => tokenClient.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
       await initCalendarId();
       await initData();
     }
@@ -108,18 +97,24 @@ function createCalendar() {
   for (let month = 0; month < 12; month++) {
     const col = document.createElement("div");
     col.className = "month-column";
-    const label = document.createElement("h3");
-    label.textContent = new Date(currentYear, month).toLocaleString("default", { month: "long" });
-    col.appendChild(label);
+
+    const header = document.createElement("h3");
+    header.textContent = new Date(currentYear, month).toLocaleString("default", { month: "long" });
+    header.style.cursor = "pointer";
+
+    const daysWrapper = document.createElement("div");
+    daysWrapper.className = "days-wrapper";
+
+    header.onclick = () => {
+      daysWrapper.style.display = daysWrapper.style.display === "none" ? "block" : "none";
+    };
 
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const cell = document.createElement("div");
       cell.className = "day-cell";
-      if (dateStr === new Date().toISOString().split("T")[0]) {
-        cell.classList.add("today");
-      }
+      if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
       cell.innerHTML = `<div class='day-label'>${day}</div>`;
       if (calendarData[dateStr]) {
         calendarData[dateStr].forEach(e => {
@@ -127,39 +122,29 @@ function createCalendar() {
           n.className = "note-text";
           n.style.background = e.color;
           n.textContent = e.text;
-
-          n.onclick = (event) => {
-            event.stopPropagation();
-            openModal(dateStr, e);
-          };
-
+          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
           cell.appendChild(n);
         });
       }
       cell.onclick = () => openModal(dateStr);
-      col.appendChild(cell);
+      daysWrapper.appendChild(cell);
     }
 
+    col.appendChild(header);
+    col.appendChild(daysWrapper);
     container.appendChild(col);
   }
 }
 
-function prevMonth() {
-  currentMonth--;
-  if (currentMonth < 0) {
-    currentMonth = 11;
-    currentYear--;
-  }
-  createCalendar();
+function changeYear(delta) {
+  currentYear += delta;
+  initData();
 }
 
-function nextMonth() {
-  currentMonth++;
-  if (currentMonth > 11) {
-    currentMonth = 0;
-    currentYear++;
-  }
-  createCalendar();
+function goToToday() {
+  currentYear = new Date().getFullYear();
+  currentMonth = new Date().getMonth();
+  initData();
 }
 
 async function initData() {
@@ -170,12 +155,8 @@ async function initData() {
 
   try {
     const response = await gapi.client.calendar.events.list({
-      calendarId,
-      timeMin,
-      timeMax,
-      showDeleted: false,
-      singleEvents: true,
-      orderBy: "startTime"
+      calendarId, timeMin, timeMax, showDeleted: false,
+      singleEvents: true, orderBy: "startTime"
     });
 
     calendarData = {};
@@ -184,16 +165,10 @@ async function initData() {
     response.result.items.forEach(ev => {
       const start = ev.start?.date;
       const endRaw = ev.end?.date;
-
-      if (!start || !endRaw) {
-        skippedCount++;
-        return;
-      }
+      if (!start || !endRaw) return skippedCount++;
 
       const rrule = ev.recurrence?.[0] || "";
-
       if (!showRecurringEvents && rrule) return;
-
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
 
@@ -204,7 +179,6 @@ async function initData() {
           adjustFunc(startDate, i);
           adjustFunc(endDate, i);
           endDate.setDate(endDate.getDate() - 1);
-
           const eventCopy = {
             text: ev.summary,
             color,
@@ -218,41 +192,22 @@ async function initData() {
         }
       };
 
-      if (rrule.startsWith("RRULE:FREQ=YEARLY")) {
-        staticize(5, (d, i) => d.setFullYear(d.getFullYear() + i));
-        return;
-      } else if (rrule.startsWith("RRULE:FREQ=MONTHLY")) {
-        staticize(6, (d, i) => d.setMonth(d.getMonth() + i));
-        return;
-      } else if (rrule.startsWith("RRULE:FREQ=WEEKLY")) {
-        staticize(8, (d, i) => d.setDate(d.getDate() + 7 * i));
-        return;
-      } else if (rrule) {
-        skippedCount++;
-        return;
-      }
+      if (rrule.startsWith("RRULE:FREQ=YEARLY")) return staticize(5, (d, i) => d.setFullYear(d.getFullYear() + i));
+      if (rrule.startsWith("RRULE:FREQ=MONTHLY")) return staticize(6, (d, i) => d.setMonth(d.getMonth() + i));
+      if (rrule.startsWith("RRULE:FREQ=WEEKLY")) return staticize(8, (d, i) => d.setDate(d.getDate() + 7 * i));
+      if (rrule) return skippedCount++;
 
       const endDateObj = new Date(endRaw);
-      if (isNaN(endDateObj.getTime())) {
-        skippedCount++;
-        return;
-      }
-
+      if (isNaN(endDateObj.getTime())) return skippedCount++;
       endDateObj.setDate(endDateObj.getDate() - 1);
-      const end = endDateObj.toISOString().split("T")[0];
-
       const newEvent = {
         text: ev.summary,
         color,
-        range: { start, end },
+        range: { start, end: endDateObj.toISOString().split("T")[0] },
         googleId: ev.id
       };
       addToRange(newEvent);
     });
-
-    if (skippedCount > 0) {
-      console.info(`Skipped ${skippedCount} unsupported or timed events.`);
-    }
 
     createCalendar();
   } catch (e) {
@@ -268,9 +223,7 @@ async function initData() {
 
 window.addEventListener("DOMContentLoaded", () => {
   const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-  }
+  if (savedTheme === "dark") document.body.classList.add("dark");
 });
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -281,11 +234,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     gapi.client.setToken({ access_token: accessToken });
     document.getElementById('signin-btn').style.display = 'none';
     document.getElementById('signout-btn').style.display = 'inline-block';
-
-    setInterval(() => {
-      tokenClient?.requestAccessToken({ prompt: '' });
-    }, 55 * 60 * 1000);
-
+    setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
     await initCalendarId();
     await initData();
   }
