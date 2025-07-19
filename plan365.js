@@ -65,7 +65,6 @@ async function saveNote() {
   // 🧹 Delete all matching events if editing
   if (currentEditingEvent) {
     const baseText = currentEditingEvent.text.replace(/^↻ /, '');
-    const recurType = currentEditingEvent.recurrenceType;
 
     try {
       const res = await gapi.client.calendar.events.list({
@@ -76,11 +75,10 @@ async function saveNote() {
       });
 
       for (const ev of res.result.items) {
-        const desc = ev.description ? JSON.parse(ev.description) : {};
-        const evRecur = desc.recurrence;
         const evText = ev.summary?.replace(/^↻ /, '');
+        const evRecur = ev.recurrence ? ev.recurrence[0] : null;
 
-        if (evText === baseText && evRecur === recurType) {
+        if (evText === baseText && evRecur) {
           await gapi.client.calendar.events.delete({
             calendarId,
             eventId: ev.id
@@ -116,20 +114,19 @@ async function deleteCurrentEvent() {
     if (deleteChoice) {
       // Delete the entire series
       const baseText = currentEditingEvent.text.replace(/^↻ /, '');
-      const recurType = currentEditingEvent.recurrenceType;
       const res = await gapi.client.calendar.events.list({
         calendarId,
         showDeleted: false,
         singleEvents: false,
+        maxResults: 2500,
         orderBy: "startTime"
       });
 
       for (const ev of res.result.items) {
-        const desc = ev.description ? JSON.parse(ev.description) : {};
-        const evRecur = desc.recurrence;
         const evText = ev.summary?.replace(/^↻ /, '');
+        const evRecur = ev.recurrence ? ev.recurrence[0] : null;
 
-        if (evText === baseText && evRecur === recurType) {
+        if (evText === baseText && evRecur) {
           await gapi.client.calendar.events.delete({
             calendarId,
             eventId: ev.id
