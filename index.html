@@ -7,8 +7,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
   <style>
+    :root {
+      --today-color: red;
+    }
     body {
       font-family: Roboto, Arial, sans-serif;
       margin: 0;
@@ -20,28 +24,7 @@
       color: white;
     }
 
-    button {
-      padding: 6px 10px;
-      border: none;
-      border-radius: 6px;
-      background-color: #eee;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background-color: #ddd;
-    }
-
-    body.dark button {
-      background-color: #333;
-      color: white;
-    }
-
-    body.dark button:hover {
-      background-color: #444;
-    }
-
+    /* Header */
     #header {
       display: flex;
       justify-content: space-between;
@@ -50,19 +33,39 @@
       background: #f0f0f0;
       flex-wrap: wrap;
     }
-
     body.dark #header {
       background: #1f1f1f;
     }
 
+    #header button {
+      margin: 0 5px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #header button:hover {
+      background-color: #ddd;
+    }
+    body.dark #header button {
+      background-color: #333;
+      color: white;
+    }
+    body.dark #header button:hover {
+      background-color: #444;
+    }
+
+    /* Calendar */
     #calendar {
       display: flex;
       flex-wrap: nowrap;
       overflow-x: auto;
       padding: 10px;
       background: #f4f4f4;
+      transition: opacity 0.3s ease;
     }
-
     body.dark #calendar {
       background: #1a1a1a;
     }
@@ -73,10 +76,9 @@
       margin-right: 10px;
       background: white;
       border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
       padding: 5px;
     }
-
     body.dark .month-column {
       background: #2c2c2c;
     }
@@ -96,19 +98,13 @@
       border-radius: 4px;
       min-height: 45px;
     }
-
     body.dark .day-cell {
       border: 1px solid #666;
     }
 
     .today {
-      border: 2px solid red;
+      border: 2px solid var(--today-color, red);
     }
-
-    body.dark .today {
-      border: 2px solid #ff4d4d;
-    }
-
     .day-label {
       font-weight: bold;
       margin-bottom: 3px;
@@ -122,45 +118,31 @@
       color: black;
     }
 
-    /* Modal + Settings Shared Styles */
-    .popup-overlay {
+    /* Modal */
+    #modal {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.5);
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 1000;
-      animation: fadeIn 0.3s ease;
     }
 
-    .popup-content {
+    #modal-content {
       background: white;
       padding: 20px;
       border-radius: 10px;
       width: 300px;
-      animation: scaleUp 0.3s ease;
+      animation: fadeIn 0.3s ease;
     }
 
-    body.dark .popup-content {
+    body.dark #modal-content {
       background: #2c2c2c;
       color: white;
-    }
-
-    @keyframes fadeIn {
-      from { background: rgba(0,0,0,0); }
-      to { background: rgba(0,0,0,0.5); }
-    }
-
-    @keyframes scaleUp {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    /* Modal */
-    #modal {
-      z-index: 1000;
     }
 
     #modal-content input,
@@ -174,6 +156,7 @@
       margin-top: 10px;
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
       gap: 5px;
     }
 
@@ -185,32 +168,62 @@
       border: 1px solid #555;
     }
 
+    body.dark #modal-content input[type="color"] {
+      background-color: transparent;
+      padding: 2px;
+    }
+
     body.dark input[type="date"] {
-      background-color: #1e1e1e !important;
+      background-color: #3a3a3a !important;
       color: white !important;
-      border: 1px solid #888;
+      border: 1px solid #555;
+      padding: 5px;
+      border-radius: 4px;
     }
 
     body.dark input[type="date"]::-webkit-calendar-picker-indicator {
+      background: transparent;
       filter: invert(1);
+      cursor: pointer;
     }
 
-    /* Settings */
+    /* Settings Popup */
     #settings-overlay {
-      z-index: 1001;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1100;
     }
 
     #settings-panel {
-      max-width: 300px;
+      background: #fafafa;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 320px;
+      width: 90%;
+      animation: fadeIn 0.3s ease;
     }
 
-    #settings-panel h3 {
-      margin: 0 0 15px;
+    body.dark #settings-panel {
+      background: #1e1e1e;
+      color: white;
     }
 
-    #settings-panel button, #settings-panel label {
+    #settings-panel button {
+      margin: 8px 0;
       display: block;
-      margin-bottom: 15px;
+      width: 100%;
+    }
+
+    #settings-panel label {
+      display: block;
+      margin: 12px 0;
     }
 
     #settings-panel .info {
@@ -218,23 +231,46 @@
       margin-top: 10px;
       color: #666;
     }
-
     body.dark #settings-panel .info {
       color: #aaa;
     }
 
-    .close-settings {
-      float: right;
-      background: transparent;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
+    /* Spinner */
+    #loading-spinner {
+      display: none;
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 2000;
+      font-size: 22px;
+      color: #333;
+    }
+    body.dark #loading-spinner {
+      color: white;
     }
 
-    .close-settings:hover {
-      color: red;
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+    }
+
+    .fade-out {
+      animation: fadeOut 0.3s forwards;
+    }
   </style>
 </head>
 <body>
@@ -248,29 +284,28 @@
     <div>
       <button id="signin-btn" onclick="handleSignIn()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
       <button id="signout-btn" style="display:none" onclick="handleSignOut()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
-      <button onclick="openSettings()"><i id="theme-icon" class="fas fa-moon"></i></button>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
-  <div id="settings-overlay" class="popup-overlay" onclick="closeSettings(event)">
-    <div id="settings-panel" class="popup-content" onclick="event.stopPropagation()">
-      <button class="close-settings" onclick="closeSettings(event)">&times;</button>
-      <h3><i class="fas fa-cog"></i> Settings</h3>
-      <button onclick="toggleDarkMode()"><i id="theme-toggle-icon" class="fas fa-moon"></i> Toggle Theme</button>
-      <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()"><i class="fas fa-sync-alt"></i> Show/Hide Recurring</button>
-      <label><i class="fas fa-palette"></i> Today Color:
-        <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
-      </label>
-      <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Google sync.</p>
+      <button onclick="openSettings()"><i class="fas fa-cog"></i></button>
     </div>
   </div>
 
   <div id="calendar"></div>
 
-  <!-- Event Modal -->
-  <div id="modal" class="popup-overlay" onclick="closeModal()">
-    <div id="modal-content" class="popup-content" onclick="event.stopPropagation()">
+  <!-- Settings Popup -->
+  <div id="settings-overlay" onclick="closeSettings(event)">
+    <div id="settings-panel" onclick="event.stopPropagation()">
+      <h3><i class="fas fa-cog"></i> Settings</h3>
+      <button onclick="toggleDarkMode()"><i id="theme-toggle-icon" class="fas fa-moon"></i> Toggle Theme</button>
+      <button onclick="toggleRecurringEvents()"><i class="fas fa-sync-alt"></i> Show/Hide Recurring</button>
+      <label><i class="fas fa-palette"></i> Today Color:
+        <input type="color" onchange="changeTodayColor(this.value)" />
+      </label>
+      <p class="info"><i class="fas fa-info-circle"></i> Custom recurring rules like “3 times a week” aren't supported and will not sync.</p>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal">
+    <div id="modal-content">
       <label><strong>Start:</strong> <input type="date" id="start-date"></label>
       <label><strong>End:</strong> <input type="date" id="end-date"></label>
       <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
@@ -293,65 +328,10 @@
     </div>
   </div>
 
-  <script>
-    function openSettings() {
-      document.getElementById('settings-overlay').style.display = 'flex';
-    }
+  <!-- Loading Spinner -->
+  <div id="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Syncing...</div>
 
-    function closeSettings(e) {
-      e.stopPropagation();
-      document.getElementById('settings-overlay').style.display = 'none';
-    }
-
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-    }
-
-    function toggleDarkMode() {
-      const dark = document.body.classList.toggle('dark');
-      document.getElementById('theme-icon').className = dark ? 'fas fa-sun' : 'fas fa-moon';
-      document.getElementById('theme-toggle-icon').className = dark ? 'fas fa-sun' : 'fas fa-moon';
-      localStorage.setItem('darkMode', dark);
-    }
-
-    function changeTodayColor(color) {
-      document.querySelectorAll('.today').forEach(el => {
-        el.style.borderColor = color;
-      });
-      localStorage.setItem('todayColor', color);
-    }
-
-    function toggleRecurringEvents() {
-      const btn = document.getElementById('toggle-recurring-btn');
-      const isHidden = btn.textContent.includes("Show");
-      btn.innerHTML = `<i class="fas fa-sync-alt"></i> ${isHidden ? "Hide" : "Show"} Recurring`;
-      localStorage.setItem('hideRecurring', isHidden ? "false" : "true");
-      // Add actual logic to hide/show recurring events
-    }
-
-    window.onload = () => {
-      // Theme
-      const darkMode = localStorage.getItem('darkMode') === 'true';
-      if (darkMode) document.body.classList.add('dark');
-      const icon = darkMode ? 'fas fa-sun' : 'fas fa-moon';
-      document.getElementById('theme-icon').className = icon;
-      document.getElementById('theme-toggle-icon').className = icon;
-
-      // Today color
-      const storedColor = localStorage.getItem('todayColor');
-      if (storedColor) {
-        changeTodayColor(storedColor);
-        document.getElementById('today-color-input').value = storedColor;
-      }
-
-      // Recurring toggle
-      const hideRecurring = localStorage.getItem('hideRecurring');
-      if (hideRecurring === "true") {
-        document.getElementById('toggle-recurring-btn').innerHTML = `<i class="fas fa-sync-alt"></i> Show Recurring`;
-      }
-    };
-  </script>
-
+  <!-- Scripts -->
   <script src="plan365.js"></script>
 </body>
 </html>
