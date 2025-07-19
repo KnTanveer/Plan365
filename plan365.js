@@ -8,6 +8,12 @@ let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
 
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+  const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+  localStorage.setItem("theme", newTheme);
+}
+
 function showSpinner(show) {
   const spinner = document.getElementById("spinner");
   if (spinner) spinner.style.display = show ? "block" : "none";
@@ -330,3 +336,4 @@ window.addEventListener("DOMContentLoaded", async () => {
 window.toggleRecurringEvents = toggleRecurringEvents;
 window.handleSignIn = handleSignIn;
 window.handleSignOut = handleSignOut;
+window.toggleDarkMode = toggleDarkMode;
