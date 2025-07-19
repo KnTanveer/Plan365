@@ -7,6 +7,7 @@ let accessToken = null;
 let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
+let lastUsedColor = localStorage.getItem("lastColor") || "#b6eeb6";
 
 function showSpinner(show) {
   const spinner = document.getElementById("spinner");
@@ -27,8 +28,11 @@ function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
   document.getElementById("note-text").value = event ? event.text : "";
-  document.getElementById("event-color").value = event ? event.color : "#b6eeb6";
+  document.getElementById("event-color").value = event ? event.color : lastUsedColor;
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
+  document.getElementById("repeat-interval").value = event?.recurrenceInterval || 1;
+  document.getElementById("repeat-until").value = event?.recurrenceUntil || "";
+  document.getElementById("repeat-count").value = event?.recurrenceCount || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
@@ -46,33 +50,43 @@ async function saveNote() {
   const text = document.getElementById("note-text").value;
   const color = document.getElementById("event-color").value;
   const recurrence = document.getElementById("repeat-select").value;
+  const interval = parseInt(document.getElementById("repeat-interval").value) || 1;
+  const until = document.getElementById("repeat-until").value;
+  const count = parseInt(document.getElementById("repeat-count").value);
 
   if (!start || !end || !text) return alert("Please fill all fields");
+  localStorage.setItem("lastColor", color);
   const metadata = JSON.stringify({ color });
-  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
+
+  let recurrenceRule;
+  if (recurrence) {
+    recurrenceRule = `RRULE:FREQ=${recurrence};INTERVAL=${interval}`;
+    if (until) {
+      recurrenceRule += `;UNTIL=${until.replace(/-/g, '')}T000000Z`;
+    } else if (!isNaN(count)) {
+      recurrenceRule += `;COUNT=${count}`;
+    }
+    recurrenceRule = [recurrenceRule];
+  }
+
+  const eventPayload = {
+    summary: text,
+    description: metadata,
+    start: { date: start },
+    end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
+    recurrence: recurrenceRule
+  };
 
   if (currentEditingEvent) {
     await gapi.client.calendar.events.update({
       calendarId,
       eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, ""),
-      resource: {
-        summary: text,
-        description: metadata,
-        start: { date: start },
-        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
-        recurrence: recurrenceRule
-      }
+      resource: eventPayload
     });
   } else {
     await gapi.client.calendar.events.insert({
       calendarId,
-      resource: {
-        summary: text,
-        description: metadata,
-        start: { date: start },
-        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
-        recurrence: recurrenceRule
-      }
+      resource: eventPayload
     });
   }
 
@@ -82,13 +96,16 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
-  const confirmDelete = confirm("Delete this event?");
-  if (!confirmDelete) return;
 
-  await gapi.client.calendar.events.delete({
-    calendarId,
-    eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
-  });
+  const choice = confirm("Delete the entire series?\nClick OK for full series, Cancel for only this event.");
+  if (choice) {
+    await gapi.client.calendar.events.delete({
+      calendarId,
+      eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
+    });
+  } else {
+    alert("To delete a single instance of a recurring event, please delete it directly from Google Calendar.");
+  }
 
   closeModal();
   await initData();
