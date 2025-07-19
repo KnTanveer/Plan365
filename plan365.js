@@ -53,6 +53,30 @@ async function initCalendarId() {
   }
 }
 
+function handleSignIn() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    callback: async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      await gapiLoad();
+      gapi.client.setToken({ access_token: accessToken });
+
+      document.getElementById('signin-btn').style.display = 'none';
+      document.getElementById('signout-btn').style.display = 'inline-block';
+
+      setInterval(() => {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }, 55 * 60 * 1000);
+
+      await initCalendarId();
+      await initData();
+    }
+  });
+  tokenClient.requestAccessToken();
+}
+
 function handleSignOut() {
   if (accessToken) {
     gapi.client.setToken(null);
