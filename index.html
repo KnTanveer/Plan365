@@ -1,175 +1,312 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Plan365</title>
-  <link rel="icon" href="/favicon.png" type="image/png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://apis.google.com/js/api.js"></script>
-  <style>
-    body {
-      font-family: Roboto, Arial, sans-serif;
-      margin: 0;
-      overflow-x: auto;
-      transition: background 0.3s, color 0.3s;
-    }
-    body.dark { background: #121212; color: white; }
-    #header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: #f0f0f0;
-      flex-wrap: wrap;
-    }
-    body.dark #header { background: #1f1f1f; }
-    #calendar {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding: 10px;
-      background: #f4f4f4;
-    }
-    body.dark #calendar { background: #1a1a1a; }
-    .month-column {
-      flex: 0 0 auto;
-      width: 130px;
-      margin-right: 10px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      padding: 5px;
-    }
-    body.dark .month-column { background: #2c2c2c; }
-    .month-column h3 {
-      text-align: center;
-      font-size: 16px;
-      margin-bottom: 5px;
-    }
-    .day-cell {
-      border: 1px solid #ddd;
-      margin: 2px 0;
-      padding: 4px;
-      font-size: 13px;
-      cursor: pointer;
-      border-radius: 4px;
-      min-height: 45px;
-    }
-    body.dark .day-cell { border: 1px solid #666;}  
-    .today { border: 2px solid red; }
-    body.dark .today { border: 2px solid #ff4d4d; }
-    .day-label { font-weight: bold; margin-bottom: 3px; }
-    .note-text {
-      font-size: 12px;
-      border-radius: 4px;
-      padding: 2px 4px;
-      margin-top: 2px;
-      color: black;
-    }
-    #modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    #modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 300px;
-    }
-    body.dark #modal-content { background: #2c2c2c; color: white; }
-    #modal-content input,
-    #modal-content textarea {
-      width: 100%;
-      margin-top: 5px;
-    }
-    #modal-content .actions {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-    body.dark #modal-content input,
-    body.dark #modal-content textarea,
-    body.dark #modal-content select {
-      background-color: #3a3a3a; 
-      color: white;
-      border: 1px solid #555; 
-    }
-    body.dark #modal-content input[type="color"] {
-      background-color: transparent; 
-      padding: 2px;
-    }
-    body.dark #modal-content button {
-      background-color: #444;
-      color: white;
-      border: 1px solid #666;
-    }
-    body.dark input[type="date"] {
-      background-color: #3a3a3a !important;
-      color: white !important;
-      border: 1px solid #555;
-      padding: 5px;
-      border-radius: 4px;
-    }
-    body.dark input[type="date"]::-webkit-calendar-picker-indicator {
-      background: transparent;
-      filter: invert(1);
-      cursor: pointer;
-    }
-    #signin-btn, #signout-btn, #toggle-recurring-btn { margin: 5px; }
-  </style>
-</head>
-<body>
-  <div id="header">
-    <div>
-      <button onclick="changeYear(-1)">⏪ Prev</button>
-      <button onclick="goToToday()">📅 Today</button>
-      <button onclick="changeYear(1)">Next ⏩</button>
-    </div>
-    <h2>📅 Plan365 - <span id="year-label"></span></h2>
-    <div>
-      <button id="signin-btn" onclick="handleSignIn()">🔐 Sign In</button>
-      <button id="signout-btn" style="display:none" onclick="handleSignOut()">🚪 Log Out</button>
-      <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()">Hide Recurring</button>
-      <button onclick="toggleDarkMode()">🌓 Theme</button>
-    </div>
-  </div>
+// --- Constants and State ---
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+let calendarData = {};
+let calendarId = null;
+let accessToken = null;
+let tokenClient;
+let currentEditingEvent = null;
+let showRecurringEvents = true;
 
-  <div id="calendar"></div>
+function showSpinner(show) {
+  const spinner = document.getElementById("spinner");
+  if (spinner) spinner.style.display = show ? "block" : "none";
+}
 
-  <div id="modal">
-    <div id="modal-content">
-      <label><strong>Start:</strong> <input type="date" id="start-date"></label>
-      <label><strong>End:</strong> <input type="date" id="end-date"></label>
-      <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
-      <label><strong>Color:</strong> <input type="color" id="event-color"></label>
-      <label><strong>Repeat:</strong>
-      <select id="repeat-select">
-        <option value="">None</option>
-        <option value="DAILY">Daily</option>
-        <option value="WEEKLY">Weekly</option>
-        <option value="MONTHLY">Monthly</option>
-        <option value="YEARLY">Yearly</option>
-      </select>
-      </label>
-      <p id="duration-display"></p>
-      <div class="actions">
-        <button onclick="saveNote()">Save</button>
-        <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
-        <button onclick="closeModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
+function addToRange(event) {
+  const start = new Date(event.range.start);
+  const end = new Date(event.range.end);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().split("T")[0];
+    if (!calendarData[key]) calendarData[key] = [];
+    calendarData[key].push(event);
+  }
+}
 
-  <!-- JavaScript is loaded last -->
-  <script src="plan365.js"></script>
-</body>
-</html>
+function openModal(dateStr, event = null) {
+  document.getElementById("start-date").value = event ? event.range.start : dateStr;
+  document.getElementById("end-date").value = event ? event.range.end : dateStr;
+  document.getElementById("note-text").value = event ? event.text : "";
+  document.getElementById("event-color").value = event ? event.color : "#b6eeb6";
+  document.getElementById("repeat-select").value = event?.recurrenceType || "";
+  document.getElementById("duration-display").textContent = "";
+  document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
+  currentEditingEvent = event;
+  document.getElementById("modal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+  currentEditingEvent = null;
+}
+
+async function saveNote() {
+  const start = document.getElementById("start-date").value;
+  const end = document.getElementById("end-date").value;
+  const text = document.getElementById("note-text").value;
+  const color = document.getElementById("event-color").value;
+  const recurrence = document.getElementById("repeat-select").value;
+
+  if (!start || !end || !text) return alert("Please fill all fields");
+  const metadata = JSON.stringify({ color });
+  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
+
+  if (currentEditingEvent) {
+    await gapi.client.calendar.events.update({
+      calendarId,
+      eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, ""),
+      resource: {
+        summary: text,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule
+      }
+    });
+  } else {
+    await gapi.client.calendar.events.insert({
+      calendarId,
+      resource: {
+        summary: text,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule
+      }
+    });
+  }
+
+  closeModal();
+  await initData();
+}
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
+  const confirmDelete = confirm("Delete this event?");
+  if (!confirmDelete) return;
+
+  await gapi.client.calendar.events.delete({
+    calendarId,
+    eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, "")
+  });
+
+  closeModal();
+  await initData();
+}
+
+function gapiLoad() {
+  return new Promise((resolve) => {
+    gapi.load("client", async () => {
+      await gapi.client.init({
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+      });
+      resolve();
+    });
+  });
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+}
+
+function toggleRecurringEvents() {
+  showRecurringEvents = !showRecurringEvents;
+  document.getElementById("toggle-recurring-btn").textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
+  initData();
+}
+
+async function initCalendarId() {
+  const result = await gapi.client.calendar.calendarList.list();
+  const exists = result.result.items.find(c => c.summary === "Plan365");
+  calendarId = exists ? exists.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
+}
+
+function handleSignIn() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    callback: async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      await gapiLoad();
+      gapi.client.setToken({ access_token: accessToken });
+
+      document.getElementById('signin-btn').style.display = 'none';
+      document.getElementById('signout-btn').style.display = 'inline-block';
+
+      setInterval(() => tokenClient.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+      await initCalendarId();
+      await initData();
+    }
+  });
+  tokenClient.requestAccessToken();
+}
+
+function handleSignOut() {
+  if (accessToken) {
+    gapi.client.setToken(null);
+    google.accounts.oauth2.revoke(accessToken, () => {
+      accessToken = null;
+      calendarId = null;
+      localStorage.removeItem("accessToken");
+      document.getElementById('signin-btn').style.display = 'inline-block';
+      document.getElementById('signout-btn').style.display = 'none';
+      calendarData = {};
+      createCalendar();
+    });
+  }
+}
+
+function createCalendar() {
+  const container = document.getElementById("calendar");
+  if (!container) return;
+
+  container.innerHTML = "";
+  document.getElementById("year-label").textContent = `${currentYear}`;
+
+  for (let month = 0; month < 12; month++) {
+    const col = document.createElement("div");
+    col.className = "month-column";
+
+    const header = document.createElement("h3");
+    header.textContent = new Date(currentYear, month).toLocaleString("default", { month: "long" });
+    header.style.cursor = "pointer";
+
+    const daysWrapper = document.createElement("div");
+    daysWrapper.className = "days-wrapper";
+
+    header.onclick = () => {
+      daysWrapper.style.display = daysWrapper.style.display === "none" ? "block" : "none";
+    };
+
+    const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
+      cell.innerHTML = `<div class='day-label'>${day}</div>`;
+      if (calendarData[dateStr]) {
+        calendarData[dateStr].forEach(e => {
+          const n = document.createElement("div");
+          n.className = "note-text";
+          n.style.background = e.color;
+          n.textContent = e.text;
+          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
+          cell.appendChild(n);
+        });
+      }
+      cell.onclick = () => openModal(dateStr);
+      daysWrapper.appendChild(cell);
+    }
+
+    col.appendChild(header);
+    col.appendChild(daysWrapper);
+    container.appendChild(col);
+  }
+}
+
+function changeYear(delta) {
+  currentYear += delta;
+  initData();
+}
+
+function goToToday() {
+  currentYear = new Date().getFullYear();
+  currentMonth = new Date().getMonth();
+  initData();
+}
+
+async function initData() {
+  if (!calendarId) return;
+  showSpinner(true);
+  const timeMin = new Date(currentYear, 0, 1).toISOString();
+  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
+
+  try {
+    const response = await gapi.client.calendar.events.list({
+      calendarId, timeMin, timeMax, showDeleted: false,
+      singleEvents: true, orderBy: "startTime"
+    });
+
+    calendarData = {};
+    let skippedCount = 0;
+
+    response.result.items.forEach(ev => {
+      const start = ev.start?.date;
+      const endRaw = ev.end?.date;
+      if (!start || !endRaw) return skippedCount++;
+
+      const rrule = ev.recurrence?.[0] || "";
+      if (!showRecurringEvents && rrule) return;
+      const metadata = ev.description ? JSON.parse(ev.description) : {};
+      const color = metadata.color || '#b6eeb6';
+
+      const staticize = (count, adjustFunc) => {
+        for (let i = 0; i < count; i++) {
+          const startDate = new Date(start);
+          const endDate = new Date(endRaw);
+          adjustFunc(startDate, i);
+          adjustFunc(endDate, i);
+          endDate.setDate(endDate.getDate() - 1);
+          const eventCopy = {
+            text: ev.summary,
+            color,
+            range: {
+              start: startDate.toISOString().split("T")[0],
+              end: endDate.toISOString().split("T")[0]
+            },
+            googleId: ev.id + `_repeat_${i}`
+          };
+          addToRange(eventCopy);
+        }
+      };
+
+      if (rrule.startsWith("RRULE:FREQ=YEARLY")) return staticize(5, (d, i) => d.setFullYear(d.getFullYear() + i));
+      if (rrule.startsWith("RRULE:FREQ=MONTHLY")) return staticize(6, (d, i) => d.setMonth(d.getMonth() + i));
+      if (rrule.startsWith("RRULE:FREQ=WEEKLY")) return staticize(8, (d, i) => d.setDate(d.getDate() + 7 * i));
+      if (rrule) return skippedCount++;
+
+      const endDateObj = new Date(endRaw);
+      if (isNaN(endDateObj.getTime())) return skippedCount++;
+      endDateObj.setDate(endDateObj.getDate() - 1);
+      const newEvent = {
+        text: ev.summary,
+        color,
+        range: { start, end: endDateObj.toISOString().split("T")[0] },
+        googleId: ev.id
+      };
+      addToRange(newEvent);
+    });
+
+    createCalendar();
+  } catch (e) {
+    console.error("Failed to fetch events:", e);
+    if (e.status === 401) {
+      alert("Session expired. Please sign in again.");
+      handleSignOut();
+    }
+  } finally {
+    showSpinner(false);
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") document.body.classList.add("dark");
+});
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const savedToken = localStorage.getItem("accessToken");
+  if (savedToken) {
+    accessToken = savedToken;
+    await gapiLoad();
+    gapi.client.setToken({ access_token: accessToken });
+    document.getElementById('signin-btn').style.display = 'none';
+    document.getElementById('signout-btn').style.display = 'inline-block';
+    setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+    await initCalendarId();
+    await initData();
+  }
+});
