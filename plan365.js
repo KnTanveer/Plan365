@@ -60,7 +60,7 @@ async function saveNote() {
   const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
   localStorage.setItem("lastColor", color);
 
-  const displayText = recurrence ? `🔁 ${text}` : text;
+  const displayText = recurrence ? `↻ ${text}` : text;
 
   if (currentEditingEvent) {
     try {
