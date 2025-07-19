@@ -234,7 +234,16 @@
     .close-settings:hover {
       color: red;
     }
-
+    .fade-out {
+      animation: fadeOut 0.3s forwards;
+    }
+    
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+    }
   </style>
 </head>
 <body>
