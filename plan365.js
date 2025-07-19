@@ -8,17 +8,10 @@ let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
 
-// Apply today color early
-const storedColor = localStorage.getItem("todayColor");
-if (storedColor) {
-  document.documentElement.style.setProperty("--today-color", storedColor);
-}
-
 function toggleDarkMode() {
-  const isDark = document.body.classList.toggle("dark");
-  const icon = document.getElementById("theme-toggle-icon");
-  if (icon) icon.className = isDark ? "fas fa-sun" : "fas fa-moon";
-  localStorage.setItem("theme", isDark ? "dark" : "light");
+  document.body.classList.toggle("dark");
+  const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+  localStorage.setItem("theme", newTheme);
 }
 
 function showSpinner(show) {
@@ -56,37 +49,8 @@ function openModal(dateStr, event = null) {
 }
 
 function closeModal() {
-  const modal = document.getElementById("modal");
-  const content = document.getElementById("modal-content");
-  if (modal && content) {
-    content.classList.add("fade-out");
-    modal.classList.add("fade-out");
-    content.addEventListener("animationend", () => {
-      content.classList.remove("fade-out");
-      modal.classList.remove("fade-out");
-      modal.style.display = "none";
-      currentEditingEvent = null;
-    }, { once: true });
-  }
-}
-
-function closeSettings() {
-  const panel = document.getElementById("settings-panel");
-  const overlay = document.getElementById("settings-overlay");
-  if (panel && overlay) {
-    panel.classList.add("fade-out");
-    overlay.classList.add("fade-out");
-    panel.addEventListener("animationend", () => {
-      panel.classList.remove("fade-out");
-      overlay.classList.remove("fade-out");
-      overlay.style.display = "none";
-    }, { once: true });
-  }
-}
-
-function changeTodayColor(color) {
-  document.documentElement.style.setProperty('--today-color', color);
-  localStorage.setItem('todayColor', color);
+  document.getElementById("modal").style.display = "none";
+  currentEditingEvent = null;
 }
 
 async function saveNote() {
@@ -200,19 +164,8 @@ function createCalendar() {
 }
 
 function changeYear(delta) {
-  const calendar = document.getElementById("calendar");
-  if (calendar) {
-    calendar.style.opacity = 0;
-    setTimeout(() => {
-      currentYear += delta;
-      initData().then(() => {
-        calendar.style.opacity = 1;
-      });
-    }, 200);
-  } else {
-    currentYear += delta;
-    initData();
-  }
+  currentYear += delta;
+  initData();
 }
 
 function goToToday() {
@@ -361,9 +314,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") document.body.classList.add("dark");
 
-  const icon = document.getElementById("theme-toggle-icon");
-  if (icon) icon.className = savedTheme === "dark" ? "fas fa-sun" : "fas fa-moon";
-
   const btn = document.createElement("button");
   btn.id = "toggle-recurring-btn";
   btn.textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
@@ -387,6 +337,3 @@ window.toggleRecurringEvents = toggleRecurringEvents;
 window.handleSignIn = handleSignIn;
 window.handleSignOut = handleSignOut;
 window.toggleDarkMode = toggleDarkMode;
-window.closeModal = closeModal;
-window.closeSettings = closeSettings;
-window.changeTodayColor = changeTodayColor;
