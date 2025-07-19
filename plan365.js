@@ -9,9 +9,15 @@ let currentEditingEvent = null;
 let showRecurringEvents = true;
 
 function toggleDarkMode() {
-  document.body.classList.toggle("dark");
-  const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
-  localStorage.setItem("theme", newTheme);
+  const isDark = document.body.classList.toggle("dark");
+  const icon = document.getElementById("theme-toggle-icon");
+  if (icon) icon.className = isDark ? "fas fa-sun" : "fas fa-moon";
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+}
+
+function changeTodayColor(color) {
+  document.documentElement.style.setProperty('--today-color', color);
+  localStorage.setItem('todayColor', color);
 }
 
 function showSpinner(show) {
@@ -164,8 +170,19 @@ function createCalendar() {
 }
 
 function changeYear(delta) {
-  currentYear += delta;
-  initData();
+  const calendar = document.getElementById("calendar");
+  if (calendar) {
+    calendar.style.opacity = 0;
+    setTimeout(() => {
+      currentYear += delta;
+      initData().then(() => {
+        calendar.style.opacity = 1;
+      });
+    }, 200);
+  } else {
+    currentYear += delta;
+    initData();
+  }
 }
 
 function goToToday() {
@@ -309,6 +326,11 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") smoothScrollCalendar(100);
   if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
 });
+
+const storedColor = localStorage.getItem("todayColor");
+if (storedColor) {
+  document.documentElement.style.setProperty("--today-color", storedColor);
+}
 
 window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme");
