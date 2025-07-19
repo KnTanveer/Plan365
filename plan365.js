@@ -64,27 +64,12 @@ async function saveNote() {
 
   // 🧹 Delete all matching events if editing
   if (currentEditingEvent) {
-    const baseText = currentEditingEvent.text.replace(/^↻ /, '');
-
+    const recurringId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, '');
     try {
-      const res = await gapi.client.calendar.events.list({
+      await gapi.client.calendar.events.delete({
         calendarId,
-        showDeleted: false,
-        singleEvents: false,
-        orderBy: "startTime"
+        eventId: recurringId
       });
-
-      for (const ev of res.result.items) {
-        const evText = ev.summary?.replace(/^↻ /, '');
-        const evRecur = ev.recurrence ? ev.recurrence[0] : null;
-
-        if (evText === baseText && evRecur) {
-          await gapi.client.calendar.events.delete({
-            calendarId,
-            eventId: ev.id
-          });
-        }
-      }
     } catch (e) {
       console.error("Failed to delete previous recurring events:", e);
     }
@@ -112,29 +97,16 @@ async function deleteCurrentEvent() {
 
   try {
     if (deleteChoice) {
-      // Delete the entire series
-      const baseText = currentEditingEvent.text.replace(/^↻ /, '');
-      const res = await gapi.client.calendar.events.list({
+      // 🔁 Delete recurring master event
+      const recurringId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, '');
+
+      await gapi.client.calendar.events.delete({
         calendarId,
-        showDeleted: false,
-        singleEvents: false,
-        maxResults: 2500,
-        orderBy: "startTime"
+        eventId: recurringId
       });
 
-      for (const ev of res.result.items) {
-        const evText = ev.summary?.replace(/^↻ /, '');
-        const evRecur = ev.recurrence ? ev.recurrence[0] : null;
-
-        if (evText === baseText && evRecur) {
-          await gapi.client.calendar.events.delete({
-            calendarId,
-            eventId: ev.id
-          });
-        }
-      }
     } else {
-      // Delete just the selected instance
+      // 🗑️ Delete single event instance
       await gapi.client.calendar.events.delete({
         calendarId,
         eventId: currentEditingEvent.googleId.replace(/_repeat_\d+$/, '')
