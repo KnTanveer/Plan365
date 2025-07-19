@@ -20,6 +20,7 @@ function smoothScrollCalendar(delta) {
 }
 
 function addToRange(event) {
+  if (!showRecurringEvents && event.recurrenceType) return;
   const start = new Date(event.range.start);
   const end = new Date(event.range.end);
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -32,7 +33,7 @@ function addToRange(event) {
 function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
-  document.getElementById("note-text").value = event ? event.text : "";
+  document.getElementById("note-text").value = event ? event.text.replace(/ 🔁$/, '') : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
@@ -60,14 +61,24 @@ async function saveNote() {
   localStorage.setItem("lastColor", color);
 
   if (currentEditingEvent) {
-    try {
-      const baseId = currentEditingEvent.googleId.replace(/_repeat_\d+$/, "");
-      await gapi.client.calendar.events.delete({
-        calendarId,
-        eventId: baseId
-      });
-    } catch (e) {
-      console.error("Failed to delete existing event:", e);
+    const textBase = currentEditingEvent.text.replace(/ 🔁$/, '');
+    const recurType = currentEditingEvent.recurrenceType;
+    const allEvents = await gapi.client.calendar.events.list({
+      calendarId,
+      showDeleted: false,
+      singleEvents: true,
+      orderBy: "startTime"
+    });
+
+    for (const ev of allEvents.result.items) {
+      const desc = ev.description ? JSON.parse(ev.description) : {};
+      if (ev.summary?.replace(/ 🔁$/, '') === textBase && desc.recurrence === recurType) {
+        try {
+          await gapi.client.calendar.events.delete({ calendarId, eventId: ev.id });
+        } catch (e) {
+          console.error("Failed to delete existing event:", e);
+        }
+      }
     }
   }
 
@@ -87,6 +98,49 @@ async function saveNote() {
   closeModal();
   await initData();
 }
+
+async function deleteCurrentEvent() {
+  if (!currentEditingEvent) return;
+
+  const textBase = currentEditingEvent.text.replace(/ 🔁$/, '');
+  const recurType = currentEditingEvent.recurrenceType;
+  const allEvents = await gapi.client.calendar.events.list({
+    calendarId,
+    showDeleted: false,
+    singleEvents: true,
+    orderBy: "startTime"
+  });
+
+  for (const ev of allEvents.result.items) {
+    const desc = ev.description ? JSON.parse(ev.description) : {};
+    if (ev.summary?.replace(/ 🔁$/, '') === textBase && desc.recurrence === recurType) {
+      try {
+        await gapi.client.calendar.events.delete({ calendarId, eventId: ev.id });
+      } catch (e) {
+        console.error("Failed to delete event:", e);
+      }
+    }
+  }
+
+  closeModal();
+  await initData();
+}
+
+// Toggle visibility of recurring events
+function toggleRecurringFilter() {
+  showRecurringEvents = !showRecurringEvents;
+  initData();
+  document.getElementById("toggle-recurring-btn").textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
+}
+
+// Add filter toggle button
+window.addEventListener("DOMContentLoaded", () => {
+  const btn = document.createElement("button");
+  btn.id = "toggle-recurring-btn";
+  btn.textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
+  btn.onclick = toggleRecurringFilter;
+  document.body.insertBefore(btn, document.body.firstChild);
+});
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
