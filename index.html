@@ -11,266 +11,160 @@
 
   <style>
     :root {
-      --today-color: red;
-    }
-    body {
-      font-family: Roboto, Arial, sans-serif;
-      margin: 0;
-      overflow-x: auto;
-      transition: background 0.3s, color 0.3s;
-    }
-    body.dark {
-      background: #121212;
-      color: white;
-    }
+  --today-color: #ff6961; /* Default, can be changed from settings */
+  --modal-bg: rgba(0, 0, 0, 0.4);
+  --light-bg: #fff;
+  --dark-bg: #1e1e1e;
+  --dark-text: #e5e5e5;
+  --hover-delete: #ff4d4f;
+}
 
-    /* Header */
-    #header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: #f0f0f0;
-      flex-wrap: wrap;
-    }
-    body.dark #header {
-      background: #1f1f1f;
-    }
+/* General */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+body.dark {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+.today {
+  border: 2px solid var(--today-color);
+}
 
-    #header button {
-      margin: 0 5px;
-      padding: 6px 10px;
-      border: none;
-      border-radius: 6px;
-      background-color: #eee;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #header button:hover {
-      background-color: #ddd;
-    }
-    body.dark #header button {
-      background-color: #333;
-      color: white;
-    }
-    body.dark #header button:hover {
-      background-color: #444;
-    }
+/* Calendar */
+#calendar {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 1rem;
+  transition: opacity 0.3s ease;
+}
+.month-column {
+  min-width: 250px;
+}
 
-    /* Calendar */
-    #calendar {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      padding: 10px;
-      background: #f4f4f4;
-      transition: opacity 0.3s ease;
-    }
-    body.dark #calendar {
-      background: #1a1a1a;
-    }
+/* Modal */
+#modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: var(--modal-bg);
+  z-index: 1000;
+}
+#modal-content {
+  background: var(--light-bg);
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  animation: fadeInScale 0.3s ease;
+}
+body.dark #modal-content {
+  background: #2c2c2c;
+  color: var(--dark-text);
+}
+#modal.fade-out,
+#modal-content.fade-out {
+  animation: fadeOutScale 0.3s ease forwards;
+}
 
-    .month-column {
-      flex: 0 0 auto;
-      width: 130px;
-      margin-right: 10px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-      padding: 5px;
-    }
-    body.dark .month-column {
-      background: #2c2c2c;
-    }
+/* Modal delete button hover red */
+#delete-btn {
+  background-color: #ccc;
+  transition: background-color 0.3s ease;
+}
+#delete-btn:hover {
+  background-color: var(--hover-delete);
+  color: white;
+}
 
-    .month-column h3 {
-      text-align: center;
-      font-size: 16px;
-      margin-bottom: 5px;
-    }
+/* Settings Overlay */
+#settings-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--modal-bg);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+#settings-panel {
+  background: var(--light-bg);
+  padding: 20px;
+  border-radius: 10px;
+  min-width: 300px;
+  animation: fadeInScale 0.3s ease;
+}
+body.dark #settings-panel {
+  background: #2c2c2c;
+  color: var(--dark-text);
+}
+#settings-panel.fade-out,
+#settings-overlay.fade-out {
+  animation: fadeOutScale 0.3s ease forwards;
+}
 
-    .day-cell {
-      border: 1px solid #ddd;
-      margin: 2px 0;
-      padding: 4px;
-      font-size: 13px;
-      cursor: pointer;
-      border-radius: 4px;
-      min-height: 45px;
-    }
-    body.dark .day-cell {
-      border: 1px solid #666;
-    }
+/* Today Color Section Spacing */
+#settings-panel label[for="today-color"] {
+  display: block;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
 
-    .today {
-      border: 2px solid var(--today-color, red);
-    }
-    .day-label {
-      font-weight: bold;
-      margin-bottom: 3px;
-    }
+/* Settings close button hover */
+.settings-close {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: color 0.2s ease;
+}
+.settings-close:hover {
+  color: var(--hover-delete);
+}
 
-    .note-text {
-      font-size: 12px;
-      border-radius: 4px;
-      padding: 2px 4px;
-      margin-top: 2px;
-      color: black;
-    }
+/* Note text inside calendar */
+.note-text {
+  background-color: #b6eeb6;
+  padding: 4px 6px;
+  margin: 2px 0;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
 
-    /* Modal */
-    #modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
+/* Animations */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes fadeOutScale {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
 
-    #modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 300px;
-      animation: fadeIn 0.3s ease;
-    }
-
-    body.dark #modal-content {
-      background: #2c2c2c;
-      color: white;
-    }
-
-    #modal-content input,
-    #modal-content textarea,
-    #modal-content select {
-      width: 100%;
-      margin-top: 5px;
-    }
-
-    #modal-content .actions {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    body.dark #modal-content input,
-    body.dark #modal-content textarea,
-    body.dark #modal-content select {
-      background-color: #3a3a3a;
-      color: white;
-      border: 1px solid #555;
-    }
-
-    body.dark #modal-content input[type="color"] {
-      background-color: transparent;
-      padding: 2px;
-    }
-
-    body.dark input[type="date"] {
-      background-color: #3a3a3a !important;
-      color: white !important;
-      border: 1px solid #555;
-      padding: 5px;
-      border-radius: 4px;
-    }
-
-    body.dark input[type="date"]::-webkit-calendar-picker-indicator {
-      background: transparent;
-      filter: invert(1);
-      cursor: pointer;
-    }
-
-    /* Settings Popup */
-    #settings-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.4);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1100;
-    }
-
-    #settings-panel {
-      background: #fafafa;
-      padding: 15px;
-      border-radius: 10px;
-      max-width: 320px;
-      width: 90%;
-      animation: fadeIn 0.3s ease;
-    }
-
-    body.dark #settings-panel {
-      background: #1e1e1e;
-      color: white;
-    }
-
-    #settings-panel button {
-      margin: 8px 0;
-      display: block;
-      width: 100%;
-    }
-
-    #settings-panel label {
-      display: block;
-      margin: 12px 0;
-    }
-
-    #settings-panel .info {
-      font-size: 13px;
-      margin-top: 10px;
-      color: #666;
-    }
-    body.dark #settings-panel .info {
-      color: #aaa;
-    }
-
-    /* Spinner */
-    #loading-spinner {
-      display: none;
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 2000;
-      font-size: 22px;
-      color: #333;
-    }
-    body.dark #loading-spinner {
-      color: white;
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes fadeOut {
-      to {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-    }
-
-    .fade-out {
-      animation: fadeOut 0.3s forwards;
-    }
+/* Fix for dark mode date inputs */
+body.dark input[type="date"] {
+  background: #3a3a3a;
+  color: var(--dark-text);
+  border: 1px solid #555;
+}
   </style>
 </head>
 <body>
