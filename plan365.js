@@ -103,7 +103,7 @@ async function initData() {
       timeMin,
       timeMax,
       showDeleted: false,
-      singleEvents: false,
+      singleEvents: true,
       orderBy: "startTime"
     });
 
