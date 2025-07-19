@@ -414,7 +414,10 @@
       const darkMode = localStorage.getItem('darkMode') === 'true';
       if (darkMode) document.body.classList.add('dark');
       const icon = darkMode ? 'fas fa-sun' : 'fas fa-moon';
-      document.getElementById('theme-icon').className = icon;
+      
+      const themeIcon = document.getElementById('theme-icon');
+      if (themeIcon) themeIcon.className = icon;
+      
       document.getElementById('theme-toggle-icon').className = icon;
 
       const storedColor = localStorage.getItem('todayColor');
