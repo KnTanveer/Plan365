@@ -148,6 +148,62 @@
       border: 1px solid #555;
     }
 
+    #font-picker-container {
+      position: relative;
+      margin-top: 5px;
+    }
+    
+    #font-search {
+      padding: 6px;
+      width: 100%;
+      font-size: 14px;
+    }
+    
+    #font-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ccc;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 4px;
+    }
+    
+    #font-dropdown div {
+      padding: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    #font-dropdown div:hover {
+      background: #f0f0f0;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    body.dark #font-search {
+      background-color: #3a3a3a;
+      color: white;
+      border: 1px solid #555;
+    }
+    
+    body.dark #font-dropdown {
+      background: #2c2c2c;
+      border-color: #444;
+      color: white;
+    }
+    
+    body.dark #font-dropdown div:hover {
+      background: #444;
+    }
+        
     /* Shared Modal Styles */
     .popup-overlay {
       position: fixed;
@@ -352,8 +408,10 @@
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
       </label>
       <label><i class="fas fa-font"></i> Font:
-        <input list="font-options" id="font-input" placeholder="Search fonts...">
-        <datalist id="font-options"></datalist>
+        <div id="font-picker-container">
+          <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
+          <div id="font-dropdown" class="hidden"></div>
+        </div>
       </label>
       <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Plan365 (Hence will not be synced from Google calendar)</p>
     </div>
