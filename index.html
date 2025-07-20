@@ -157,13 +157,23 @@
     }
     
     #font-label {
-      position: relative;
       display: block;
+      font-size: 14px;
+      margin-bottom: 10px;
     }
 
     #font-label input {
       width: 100%;
       box-sizing: border-box;
+    }
+
+    .font-input-wrapper {
+      position: relative;
+      margin-top: 6px; 
+    }
+    
+    #font-dropdown.hidden {
+      display: none;
     }
     
     #font-search {
@@ -452,7 +462,7 @@
       </label>
       <label id="font-label">
         <i class="fas fa-font"></i> Font:
-        <div style="position: relative;">
+        <div class="font-input-wrapper">
           <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
           <button id="font-reset" title="Reset font">
             <i class="fas fa-undo-alt"></i>
