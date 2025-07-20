@@ -4,7 +4,7 @@ let currentMonth = new Date().getMonth();
 const calendarData = new Map();
 let calendarId = null;
 let accessToken = null;
-let tokenClient = null;
+let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
 
@@ -393,6 +393,21 @@ function toggleRecurringEvents() {
 
 // --- Auth and Startup ---
 function handleSignIn() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    callback: async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      await gapiLoad();
+      gapi.client.setToken({ access_token: accessToken });
+      document.getElementById("signin-btn").style.display = "none";
+      document.getElementById("signout-btn").style.display = "inline-block";
+      setInterval(() => tokenClient.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+      await initCalendarId();
+      await initData();
+    },
+  });
   tokenClient.requestAccessToken();
 }
 
@@ -402,6 +417,7 @@ function handleSignOut() {
     google.accounts.oauth2.revoke(accessToken, () => {
       accessToken = null;
       calendarId = null;
+      localStorage.removeItem("accessToken");
       document.getElementById("signin-btn").style.display = "inline-block";
       document.getElementById("signout-btn").style.display = "none";
       calendarData.clear();
@@ -413,12 +429,22 @@ function handleSignOut() {
 function gapiLoad() {
   return new Promise(resolve => {
     gapi.load("client", async () => {
-      await gapi.client.init({
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
-      });
+      await gapi.client.init({ discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"] });
       resolve();
     });
   });
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") smoothScrollCalendar(100);
+  if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
+});
+
+const storedColor = localStorage.getItem("todayColor");
+if (storedColor) {
+  document.documentElement.style.setProperty('--today-color', storedColor);
+  const picker = document.getElementById("today-color-input");
+  if (picker) picker.value = storedColor;
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -435,44 +461,25 @@ window.addEventListener("DOMContentLoaded", async () => {
   const storedColor = localStorage.getItem("todayColor");
   if (storedColor) {
     changeTodayColor(storedColor);
-    const picker = document.getElementById("today-color-input");
-    if (picker) picker.value = storedColor;
+    document.getElementById("today-color-input").value = storedColor;
   }
 
-  await gapiLoad();
+  const savedToken = localStorage.getItem("accessToken");
+  if (savedToken) {
+    accessToken = savedToken;
+    await gapiLoad();
+    gapi.client.setToken({ access_token: accessToken });
 
-  const CLIENT_ID = '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com';
-  const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
+    document.getElementById("signin-btn").style.display = "none";
+    document.getElementById("signout-btn").style.display = "inline-block";
 
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: async (tokenResponse) => {
-      accessToken = tokenResponse.access_token;
-      gapi.client.setToken({ access_token: accessToken });
+    setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
 
-      document.getElementById("signin-btn").style.display = "none";
-      document.getElementById("signout-btn").style.display = "inline-block";
-
-      setInterval(() => {
-        tokenClient.requestAccessToken({ prompt: '' });
-      }, 55 * 60 * 1000);
-
-      await initCalendarId();
-      await initData();
-    },
-  });
-
-  google.accounts.oauth2.hasGrantedAllScopes(
-    { client_id: CLIENT_ID },
-    SCOPES
-  ) && tokenClient.requestAccessToken({ prompt: '' });
+    await initCalendarId();
+    await initData();
+  }
 });
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowRight") smoothScrollCalendar(100);
-  if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
-});
 
 function showDeleteChoiceModal() {
   return new Promise(resolve => {
