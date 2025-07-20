@@ -151,18 +151,34 @@
 
     #font-picker-container {
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       margin-top: 5px;
     }
     
     #font-search {
+      flex: 1;
       padding: 6px;
-      width: 100%;
       font-size: 14px;
+    }
+    
+    #font-reset {
+      padding: 6px 8px;
+      font-size: 14px;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    #font-reset:hover {
+      background: #ddd;
     }
     
     #font-dropdown {
       position: absolute;
-      top: 100%;
+      top: 110%;
       left: 0;
       right: 0;
       max-height: 200px;
@@ -185,8 +201,8 @@
       background: #f0f0f0;
     }
     
-    .hidden {
-      display: none;
+    #font-dropdown .highlighted {
+      background-color: #e6f0ff !important;
     }
     
     body.dark #font-search {
@@ -204,6 +220,17 @@
     body.dark #font-dropdown div:hover {
       background: #444;
     }
+    
+    body.dark #font-dropdown .highlighted {
+      background: #333 !important;
+    }
+    
+    body.dark #font-reset {
+      background: #444;
+      color: white;
+      border-color: #666;
+    }
+
   
     /* Shared Modal Styles */
     .popup-overlay {
@@ -411,6 +438,7 @@
       <label><i class="fas fa-font"></i> Font:
         <div id="font-picker-container">
           <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
+          <button id="font-reset" title="Reset font" aria-label="Reset font">↺</button>
           <div id="font-dropdown" class="hidden"></div>
         </div>
       </label>
