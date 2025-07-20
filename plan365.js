@@ -48,59 +48,83 @@ function addToRange(event) {
 }
 
 //font selector 
-const systemFonts = [
+const fontSearchInput = document.getElementById("font-search");
+const fontDropdown = document.getElementById("font-dropdown");
+const fontList = [
+  // System fonts
   "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
   "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
   "Franklin Gothic Medium", "Comic Sans MS", "Calibri", "Helvetica", "Optima",
-  "Candara", "Century Gothic", "Geneva"
-];
-
-const googleFonts = [
+  "Candara", "Century Gothic", "Geneva",
+  // Popular Google Fonts
   "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Oswald", "Raleway",
   "Merriweather", "Nunito", "Playfair Display", "Rubik", "Inter", "Work Sans",
   "Noto Sans", "Fira Sans", "DM Sans", "PT Sans", "Quicksand", "Source Sans Pro",
-  "Titillium Web", "Cabin", "Ubuntu", "Arimo", "Space Grotesk", "Manrope"
+  "Titillium Web", "Cabin", "Ubuntu", "Arimo", "Space Grotesk", "Manrope",
+  "Teko", "Anton", "Archivo", "Lexend", "Prompt", "Dosis", "Josefin Sans",
+  "Zilla Slab", "Chakra Petch", "Sora", "Cairo", "Barlow", "Bitter", "Exo",
+  "Mukta", "Heebo", "Asap", "Catamaran", "Crimson Text", "Overpass", "Muli",
+  "Bebas Neue", "Signika", "Kanit", "Tajawal", "Assistant"
 ];
 
-const allFonts = [...systemFonts, ...googleFonts];
-const fontInput = document.getElementById("font-input");
-const fontOptions = document.getElementById("font-options");
-
-allFonts.forEach(font => {
-  const opt = document.createElement("option");
-  opt.value = font;
-  fontOptions.appendChild(opt);
-});
+const googleFontsSet = new Set(fontList.slice(20)); // Google Fonts only from index 20 onward
 
 function loadGoogleFont(font) {
+  if (!googleFontsSet.has(font)) return;
   const id = "dynamic-font";
-  if (!googleFonts.includes(font)) return;
-  let link = document.getElementById(id);
-  if (link) link.remove();
+  let existing = document.getElementById(id);
+  if (existing) existing.remove();
 
-  link = document.createElement("link");
+  const link = document.createElement("link");
   link.id = id;
   link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap`;
+  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}&display=swap`;
   document.head.appendChild(link);
 }
 
 function applyFont(font) {
-  if (!font || !allFonts.includes(font)) return;
+  if (!fontList.includes(font)) return;
   loadGoogleFont(font);
   document.body.style.fontFamily = `'${font}', sans-serif`;
   localStorage.setItem("preferredFont", font);
 }
 
-fontInput.addEventListener("change", () => {
-  applyFont(fontInput.value);
+function updateDropdown(query = "") {
+  fontDropdown.innerHTML = "";
+  const filtered = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
+  filtered.forEach(font => {
+    const item = document.createElement("div");
+    item.textContent = font;
+    item.style.fontFamily = `'${font}', sans-serif`;
+    item.onclick = () => {
+      fontSearchInput.value = font;
+      applyFont(font);
+      fontDropdown.classList.add("hidden");
+    };
+    fontDropdown.appendChild(item);
+  });
+  fontDropdown.classList.toggle("hidden", filtered.length === 0);
+}
+
+fontSearchInput.addEventListener("input", () => {
+  updateDropdown(fontSearchInput.value);
+});
+
+fontSearchInput.addEventListener("focus", () => {
+  updateDropdown(fontSearchInput.value);
+});
+
+document.addEventListener("click", (e) => {
+  if (!document.getElementById("font-picker-container").contains(e.target)) {
+    fontDropdown.classList.add("hidden");
+  }
 });
 
 window.addEventListener("load", () => {
-  const storedFont = localStorage.getItem("preferredFont");
-  if (storedFont && allFonts.includes(storedFont)) {
-    fontInput.value = storedFont;
-    applyFont(storedFont);
+  const saved = localStorage.getItem("preferredFont");
+  if (saved && fontList.includes(saved)) {
+    fontSearchInput.value = saved;
+    applyFont(saved);
   }
 });
 
