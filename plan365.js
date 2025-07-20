@@ -50,6 +50,7 @@ function addToRange(event) {
 //font selector 
 const fontSearchInput = document.getElementById("font-search");
 const fontDropdown = document.getElementById("font-dropdown");
+const fontReset = document.getElementById("font-reset");
 
 const fontList = [
   // Sans-Serif
@@ -80,10 +81,10 @@ const fontList = [
 ];
 
 const systemFonts = new Set([
-  "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
-  "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
-  "Comic Sans MS", "Helvetica", "Optima", "Candara", "Geneva", "Century Gothic"
-]);
+    "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
+    "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
+    "Comic Sans MS", "Helvetica", "Optima", "Candara", "Geneva", "Century Gothic"
+  ]);
 
 const googleFontsSet = new Set(fontList.filter(f => !systemFonts.has(f)));
 
@@ -118,11 +119,12 @@ function selectFont(font) {
 function updateDropdown(query = "") {
   fontDropdown.innerHTML = "";
   currentFontList = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
-  currentFontList.forEach(font => {
+  currentFontList.forEach((font, index) => {
     const item = document.createElement("div");
     item.textContent = font;
     item.style.fontFamily = `'${font}', sans-serif`;
     item.onclick = () => selectFont(font);
+    if (index === 0) item.classList.add("highlighted");
     fontDropdown.appendChild(item);
   });
   fontDropdown.classList.toggle("hidden", currentFontList.length === 0);
@@ -141,6 +143,13 @@ fontSearchInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     selectFont(currentFontList[0]);
   }
+});
+
+fontReset.addEventListener("click", () => {
+  fontSearchInput.value = "";
+  fontDropdown.classList.add("hidden");
+  document.body.style.fontFamily = "";
+  localStorage.removeItem("preferredFont");
 });
 
 document.addEventListener("click", (e) => {
