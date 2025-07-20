@@ -367,25 +367,29 @@ function goToToday() {
 }
 
 async function initCalendarId() {
-  const result = await gapi.client.calendar.calendarList.list();
-  const exists = result.result.items.find(c => c.summary === "Plan365");
-  calendarId = exists ? exists.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
+  if (!accessToken) return console.warn("Skipping calendar init: no access token.");
+
+  try {
+    const res = await gapi.client.calendar.calendarList.list();
+    const found = res.result.items.find(c => c.summary === "Plan365");
+    calendarId = found ? found.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
+  } catch (e) {
+    console.error("initCalendarId failed:", e);
+    if (e.status === 401) {
+      alert("Session expired – please sign in again.");
+      handleSignOut();
+    }
+  }
 }
 
 async function initData() {
-  if (!calendarId) return;
-  if (!accessToken) {
-    console.warn("Access token missing. Please sign in.");
-    return;
-  }
+  if (!calendarId || !accessToken) return;
   showSpinner(true);
-  const timeMin = new Date(currentYear, 0, 1).toISOString();
-  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
 
   try {
-    const response = await gapi.client.calendar.events.list({
-      calendarId, timeMin, timeMax, showDeleted: false,
-      singleEvents: true, orderBy: "startTime"
+    const res = await gapi.client.calendar.events.list({
+      calendarId, timeMin: /*...*/, timeMax: /*...*/,
+      showDeleted: false, singleEvents: true, orderBy: "startTime",
     });
 
     calendarData.clear();
@@ -441,9 +445,9 @@ async function initData() {
 
     createCalendar();
   } catch (e) {
-    console.error("Failed to fetch events:", e);
+    console.error("initData failed:", e);
     if (e.status === 401) {
-      alert("Session expired. Please sign in again.");
+      alert("Session expired or unauthorized. Signing out...");
       handleSignOut();
     }
   } finally {
@@ -468,6 +472,7 @@ function handleSignIn() {
 
       await gapiLoad();
       gapi.client.setToken({ access_token: accessToken });
+
       document.getElementById("signin-btn").style.display = "none";
       document.getElementById("signout-btn").style.display = "inline-block";
 
@@ -476,14 +481,11 @@ function handleSignIn() {
       await initData();
     }
   });
-
   tokenClient.requestAccessToken(); 
 }
 
 function setupTokenRefresh() {
-  if (!tokenClient) return;
-  if (window.__tokenRefreshInterval) return;
-
+  if (!tokenClient || window.__tokenRefreshInterval) return;
   window.__tokenRefreshInterval = setInterval(() => {
     if (tokenClient) {
       console.log("Refreshing access token...");
@@ -493,18 +495,16 @@ function setupTokenRefresh() {
 }
 
 function handleSignOut() {
-  if (accessToken) {
-    gapi.client.setToken(null);
-    google.accounts.oauth2.revoke(accessToken, () => {
-      accessToken = null;
-      calendarId = null;
-      localStorage.removeItem("accessToken");
-      document.getElementById("signin-btn").style.display = "inline-block";
-      document.getElementById("signout-btn").style.display = "none";
-      calendarData.clear();
-      createCalendar();
-    });
-  }
+  if (!accessToken) return;
+  gapi.client.setToken(null);
+  google.accounts.oauth2.revoke(accessToken, () => {
+    accessToken = calendarId = null;
+    localStorage.removeItem("accessToken");
+    document.getElementById("signin-btn").style.display = "inline-block";
+    document.getElementById("signout-btn").style.display = "none";
+    calendarData.clear();
+    createCalendar();
+  });
 }
 
 function gapiLoad() {
@@ -550,11 +550,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     accessToken = savedToken;
     await gapiLoad();
     gapi.client.setToken({ access_token: accessToken });
-  
+
     document.getElementById("signin-btn").style.display = "none";
     document.getElementById("signout-btn").style.display = "inline-block";
 
-    setupTokenRefresh();
+    setupTokenRefresh(); 
     await initCalendarId();
     await initData();
   }
