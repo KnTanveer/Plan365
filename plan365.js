@@ -50,29 +50,49 @@ function addToRange(event) {
 //font selector 
 const fontSearchInput = document.getElementById("font-search");
 const fontDropdown = document.getElementById("font-dropdown");
+
 const fontList = [
-  // System fonts
+  // Sans-Serif
+  "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Inter", "Noto Sans",
+  "Work Sans", "Ubuntu", "Fira Sans", "DM Sans", "Mulish", "Assistant",
+  "Barlow", "Rubik", "Titillium Web", "Cabin", "Asap", "Questrial", "Manrope",
+
+  // Serif
+  "Merriweather", "Playfair Display", "Lora", "Crimson Text", "Cormorant",
+  "Zilla Slab", "Tinos", "EB Garamond", "Domine", "PT Serif", "Tangerine",
+
+  // Display
+  "Oswald", "Anton", "Bebas Neue", "Alfa Slab One", "Black Ops One",
+  "Bangers", "Righteous", "Permanent Marker", "Passion One",
+
+  // Handwriting / Calligraphy
+  "Dancing Script", "Pacifico", "Satisfy", "Great Vibes", "Cookie",
+  "Kaushan Script", "Caveat", "Shadows Into Light", "Indie Flower",
+
+  // Monospace
+  "Courier New", "Fira Code", "JetBrains Mono", "Source Code Pro",
+  "IBM Plex Mono", "Inconsolata", "Lucida Console",
+
+  // System Fonts
   "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
-  "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
-  "Franklin Gothic Medium", "Comic Sans MS", "Calibri", "Helvetica", "Optima",
-  "Candara", "Century Gothic", "Geneva",
-  // Popular Google Fonts
-  "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Oswald", "Raleway",
-  "Merriweather", "Nunito", "Playfair Display", "Rubik", "Inter", "Work Sans",
-  "Noto Sans", "Fira Sans", "DM Sans", "PT Sans", "Quicksand", "Source Sans Pro",
-  "Titillium Web", "Cabin", "Ubuntu", "Arimo", "Space Grotesk", "Manrope",
-  "Teko", "Anton", "Archivo", "Lexend", "Prompt", "Dosis", "Josefin Sans",
-  "Zilla Slab", "Chakra Petch", "Sora", "Cairo", "Barlow", "Bitter", "Exo",
-  "Mukta", "Heebo", "Asap", "Catamaran", "Crimson Text", "Overpass", "Muli",
-  "Bebas Neue", "Signika", "Kanit", "Tajawal", "Assistant"
+  "Impact", "Palatino Linotype", "Segoe UI", "Comic Sans MS", "Helvetica",
+  "Optima", "Candara", "Geneva", "Century Gothic"
 ];
 
-const googleFontsSet = new Set(fontList.slice(20)); // Google Fonts only from index 20 onward
+const systemFonts = new Set([
+  "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
+  "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
+  "Comic Sans MS", "Helvetica", "Optima", "Candara", "Geneva", "Century Gothic"
+]);
+
+const googleFontsSet = new Set(fontList.filter(f => !systemFonts.has(f)));
+
+let currentFontList = [];
 
 function loadGoogleFont(font) {
   if (!googleFontsSet.has(font)) return;
   const id = "dynamic-font";
-  let existing = document.getElementById(id);
+  const existing = document.getElementById(id);
   if (existing) existing.remove();
 
   const link = document.createElement("link");
@@ -89,21 +109,23 @@ function applyFont(font) {
   localStorage.setItem("preferredFont", font);
 }
 
+function selectFont(font) {
+  fontSearchInput.value = font;
+  applyFont(font);
+  fontDropdown.classList.add("hidden");
+}
+
 function updateDropdown(query = "") {
   fontDropdown.innerHTML = "";
-  const filtered = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
-  filtered.forEach(font => {
+  currentFontList = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
+  currentFontList.forEach(font => {
     const item = document.createElement("div");
     item.textContent = font;
     item.style.fontFamily = `'${font}', sans-serif`;
-    item.onclick = () => {
-      fontSearchInput.value = font;
-      applyFont(font);
-      fontDropdown.classList.add("hidden");
-    };
+    item.onclick = () => selectFont(font);
     fontDropdown.appendChild(item);
   });
-  fontDropdown.classList.toggle("hidden", filtered.length === 0);
+  fontDropdown.classList.toggle("hidden", currentFontList.length === 0);
 }
 
 fontSearchInput.addEventListener("input", () => {
@@ -112,6 +134,13 @@ fontSearchInput.addEventListener("input", () => {
 
 fontSearchInput.addEventListener("focus", () => {
   updateDropdown(fontSearchInput.value);
+});
+
+fontSearchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && currentFontList.length > 0) {
+    e.preventDefault();
+    selectFont(currentFontList[0]);
+  }
 });
 
 document.addEventListener("click", (e) => {
