@@ -19,7 +19,7 @@ function changeTodayColor(color) {
   document.documentElement.style.setProperty('--today-color', color);
   localStorage.setItem('todayColor', color);
 
-  const colorPicker = document.getElementById('todayColorPicker');
+  const colorPicker = document.getElementById('today-color-input');
   if (colorPicker) {
     colorPicker.value = color;
   }
@@ -361,9 +361,8 @@ window.addEventListener("keydown", (e) => {
 
 const storedColor = localStorage.getItem("todayColor");
 if (storedColor) {
-  changeTodayColor(storedColor);
-
-  const picker = document.getElementById("todayColorPicker");
+  document.documentElement.style.setProperty('--today-color', storedColor);
+  const picker = document.getElementById("today-color-input");
   if (picker) picker.value = storedColor;
 }
 
