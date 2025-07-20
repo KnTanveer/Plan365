@@ -18,8 +18,11 @@ function toggleDarkMode() {
 function changeTodayColor(color) {
   document.documentElement.style.setProperty('--today-color', color);
   localStorage.setItem('todayColor', color);
+
   const colorPicker = document.getElementById('today-color-input');
-  if (colorPicker) colorPicker.value = color;
+  if (colorPicker) {
+    colorPicker.value = color;
+  }
 }
 
 function showSpinner(show) {
@@ -44,15 +47,47 @@ function addToRange(event) {
   }
 }
 
-// Font Picker Setup
+//font selector 
 const fontSearchInput = document.getElementById("font-search");
 const fontDropdown = document.getElementById("font-dropdown");
 const fontReset = document.getElementById("font-reset");
 
-const fontList = [ /* Full list omitted for brevity */ ];
+const fontList = [
+  // Sans-Serif
+  "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Inter", "Noto Sans",
+  "Work Sans", "Ubuntu", "Fira Sans", "DM Sans", "Mulish", "Assistant",
+  "Barlow", "Rubik", "Titillium Web", "Cabin", "Asap", "Questrial", "Manrope",
 
-const systemFonts = new Set([ /* System fonts omitted */ ]);
+  // Serif
+  "Merriweather", "Playfair Display", "Lora", "Crimson Text", "Cormorant",
+  "Zilla Slab", "Tinos", "EB Garamond", "Domine", "PT Serif", "Tangerine",
+
+  // Display
+  "Oswald", "Anton", "Bebas Neue", "Alfa Slab One", "Black Ops One",
+  "Bangers", "Righteous", "Permanent Marker", "Passion One",
+
+  // Handwriting / Calligraphy
+  "Dancing Script", "Pacifico", "Satisfy", "Great Vibes", "Cookie",
+  "Kaushan Script", "Caveat", "Shadows Into Light", "Indie Flower",
+
+  // Monospace
+  "Courier New", "Fira Code", "JetBrains Mono", "Source Code Pro",
+  "IBM Plex Mono", "Inconsolata", "Lucida Console",
+
+  // System Fonts
+  "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
+  "Impact", "Palatino Linotype", "Segoe UI", "Comic Sans MS", "Helvetica",
+  "Optima", "Candara", "Geneva", "Century Gothic"
+];
+
+const systemFonts = new Set([
+  "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
+  "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
+  "Comic Sans MS", "Helvetica", "Optima", "Candara", "Geneva", "Century Gothic"
+]);
+
 const googleFontsSet = new Set(fontList.filter(f => !systemFonts.has(f)));
+
 let currentFontList = [];
 
 function loadGoogleFont(font) {
@@ -78,7 +113,7 @@ function applyFont(font) {
 function selectFont(font) {
   fontSearchInput.value = font;
   applyFont(font);
-  fontDropdown.classList.add("hidden"); // Close dropdown after selection
+  fontDropdown.classList.add("hidden");
 }
 
 function clearHighlights() {
@@ -89,7 +124,7 @@ function clearHighlights() {
 function updateDropdown(query = "") {
   fontDropdown.innerHTML = "";
   currentFontList = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
-  currentFontList.forEach((font) => {
+  currentFontList.forEach((font, index) => {
     const item = document.createElement("div");
     item.textContent = font;
     item.style.fontFamily = `'${font}', sans-serif`;
@@ -97,6 +132,11 @@ function updateDropdown(query = "") {
     item.addEventListener("click", () => selectFont(font));
     fontDropdown.appendChild(item);
   });
+
+  if (currentFontList.length > 0) {
+    const firstItem = fontDropdown.querySelector("div");
+    if (firstItem) firstItem.classList.add("highlighted");
+  }
 
   fontDropdown.classList.toggle("hidden", currentFontList.length === 0);
 }
@@ -107,11 +147,6 @@ fontSearchInput.addEventListener("input", () => {
 
 fontSearchInput.addEventListener("focus", () => {
   updateDropdown(fontSearchInput.value);
-});
-
-fontSearchInput.addEventListener("click", (e) => {
-  e.stopPropagation();
-  updateDropdown(fontSearchInput.value); // Only show on click
 });
 
 fontSearchInput.addEventListener("keydown", (e) => {
