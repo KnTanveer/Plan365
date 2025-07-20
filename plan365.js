@@ -383,12 +383,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("today-color-input").value = storedColor;
   }
 
-  const btn = document.createElement("button");
-  btn.id = "toggle-recurring-btn";
-  btn.textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
-  btn.onclick = toggleRecurringEvents;
-  document.body.insertBefore(btn, document.body.firstChild);
-
   const savedToken = localStorage.getItem("accessToken");
   if (savedToken) {
     accessToken = savedToken;
