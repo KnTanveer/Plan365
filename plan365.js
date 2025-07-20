@@ -4,7 +4,7 @@ let currentMonth = new Date().getMonth();
 const calendarData = new Map();
 let calendarId = null;
 let accessToken = null;
-let tokenClient = null;
+let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
 
