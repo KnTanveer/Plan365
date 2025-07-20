@@ -122,6 +122,19 @@
       color: black;
     }
 
+    #font-select {
+      padding: 6px;
+      width: 100%;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    
+    body.dark #font-select {
+      background-color: #3a3a3a;
+      color: white;
+      border: 1px solid #555;
+    }
+    
     /* Shared Modal Styles */
     .popup-overlay {
       position: fixed;
@@ -325,7 +338,10 @@
       <label><i class="fas fa-palette"></i> Today Color:
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
       </label>
-      <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Google sync.</p>
+      <label><i class="fas fa-font"></i> Font:
+        <select id="font-select"></select>
+      </label>
+      <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Plan365 (Hence will not be synced from Google calendar)</p>
     </div>
   </div>
 
