@@ -48,59 +48,61 @@ function addToRange(event) {
 }
 
 //font selector 
-  const systemFonts = [
-    "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
-    "Garamond", "Courier New", "Brush Script MT", "Lucida Console", "Impact",
-    "Palatino Linotype", "Segoe UI", "Franklin Gothic Medium", "Comic Sans MS",
-    "Helvetica", "Calibri", "Candara", "Optima", "Century Gothic"
-  ];
+const systemFonts = [
+  "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
+  "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
+  "Franklin Gothic Medium", "Comic Sans MS", "Calibri", "Helvetica", "Optima",
+  "Candara", "Century Gothic", "Geneva"
+];
 
-  const googleFonts = [
-    "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", "Raleway", "Poppins",
-    "Merriweather", "Nunito", "Work Sans", "Inter", "Rubik", "Noto Sans"
-  ];
+const googleFonts = [
+  "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Oswald", "Raleway",
+  "Merriweather", "Nunito", "Playfair Display", "Rubik", "Inter", "Work Sans",
+  "Noto Sans", "Fira Sans", "DM Sans", "PT Sans", "Quicksand", "Source Sans Pro",
+  "Titillium Web", "Cabin", "Ubuntu", "Arimo", "Space Grotesk", "Manrope"
+];
 
-  const allFonts = [...systemFonts, ...googleFonts];
-  const fontSelect = document.getElementById("font-select");
+const allFonts = [...systemFonts, ...googleFonts];
+const fontInput = document.getElementById("font-input");
+const fontOptions = document.getElementById("font-options");
 
-  allFonts.forEach(font => {
-    const option = document.createElement("option");
-    option.value = font;
-    option.innerText = font;
-    fontSelect.appendChild(option);
-  });
+allFonts.forEach(font => {
+  const opt = document.createElement("option");
+  opt.value = font;
+  fontOptions.appendChild(opt);
+});
 
-  function loadFont(font) {
-    if (googleFonts.includes(font)) {
-      const id = 'dynamic-font';
-      let link = document.getElementById(id);
-      if (link) link.remove();
+function loadGoogleFont(font) {
+  const id = "dynamic-font";
+  if (!googleFonts.includes(font)) return;
+  let link = document.getElementById(id);
+  if (link) link.remove();
 
-      link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap`;
-      document.head.appendChild(link);
-    }
+  link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap`;
+  document.head.appendChild(link);
+}
+
+function applyFont(font) {
+  if (!font || !allFonts.includes(font)) return;
+  loadGoogleFont(font);
+  document.body.style.fontFamily = `'${font}', sans-serif`;
+  localStorage.setItem("preferredFont", font);
+}
+
+fontInput.addEventListener("change", () => {
+  applyFont(fontInput.value);
+});
+
+window.addEventListener("load", () => {
+  const storedFont = localStorage.getItem("preferredFont");
+  if (storedFont && allFonts.includes(storedFont)) {
+    fontInput.value = storedFont;
+    applyFont(storedFont);
   }
-
-  function applyFont(font) {
-    loadFont(font);
-    document.body.style.fontFamily = `'${font}', sans-serif`;
-    localStorage.setItem('preferredFont', font);
-  }
-
-  fontSelect.addEventListener("change", () => {
-    applyFont(fontSelect.value);
-  });
-
-  window.addEventListener("load", () => {
-    const storedFont = localStorage.getItem("preferredFont");
-    if (storedFont) {
-      fontSelect.value = storedFont;
-      applyFont(storedFont);
-    }
-  });
+});
 
 function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
