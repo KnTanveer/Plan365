@@ -465,19 +465,31 @@ function handleSignIn() {
     callback: async (tokenResponse) => {
       accessToken = tokenResponse.access_token;
       localStorage.setItem("accessToken", accessToken);
+
       await gapiLoad();
       gapi.client.setToken({ access_token: accessToken });
       document.getElementById("signin-btn").style.display = "none";
       document.getElementById("signout-btn").style.display = "inline-block";
-      setInterval(() => {
-        if (tokenClient) tokenClient.requestAccessToken({ prompt: '' });
-      }, 55 * 60 * 1000);
 
+      setupTokenRefresh(); 
       await initCalendarId();
       await initData();
-    },
+    }
   });
-  tokenClient.requestAccessToken();
+
+  tokenClient.requestAccessToken(); 
+}
+
+function setupTokenRefresh() {
+  if (!tokenClient) return;
+  if (window.__tokenRefreshInterval) return;
+
+  window.__tokenRefreshInterval = setInterval(() => {
+    if (tokenClient) {
+      console.log("Refreshing access token...");
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+  }, 55 * 60 * 1000); 
 }
 
 function handleSignOut() {
@@ -538,12 +550,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     accessToken = savedToken;
     await gapiLoad();
     gapi.client.setToken({ access_token: accessToken });
-
+  
     document.getElementById("signin-btn").style.display = "none";
     document.getElementById("signout-btn").style.display = "inline-block";
 
-    setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
-
+    setupTokenRefresh();
     await initCalendarId();
     await initData();
   }
