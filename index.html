@@ -153,23 +153,27 @@
       position: relative;
       display: flex;
       align-items: center;
-      gap: 4px;
       margin-top: 5px;
     }
     
     #font-search {
       flex: 1;
-      padding: 6px;
+      padding: 8px;
       font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px 0 0 4px;
+      outline: none;
     }
     
     #font-reset {
-      padding: 6px 8px;
+      padding: 8px 12px;
       font-size: 14px;
-      background: #eee;
       border: 1px solid #ccc;
-      border-radius: 4px;
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+      background: #eee;
       cursor: pointer;
+      height: 100%;
     }
     
     #font-reset:hover {
@@ -178,10 +182,10 @@
     
     #font-dropdown {
       position: absolute;
-      top: 110%;
+      top: 105%;
       left: 0;
       right: 0;
-      max-height: 200px;
+      max-height: 220px;
       overflow-y: auto;
       background: white;
       border: 1px solid #ccc;
@@ -202,13 +206,19 @@
     }
     
     #font-dropdown .highlighted {
-      background-color: #e6f0ff !important;
+      background-color: #dbe9ff !important;
     }
     
     body.dark #font-search {
       background-color: #3a3a3a;
       color: white;
       border: 1px solid #555;
+    }
+    
+    body.dark #font-reset {
+      background: #444;
+      color: white;
+      border-color: #666;
     }
     
     body.dark #font-dropdown {
@@ -225,13 +235,6 @@
       background: #333 !important;
     }
     
-    body.dark #font-reset {
-      background: #444;
-      color: white;
-      border-color: #666;
-    }
-
-  
     /* Shared Modal Styles */
     .popup-overlay {
       position: fixed;
@@ -436,12 +439,13 @@
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
       </label>
       <label><i class="fas fa-font"></i> Font:
-        <div id="font-picker-container">
-          <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
-          <button id="font-reset" title="Reset font" aria-label="Reset font">↺</button>
-          <div id="font-dropdown" class="hidden"></div>
-        </div>
-      </label>
+        <label><i class="fas fa-font"></i> Font:
+          <div id="font-picker-container">
+            <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
+            <button id="font-reset" title="Reset font" aria-label="Reset font">↺</button>
+            <div id="font-dropdown" class="hidden"></div>
+          </div>
+        </label>
       <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Plan365 (Hence will not be synced from Google calendar)</p>
     </div>
   </div>
