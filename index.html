@@ -157,10 +157,13 @@
     }
     
     #font-label {
-      display: flex;
-      flex-direction: column;
       position: relative;
+      display: block;
+    }
+
+    #font-label input {
       width: 100%;
+      box-sizing: border-box;
     }
     
     #font-search {
@@ -178,9 +181,9 @@
       top: 0;
       right: 0;
       height: 100%;
+      padding: 0 10px;
       border: none;
       background: transparent;
-      padding: 8px 10px;
       cursor: pointer;
     }
     
@@ -198,7 +201,7 @@
       background: white;
       border: 1px solid #ccc;
       border-radius: 0 0 4px 4px;
-      z-index: 9999;
+      z-index: 2000; /* higher than #settings-overlay */
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     
@@ -328,6 +331,9 @@
 
     #settings-panel {
       max-width: 300px;
+      width: 100%;
+      overflow: visible; 
+      position: relative;
     }
 
     #settings-panel h3 {
@@ -446,9 +452,9 @@
       </label>
       <label id="font-label">
         <i class="fas fa-font"></i> Font:
-        <div style="position: relative; width: 100%;">
+        <div style="position: relative;">
           <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
-          <button id="font-reset" title="Reset font" aria-label="Reset font">
+          <button id="font-reset" title="Reset font">
             <i class="fas fa-undo-alt"></i>
           </button>
           <div id="font-dropdown" class="hidden"></div>
