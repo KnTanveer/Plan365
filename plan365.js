@@ -392,9 +392,6 @@ function toggleRecurringEvents() {
 }
 
 // --- Auth and Startup ---
-let accessToken = null;
-let tokenClient = null;
-
 function handleSignIn() {
   tokenClient.requestAccessToken();
 }
