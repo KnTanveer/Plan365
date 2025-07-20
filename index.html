@@ -290,18 +290,34 @@
       to { transform: scale(1); opacity: 1; }
     }
 
+    #modal-content label {
+      display: block;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    
     #modal-content input,
     #modal-content textarea,
     #modal-content select {
       width: 100%;
       margin-top: 5px;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
 
+    #modal-content textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    
     #modal-content .actions {
-      margin-top: 10px;
+      margin-top: 20px;
       display: flex;
       justify-content: space-between;
-      gap: 5px;
+      gap: 10px;
     }
 
     body.dark #modal-content input,
