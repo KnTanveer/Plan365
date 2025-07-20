@@ -4,7 +4,7 @@ let currentMonth = new Date().getMonth();
 const calendarData = new Map();
 let calendarId = null;
 let accessToken = null;
-let tokenClient;
+let tokenClient = null;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
 
@@ -422,7 +422,6 @@ function gapiLoad() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-  // Theme handling
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") {
     document.body.classList.add("dark");
@@ -442,9 +441,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await gapiLoad();
 
+  const CLIENT_ID = '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com';
+  const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
+
   tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
-    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    client_id: CLIENT_ID,
+    scope: SCOPES,
     callback: async (tokenResponse) => {
       accessToken = tokenResponse.access_token;
       gapi.client.setToken({ access_token: accessToken });
@@ -461,7 +463,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     },
   });
 
-  tokenClient.requestAccessToken({ prompt: '' });
+  google.accounts.oauth2.hasGrantedAllScopes(
+    { client_id: CLIENT_ID },
+    SCOPES
+  ) && tokenClient.requestAccessToken({ prompt: '' });
 });
 
 window.addEventListener("keydown", (e) => {
