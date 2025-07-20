@@ -47,6 +47,61 @@ function addToRange(event) {
   }
 }
 
+//font selector 
+  const systemFonts = [
+    "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
+    "Garamond", "Courier New", "Brush Script MT", "Lucida Console", "Impact",
+    "Palatino Linotype", "Segoe UI", "Franklin Gothic Medium", "Comic Sans MS",
+    "Helvetica", "Calibri", "Candara", "Optima", "Century Gothic"
+  ];
+
+  const googleFonts = [
+    "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", "Raleway", "Poppins",
+    "Merriweather", "Nunito", "Work Sans", "Inter", "Rubik", "Noto Sans"
+  ];
+
+  const allFonts = [...systemFonts, ...googleFonts];
+  const fontSelect = document.getElementById("font-select");
+
+  allFonts.forEach(font => {
+    const option = document.createElement("option");
+    option.value = font;
+    option.innerText = font;
+    fontSelect.appendChild(option);
+  });
+
+  function loadFont(font) {
+    if (googleFonts.includes(font)) {
+      const id = 'dynamic-font';
+      let link = document.getElementById(id);
+      if (link) link.remove();
+
+      link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap`;
+      document.head.appendChild(link);
+    }
+  }
+
+  function applyFont(font) {
+    loadFont(font);
+    document.body.style.fontFamily = `'${font}', sans-serif`;
+    localStorage.setItem('preferredFont', font);
+  }
+
+  fontSelect.addEventListener("change", () => {
+    applyFont(fontSelect.value);
+  });
+
+  window.addEventListener("load", () => {
+    const storedFont = localStorage.getItem("preferredFont");
+    if (storedFont) {
+      fontSelect.value = storedFont;
+      applyFont(storedFont);
+    }
+  });
+
 function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
