@@ -87,7 +87,6 @@ const systemFonts = new Set([
 ]);
 
 const googleFontsSet = new Set(fontList.filter(f => !systemFonts.has(f)));
-
 let currentFontList = [];
 
 function loadGoogleFont(font) {
@@ -113,7 +112,7 @@ function applyFont(font) {
 function selectFont(font) {
   fontSearchInput.value = font;
   applyFont(font);
-  fontDropdown.classList.add("hidden");
+  fontDropdown.classList.add("hidden"); // Close dropdown after selection
 }
 
 function clearHighlights() {
@@ -124,7 +123,7 @@ function clearHighlights() {
 function updateDropdown(query = "") {
   fontDropdown.innerHTML = "";
   currentFontList = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
-  currentFontList.forEach((font, index) => {
+  currentFontList.forEach((font) => {
     const item = document.createElement("div");
     item.textContent = font;
     item.style.fontFamily = `'${font}', sans-serif`;
@@ -132,11 +131,6 @@ function updateDropdown(query = "") {
     item.addEventListener("click", () => selectFont(font));
     fontDropdown.appendChild(item);
   });
-
-  if (currentFontList.length > 0) {
-    const firstItem = fontDropdown.querySelector("div");
-    if (firstItem) firstItem.classList.add("highlighted");
-  }
 
   fontDropdown.classList.toggle("hidden", currentFontList.length === 0);
 }
@@ -147,6 +141,11 @@ fontSearchInput.addEventListener("input", () => {
 
 fontSearchInput.addEventListener("focus", () => {
   updateDropdown(fontSearchInput.value);
+});
+
+fontSearchInput.addEventListener("click", (e) => {
+  e.stopPropagation();
+  updateDropdown(fontSearchInput.value); // Only show on click
 });
 
 fontSearchInput.addEventListener("keydown", (e) => {
