@@ -163,7 +163,8 @@ fontReset.addEventListener("click", () => {
 });
 
 document.addEventListener("click", (e) => {
-  if (!document.getElementById("font-picker-container").contains(e.target)) {
+  const fontPickerContainer = document.getElementById("font-picker-container");
+  if (fontPickerContainer && !fontPickerContainer.contains(e.target)) {
     fontDropdown.classList.add("hidden");
   }
 });
@@ -236,50 +237,63 @@ async function saveNote() {
   const cleanText = text.replace(/↻/g, "").trim();
   const displayText = recurrence ? `${cleanText} ↻` : cleanText;
 
-  if (currentEditingEvent) {
-    try {
-      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: currentEditingEvent.googleId });
-      const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
-      await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
-    } catch (e) {
-      console.error("Failed to delete previous event:", e);
+  try {
+    if (currentEditingEvent) {
+      try {
+        const fullEvent = await gapi.client.calendar.events.get({
+          calendarId,
+          eventId: currentEditingEvent.googleId,
+        });
+        const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
+        await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
+      } catch (e) {
+        console.error("Failed to delete previous event:", e);
+      }
     }
+
+    await gapi.client.calendar.events.insert({
+      calendarId,
+      resource: {
+        summary: displayText,
+        description: metadata,
+        start: { date: start },
+        end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
+        recurrence: recurrenceRule || [],
+      },
+    });
+
+    closeModal();
+    await initData();
+  } catch (err) {
+    console.error("Failed to insert event:", err);
+    alert("Failed to save the event. Please try again.");
   }
-
-  await gapi.client.calendar.events.insert({
-    calendarId,
-    resource: {
-      summary: displayText,
-      description: metadata,
-      start: { date: start },
-      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-      recurrence: recurrenceRule || []
-    }
-  });
-
-  closeModal();
-  await initData();
 }
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
+
   const isRecurring = currentEditingEvent.recurrenceType != null;
   const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
+
   try {
     let eventIdToDelete = currentEditingEvent.googleId;
+
     if (deleteWholeSeries) {
       const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: eventIdToDelete });
       if (fullEvent.result.recurringEventId) {
         eventIdToDelete = fullEvent.result.recurringEventId;
       }
     }
+
     await gapi.client.calendar.events.delete({ calendarId, eventId: eventIdToDelete });
+
+    closeModal();
+    await initData();
   } catch (e) {
     console.error("Failed to delete event:", e);
     alert("Could not delete event.");
   }
-  closeModal();
-  await initData();
 }
 
 function createCalendar() {
@@ -360,6 +374,10 @@ async function initCalendarId() {
 
 async function initData() {
   if (!calendarId) return;
+  if (!accessToken) {
+    console.warn("Access token missing. Please sign in.");
+    return;
+  }
   showSpinner(true);
   const timeMin = new Date(currentYear, 0, 1).toISOString();
   const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
@@ -451,7 +469,10 @@ function handleSignIn() {
       gapi.client.setToken({ access_token: accessToken });
       document.getElementById("signin-btn").style.display = "none";
       document.getElementById("signout-btn").style.display = "inline-block";
-      setInterval(() => tokenClient.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+      setInterval(() => {
+        if (tokenClient) tokenClient.requestAccessToken({ prompt: '' });
+      }, 55 * 60 * 1000);
+
       await initCalendarId();
       await initData();
     },
