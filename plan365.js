@@ -50,49 +50,29 @@ function addToRange(event) {
 //font selector 
 const fontSearchInput = document.getElementById("font-search");
 const fontDropdown = document.getElementById("font-dropdown");
-const fontReset = document.getElementById("font-reset");
-
 const fontList = [
-  // Sans-Serif
-  "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Inter", "Noto Sans",
-  "Work Sans", "Ubuntu", "Fira Sans", "DM Sans", "Mulish", "Assistant",
-  "Barlow", "Rubik", "Titillium Web", "Cabin", "Asap", "Questrial", "Manrope",
-
-  // Serif
-  "Merriweather", "Playfair Display", "Lora", "Crimson Text", "Cormorant",
-  "Zilla Slab", "Tinos", "EB Garamond", "Domine", "PT Serif", "Tangerine",
-
-  // Display
-  "Oswald", "Anton", "Bebas Neue", "Alfa Slab One", "Black Ops One",
-  "Bangers", "Righteous", "Permanent Marker", "Passion One",
-
-  // Handwriting / Calligraphy
-  "Dancing Script", "Pacifico", "Satisfy", "Great Vibes", "Cookie",
-  "Kaushan Script", "Caveat", "Shadows Into Light", "Indie Flower",
-
-  // Monospace
-  "Courier New", "Fira Code", "JetBrains Mono", "Source Code Pro",
-  "IBM Plex Mono", "Inconsolata", "Lucida Console",
-
-  // System Fonts
-  "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
-  "Impact", "Palatino Linotype", "Segoe UI", "Comic Sans MS", "Helvetica",
-  "Optima", "Candara", "Geneva", "Century Gothic"
-];
-
-const systemFonts = new Set([
+  // System fonts
   "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia",
   "Courier New", "Lucida Console", "Impact", "Palatino Linotype", "Segoe UI",
-  "Comic Sans MS", "Helvetica", "Optima", "Candara", "Geneva", "Century Gothic"
-]);
+  "Franklin Gothic Medium", "Comic Sans MS", "Calibri", "Helvetica", "Optima",
+  "Candara", "Century Gothic", "Geneva",
+  // Popular Google Fonts
+  "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Oswald", "Raleway",
+  "Merriweather", "Nunito", "Playfair Display", "Rubik", "Inter", "Work Sans",
+  "Noto Sans", "Fira Sans", "DM Sans", "PT Sans", "Quicksand", "Source Sans Pro",
+  "Titillium Web", "Cabin", "Ubuntu", "Arimo", "Space Grotesk", "Manrope",
+  "Teko", "Anton", "Archivo", "Lexend", "Prompt", "Dosis", "Josefin Sans",
+  "Zilla Slab", "Chakra Petch", "Sora", "Cairo", "Barlow", "Bitter", "Exo",
+  "Mukta", "Heebo", "Asap", "Catamaran", "Crimson Text", "Overpass", "Muli",
+  "Bebas Neue", "Signika", "Kanit", "Tajawal", "Assistant"
+];
 
-const googleFontsSet = new Set(fontList.filter(f => !systemFonts.has(f)));
-let currentFontList = [];
+const googleFontsSet = new Set(fontList.slice(20)); // Google Fonts only from index 20 onward
 
 function loadGoogleFont(font) {
   if (!googleFontsSet.has(font)) return;
   const id = "dynamic-font";
-  const existing = document.getElementById(id);
+  let existing = document.getElementById(id);
   if (existing) existing.remove();
 
   const link = document.createElement("link");
@@ -109,30 +89,21 @@ function applyFont(font) {
   localStorage.setItem("preferredFont", font);
 }
 
-function selectFont(font) {
-  fontSearchInput.value = font;
-  applyFont(font);
-  fontDropdown.classList.add("hidden"); // Close dropdown after selection
-}
-
-function clearHighlights() {
-  const items = fontDropdown.querySelectorAll("div");
-  items.forEach(item => item.classList.remove("highlighted"));
-}
-
 function updateDropdown(query = "") {
   fontDropdown.innerHTML = "";
-  currentFontList = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
-  currentFontList.forEach((font) => {
+  const filtered = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
+  filtered.forEach(font => {
     const item = document.createElement("div");
     item.textContent = font;
     item.style.fontFamily = `'${font}', sans-serif`;
-    item.addEventListener("mouseenter", () => clearHighlights());
-    item.addEventListener("click", () => selectFont(font));
+    item.onclick = () => {
+      fontSearchInput.value = font;
+      applyFont(font);
+      fontDropdown.classList.add("hidden");
+    };
     fontDropdown.appendChild(item);
   });
-
-  fontDropdown.classList.toggle("hidden", currentFontList.length === 0);
+  fontDropdown.classList.toggle("hidden", filtered.length === 0);
 }
 
 fontSearchInput.addEventListener("input", () => {
@@ -143,28 +114,8 @@ fontSearchInput.addEventListener("focus", () => {
   updateDropdown(fontSearchInput.value);
 });
 
-fontSearchInput.addEventListener("click", (e) => {
-  e.stopPropagation();
-  updateDropdown(fontSearchInput.value); // Only show on click
-});
-
-fontSearchInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && currentFontList.length > 0) {
-    e.preventDefault();
-    selectFont(currentFontList[0]);
-  }
-});
-
-fontReset.addEventListener("click", () => {
-  fontSearchInput.value = "";
-  fontDropdown.classList.add("hidden");
-  document.body.style.fontFamily = "";
-  localStorage.removeItem("preferredFont");
-});
-
 document.addEventListener("click", (e) => {
-  const fontPickerContainer = document.getElementById("font-picker-container");
-  if (fontPickerContainer && !fontPickerContainer.contains(e.target)) {
+  if (!document.getElementById("font-picker-container").contains(e.target)) {
     fontDropdown.classList.add("hidden");
   }
 });
@@ -237,63 +188,50 @@ async function saveNote() {
   const cleanText = text.replace(/↻/g, "").trim();
   const displayText = recurrence ? `${cleanText} ↻` : cleanText;
 
-  try {
-    if (currentEditingEvent) {
-      try {
-        const fullEvent = await gapi.client.calendar.events.get({
-          calendarId,
-          eventId: currentEditingEvent.googleId,
-        });
-        const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
-        await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
-      } catch (e) {
-        console.error("Failed to delete previous event:", e);
-      }
+  if (currentEditingEvent) {
+    try {
+      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: currentEditingEvent.googleId });
+      const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
+      await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
+    } catch (e) {
+      console.error("Failed to delete previous event:", e);
     }
-
-    await gapi.client.calendar.events.insert({
-      calendarId,
-      resource: {
-        summary: displayText,
-        description: metadata,
-        start: { date: start },
-        end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-        recurrence: recurrenceRule || [],
-      },
-    });
-
-    closeModal();
-    await initData();
-  } catch (err) {
-    console.error("Failed to insert event:", err);
-    alert("Failed to save the event. Please try again.");
   }
+
+  await gapi.client.calendar.events.insert({
+    calendarId,
+    resource: {
+      summary: displayText,
+      description: metadata,
+      start: { date: start },
+      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
+      recurrence: recurrenceRule || []
+    }
+  });
+
+  closeModal();
+  await initData();
 }
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
-
   const isRecurring = currentEditingEvent.recurrenceType != null;
   const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
-
   try {
     let eventIdToDelete = currentEditingEvent.googleId;
-
     if (deleteWholeSeries) {
       const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: eventIdToDelete });
       if (fullEvent.result.recurringEventId) {
         eventIdToDelete = fullEvent.result.recurringEventId;
       }
     }
-
     await gapi.client.calendar.events.delete({ calendarId, eventId: eventIdToDelete });
-
-    closeModal();
-    await initData();
   } catch (e) {
     console.error("Failed to delete event:", e);
     alert("Could not delete event.");
   }
+  closeModal();
+  await initData();
 }
 
 function createCalendar() {
@@ -367,29 +305,21 @@ function goToToday() {
 }
 
 async function initCalendarId() {
-  if (!accessToken) return console.warn("Skipping calendar init: no access token.");
-
-  try {
-    const res = await gapi.client.calendar.calendarList.list();
-    const found = res.result.items.find(c => c.summary === "Plan365");
-    calendarId = found ? found.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
-  } catch (e) {
-    console.error("initCalendarId failed:", e);
-    if (e.status === 401) {
-      alert("Session expired – please sign in again.");
-      handleSignOut();
-    }
-  }
+  const result = await gapi.client.calendar.calendarList.list();
+  const exists = result.result.items.find(c => c.summary === "Plan365");
+  calendarId = exists ? exists.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
 }
 
 async function initData() {
-  if (!calendarId || !accessToken) return;
+  if (!calendarId) return;
   showSpinner(true);
+  const timeMin = new Date(currentYear, 0, 1).toISOString();
+  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
 
   try {
-    const res = await gapi.client.calendar.events.list({
-      calendarId, timeMin: /*...*/, timeMax: /*...*/,
-      showDeleted: false, singleEvents: true, orderBy: "startTime",
+    const response = await gapi.client.calendar.events.list({
+      calendarId, timeMin, timeMax, showDeleted: false,
+      singleEvents: true, orderBy: "startTime"
     });
 
     calendarData.clear();
@@ -445,9 +375,9 @@ async function initData() {
 
     createCalendar();
   } catch (e) {
-    console.error("initData failed:", e);
+    console.error("Failed to fetch events:", e);
     if (e.status === 401) {
-      alert("Session expired or unauthorized. Signing out...");
+      alert("Session expired. Please sign in again.");
       handleSignOut();
     }
   } finally {
@@ -469,42 +399,31 @@ function handleSignIn() {
     callback: async (tokenResponse) => {
       accessToken = tokenResponse.access_token;
       localStorage.setItem("accessToken", accessToken);
-
       await gapiLoad();
       gapi.client.setToken({ access_token: accessToken });
-
       document.getElementById("signin-btn").style.display = "none";
       document.getElementById("signout-btn").style.display = "inline-block";
-
-      setupTokenRefresh(); 
+      setInterval(() => tokenClient.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
       await initCalendarId();
       await initData();
-    }
+    },
   });
-  tokenClient.requestAccessToken(); 
-}
-
-function setupTokenRefresh() {
-  if (!tokenClient || window.__tokenRefreshInterval) return;
-  window.__tokenRefreshInterval = setInterval(() => {
-    if (tokenClient) {
-      console.log("Refreshing access token...");
-      tokenClient.requestAccessToken({ prompt: '' });
-    }
-  }, 55 * 60 * 1000); 
+  tokenClient.requestAccessToken();
 }
 
 function handleSignOut() {
-  if (!accessToken) return;
-  gapi.client.setToken(null);
-  google.accounts.oauth2.revoke(accessToken, () => {
-    accessToken = calendarId = null;
-    localStorage.removeItem("accessToken");
-    document.getElementById("signin-btn").style.display = "inline-block";
-    document.getElementById("signout-btn").style.display = "none";
-    calendarData.clear();
-    createCalendar();
-  });
+  if (accessToken) {
+    gapi.client.setToken(null);
+    google.accounts.oauth2.revoke(accessToken, () => {
+      accessToken = null;
+      calendarId = null;
+      localStorage.removeItem("accessToken");
+      document.getElementById("signin-btn").style.display = "inline-block";
+      document.getElementById("signout-btn").style.display = "none";
+      calendarData.clear();
+      createCalendar();
+    });
+  }
 }
 
 function gapiLoad() {
@@ -554,7 +473,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("signin-btn").style.display = "none";
     document.getElementById("signout-btn").style.display = "inline-block";
 
-    setupTokenRefresh(); 
+    setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+
     await initCalendarId();
     await initData();
   }
