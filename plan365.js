@@ -18,6 +18,11 @@ function toggleDarkMode() {
 function changeTodayColor(color) {
   document.documentElement.style.setProperty('--today-color', color);
   localStorage.setItem('todayColor', color);
+
+  const colorPicker = document.getElementById('todayColorPicker');
+  if (colorPicker) {
+    colorPicker.value = color;
+  }
 }
 
 function showSpinner(show) {
@@ -356,7 +361,10 @@ window.addEventListener("keydown", (e) => {
 
 const storedColor = localStorage.getItem("todayColor");
 if (storedColor) {
-  document.documentElement.style.setProperty("--today-color", storedColor);
+  changeTodayColor(storedColor);
+
+  const picker = document.getElementById("todayColorPicker");
+  if (picker) picker.value = storedColor;
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
