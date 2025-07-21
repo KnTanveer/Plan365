@@ -452,67 +452,6 @@
       transform: scale(1.02);
     }
 
-    /* Layout Modes */
-    #calendar.horizontal {
-      flex-direction: row;
-      overflow-x: auto;
-      flex-wrap: nowrap;
-    }
-    
-    #calendar.vertical {
-      flex-direction: column;
-      overflow-x: hidden;
-    }
-    
-    .month-column {
-      flex: 0 0 auto;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      padding: 5px;
-    }
-    
-    #calendar.horizontal .month-column {
-      width: 130px;
-      margin-right: 10px;
-      margin-bottom: 0;
-    }
-    
-    #calendar.vertical .month-column {
-      width: 100%;
-      margin-right: 0;
-      margin-bottom: 10px;
-    }
-    
-    @media (max-width: 600px) {
-      #header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-    
-      .popup-content {
-        width: 90% !important;
-      }
-    
-      html {
-        font-size: 14px;
-      }
-    
-      button {
-        min-height: 44px;
-        min-width: 44px;
-      }
-    
-      #calendar {
-        flex-wrap: nowrap;
-      }
-    }
-
-    .month-column.hidden {
-      display: none !important;
-    }
-
   </style>
 </head>
 <body>
