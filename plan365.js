@@ -350,10 +350,25 @@ function createCalendar() {
 
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayEl = document.createElement("div");
-      dayEl.className = "day-cell";
-      dayEl.textContent = day;
-      daysWrapper.appendChild(dayEl);
+      const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
+      cell.innerHTML = `<div class='day-label'>${day}</div>`;
+
+      if (calendarData.has(dateStr)) {
+        calendarData.get(dateStr).forEach(e => {
+          const n = document.createElement("div");
+          n.className = "note-text";
+          n.style.background = e.color;
+          n.textContent = e.text;
+          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
+          cell.appendChild(n);
+        });
+      }
+
+      cell.onclick = () => openModal(dateStr);
+      daysWrapper.appendChild(cell);
     }
 
     header.onclick = () => {
@@ -377,32 +392,6 @@ function createCalendar() {
     col.appendChild(daysWrapper);
     container.appendChild(col);
   }
-}
-
-    const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const cell = document.createElement("div");
-      cell.className = "day-cell";
-      if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
-      cell.innerHTML = `<div class='day-label'>${day}</div>`;
-      if (calendarData.has(dateStr)) {
-        calendarData.get(dateStr).forEach(e => {
-          const n = document.createElement("div");
-          n.className = "note-text";
-          n.style.background = e.color;
-          n.textContent = e.text;
-          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
-          cell.appendChild(n);
-        });
-      }
-      cell.onclick = () => openModal(dateStr);
-      daysWrapper.appendChild(cell);
-    }
-
-    col.appendChild(header);
-    col.appendChild(daysWrapper);
-    container.appendChild(col);
 }
 
 function changeYear(delta) {
