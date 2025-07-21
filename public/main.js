@@ -675,6 +675,4 @@ if ('serviceWorker' in navigator) {
 
 window.onload = () => { initData(); };
 window.toggleRecurringEvents = toggleRecurringEvents;
-window.handleSignIn = handleSignIn;
-window.handleSignOut = handleSignOut;
 window.toggleDarkMode = toggleDarkMode;
