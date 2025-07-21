@@ -105,7 +105,7 @@ function loadGoogleFont(font) {
 function applyFont(font) {
   if (!fontList.includes(font)) return;
   loadGoogleFont(font);
-  document.body.style.fontFamily = `'${font}', sans-serif`;
+  document.body.style.fontFamily = `"${font}", sans-serif`;
   localStorage.setItem("preferredFont", font);
 }
 
