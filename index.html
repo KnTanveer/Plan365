@@ -333,12 +333,23 @@
       top: 110%;
       left: 0;
       width: 220px;
+      max-height: 300px;          
+      overflow-y: auto; 
       background: white;
       border: 1px solid #ccc;
       border-radius: 6px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       padding: 10px;
       z-index: 1002;
+    }
+
+    #month-popup::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    #month-popup::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
     }
     
     #month-popup.hidden {
