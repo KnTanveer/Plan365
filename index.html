@@ -184,39 +184,30 @@
     #font-dropdown.hidden {
       display: none;
     }
-
-    .font-search-wrapper {
-      display: flex;
-      align-items: centered;
-      gap: 6px;
-    }
     
     #font-search {
-      flex: 1;
       padding: 8px;
       font-size: 14px;
-      border: 1px solid #555;
+      border: 1px solid #ccc;
       border-radius: 4px;
-      background-color: #3a3a3a;
-      color: white;
+      outline: none;
+      width: 100%;
       box-sizing: border-box;
     }
     
-    #font-reset {
-      width: 40px;
-      border: 1px solid #555;
-      border-radius: 4px;
-      background-color: #444;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    #font-reset, restore-months-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      padding: 0 10px;
+      border: none;
+      background: transparent;
       cursor: pointer;
-      font-size: 16px;
     }
     
-    #font-reset:hover {
-      background-color: #333;
+    #font-reset:hover, restore-months-btn:hover {
+      background: #ddd;
     }
     
     #font-dropdown {
@@ -251,13 +242,13 @@
       border: 1px solid #555;
     }
     
-    body.dark #font-reset {
+    body.dark #font-reset, restore-months-btn {
       background: #444;
       color: white;
       border-color: #666;
     }
     
-    body.dark #font-reset:hover {
+    body.dark #font-reset:hover, restore-months-btn:hover {
       background: #333;
     }
     
@@ -589,10 +580,8 @@
       <label id="font-label">
         <i class="fas fa-font"></i> Font:
         <div class="font-input-wrapper">
-          <div class="font-search-wrapper">
-            <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
-            <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
-          </div>
+          <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
+          <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
           <div id="font-dropdown" class="hidden"></div>
         </div>
       </label>
