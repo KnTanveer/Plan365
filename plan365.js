@@ -266,19 +266,41 @@ async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
   const isRecurring = currentEditingEvent.recurrenceType != null;
   const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
+
   try {
     let eventIdToDelete = currentEditingEvent.googleId;
+
     if (deleteWholeSeries) {
-      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: eventIdToDelete });
-      if (fullEvent.result.recurringEventId) {
-        eventIdToDelete = fullEvent.result.recurringEventId;
+      try {
+        const fullEvent = await gapi.client.calendar.events.get({
+          calendarId,
+          eventId: eventIdToDelete
+        });
+
+        if (fullEvent.result.recurringEventId) {
+          eventIdToDelete = fullEvent.result.recurringEventId;
+        }
+      } catch (e) {
+        if (e.status !== 410) {
+          console.warn("Failed to fetch full event info:", e);
+        }
       }
     }
-    await gapi.client.calendar.events.delete({ calendarId, eventId: eventIdToDelete });
+
+    await gapi.client.calendar.events.delete({
+      calendarId,
+      eventId: eventIdToDelete
+    });
+
   } catch (e) {
-    console.error("Failed to delete event:", e);
-    alert("Could not delete event.");
+    if (e.status === 410) {
+      console.info("Event already deleted, skipping.");
+    } else {
+      console.error("Failed to delete event:", e);
+      alert("Could not delete event.");
+    }
   }
+
   closeModal();
   await initData();
 }
