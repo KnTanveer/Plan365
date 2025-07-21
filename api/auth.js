@@ -1,16 +1,17 @@
-export default function handler(req, res) {
-  const redirect_uri = 'https://YOUR_DOMAIN/api/auth/callback';
-  const client_id = process.env.GOOGLE_CLIENT_ID;
-  const scope = [
-    'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/calendar.events'
-  ].join(' ');
+import { google } from 'googleapis';
 
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `response_type=code&client_id=${client_id}` +
-    `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
-    `&scope=${encodeURIComponent(scope)}` +
-    `&access_type=offline&prompt=consent`;
+export default async function handler(req, res) {
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/calendar.readonly'],
+    prompt: 'consent'
+  });
 
   res.redirect(authUrl);
 }
