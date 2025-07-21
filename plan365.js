@@ -495,6 +495,30 @@ function toggleRecurringEvents() {
   initData();
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+  const toggle = document.getElementById('month-popup-toggle');
+  const popup = document.getElementById('month-popup');
+  const restore = document.getElementById('restore-months-btn');
+
+  if (toggle && popup && restore) {
+    toggle.addEventListener('click', () => {
+      popup.classList.toggle('hidden');
+    });
+
+    restore.addEventListener('click', () => {
+      document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+      });
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!popup.contains(e.target) && !toggle.contains(e.target)) {
+        popup.classList.add('hidden');
+      }
+    });
+  }
+});
+
 // --- Auth and Startup ---
 function handleSignIn() {
   tokenClient = google.accounts.oauth2.initTokenClient({
