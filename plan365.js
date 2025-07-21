@@ -394,7 +394,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('click', function (e) {
-      if (!popup.contains(e.target) && !toggle.contains(e.target)) {
+      const popup = document.getElementById('month-popup');
+      const toggle = document.getElementById('month-popup-toggle');
+
+      if (
+        popup &&
+        !popup.classList.contains('hidden') &&
+        !popup.contains(e.target) &&
+        !toggle.contains(e.target)
+      ) {
         popup.classList.add('hidden');
       }
     });
