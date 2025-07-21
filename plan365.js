@@ -312,11 +312,13 @@ async function deleteCurrentEvent() {
 function createCalendar() {
   const container = document.getElementById("calendar");
   if (!container) return;
+
   container.innerHTML = "";
   document.getElementById("year-label").textContent = `${currentYear}`;
 
   for (let month = 0; month < 12; month++) {
-    if (hiddenMonths.has(month)) continue; 
+    if (hiddenMonths.has(month)) continue;
+
     const col = document.createElement("div");
     col.className = "month-column";
 
@@ -327,22 +329,6 @@ function createCalendar() {
     const daysWrapper = document.createElement("div");
     daysWrapper.className = "days-wrapper";
 
-    header.onclick = () => {
-    if (hiddenMonths.has(month)) {
-      hiddenMonths.delete(month);
-    } else {
-      hiddenMonths.add(month);
-    }
-    localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
-  
-    const select = document.getElementById("month-select");
-    Array.from(select.options).forEach(opt => {
-      opt.selected = hiddenMonths.has(parseInt(opt.value));
-    });
-  
-    createCalendar(); 
-  };
-
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -350,16 +336,21 @@ function createCalendar() {
       cell.className = "day-cell";
       if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
       cell.innerHTML = `<div class='day-label'>${day}</div>`;
+
       if (calendarData.has(dateStr)) {
         calendarData.get(dateStr).forEach(e => {
           const n = document.createElement("div");
           n.className = "note-text";
           n.style.background = e.color;
           n.textContent = e.text;
-          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
+          n.onclick = event => {
+            event.stopPropagation();
+            openModal(dateStr, e);
+          };
           cell.appendChild(n);
         });
       }
+
       cell.onclick = () => openModal(dateStr);
       daysWrapper.appendChild(cell);
     }
@@ -369,6 +360,53 @@ function createCalendar() {
     container.appendChild(col);
   }
 }
+
+function syncHiddenMonthsFromCheckboxes() {
+  hiddenMonths.clear();
+  document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
+    if (cb.checked) hiddenMonths.add(parseInt(cb.value));
+  });
+  localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
+  createCalendar();
+}
+
+function syncCheckboxesFromHiddenMonths() {
+  document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
+    cb.checked = hiddenMonths.has(parseInt(cb.value));
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const toggle = document.getElementById('month-popup-toggle');
+  const popup = document.getElementById('month-popup');
+  const restore = document.getElementById('restore-months-btn');
+
+  if (toggle && popup && restore) {
+    toggle.addEventListener('click', () => {
+      popup.classList.toggle('hidden');
+    });
+
+    restore.addEventListener('click', () => {
+      document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+      });
+      syncHiddenMonthsFromCheckboxes();
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!popup.contains(e.target) && !toggle.contains(e.target)) {
+        popup.classList.add('hidden');
+      }
+    });
+
+    document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', syncHiddenMonthsFromCheckboxes);
+    });
+  }
+
+  syncCheckboxesFromHiddenMonths();
+  createCalendar();
+});
 
 function changeYear(delta) {
   const calendar = document.getElementById("calendar");
@@ -494,30 +532,6 @@ function toggleRecurringEvents() {
 
   initData();
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-  const toggle = document.getElementById('month-popup-toggle');
-  const popup = document.getElementById('month-popup');
-  const restore = document.getElementById('restore-months-btn');
-
-  if (toggle && popup && restore) {
-    toggle.addEventListener('click', () => {
-      popup.classList.toggle('hidden');
-    });
-
-    restore.addEventListener('click', () => {
-      document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
-        cb.checked = false;
-      });
-    });
-
-    document.addEventListener('click', function (e) {
-      if (!popup.contains(e.target) && !toggle.contains(e.target)) {
-        popup.classList.add('hidden');
-      }
-    });
-  }
-});
 
 // --- Auth and Startup ---
 function handleSignIn() {
