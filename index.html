@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -196,7 +195,7 @@
       box-sizing: border-box;
     }
     
-    #font-reset {
+    #font-reset, restore-months-btn {
       position: absolute;
       top: 0;
       right: 0;
@@ -207,7 +206,7 @@
       cursor: pointer;
     }
     
-    #font-reset:hover {
+    #font-reset:hover, restore-months-btn:hover {
       background: #ddd;
     }
     
@@ -243,13 +242,13 @@
       border: 1px solid #555;
     }
     
-    body.dark #font-reset {
+    body.dark #font-reset, restore-months-btn {
       background: #444;
       color: white;
       border-color: #666;
     }
     
-    body.dark #font-reset:hover {
+    body.dark #font-reset:hover, restore-months-btn:hover {
       background: #333;
     }
     
@@ -555,6 +554,7 @@
           <option value="10">November</option>
           <option value="11">December</option>
         </select>
+        <button id="restore-months-btn"><i class="fas fa-undo-alt"></i></button>
       </div>
       <label><i class="fas fa-palette"></i> Today Color:
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
@@ -563,9 +563,7 @@
         <i class="fas fa-font"></i> Font:
         <div class="font-input-wrapper">
           <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
-          <button id="font-reset" title="Reset font">
-            <i class="fas fa-undo-alt"></i>
-          </button>
+          <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
           <div id="font-dropdown" class="hidden"></div>
         </div>
       </label>
