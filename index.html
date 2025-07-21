@@ -601,15 +601,11 @@
 <body>
   <div id="header">
     <div>
-      <button onclick="changeYear(-1)"><i class="fas fa-backward"></i> Prev</button>
-      <button onclick="goToToday()"><i class="fas fa-calendar-day"></i> Today</button>
-      <button onclick="changeYear(1)">Next <i class="fas fa-forward"></i></button>
-    </div>
-    <h2><i class="fas fa-calendar-alt"></i> Plan365 - <span id="year-label"></span></h2>
+      <button onclick="changeYear(-1)"><i class="fas fa-backward"></i></button>
+      <button onclick="goToToday()"><i class="fas fa-calendar-day"></i></button>
+      <button onclick="changeYear(1)"><i class="fas fa-forward"></i></button>
       <div class="popup-wrapper" style="margin: 10px;">
-        <button id="month-popup-toggle">
-          <i class="fas fa-calendar-times"></i> Hide Months
-        </button>
+        <button id="month-popup-toggle"><i class="fas fa-calendar-times"></i> Hide Months</button>
         <div id="month-popup" class="month-popup hidden">
           <div class="month-options">
             <label><input type="checkbox" value="0"> January</label>
@@ -627,6 +623,9 @@
           </div>
         </div>
       </div>
+
+    </div>
+    <h2><i class="fas fa-calendar-alt"></i> Plan365 - <span id="year-label"></span></h2>
     <div>
       <button id="signin-btn" onclick="handleSignIn()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
       <button id="signout-btn" style="display:none" onclick="handleSignOut()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
