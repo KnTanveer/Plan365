@@ -192,30 +192,25 @@
     }
     
     #font-search {
+      flex: 1;
       padding: 8px;
       font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      outline: none;
-      flex: 1;
-      width: auto;
       box-sizing: border-box;
     }
     
-    #font-reset, {
-      position: absolute;
-      top: 0;
-      right: 0;
-      height: 100%;
-      padding: 6px 10px;
-      border: none;
-      background: transparent;
+    #font-reset {
+      padding: 0 12px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #f5f5f5;
       cursor: pointer;
     }
     
-    #font-reset:hover, {
+    #font-reset:hover {
       background: #ddd;
-      border-radius: 4px;
     }
     
     #font-dropdown {
@@ -547,7 +542,7 @@
       <button onclick="goToToday()"><i class="fas fa-calendar-day"></i></button>
       <button onclick="changeYear(1)"><i class="fas fa-forward"></i></button>
       <div class="popup-wrapper">
-        <button id="month-popup-toggle"><i class="fas fa-calendar-minus"></i> Months</button>
+        <button id="month-popup-toggle"><i class="fas fa-xmark"></i> Months</button>
         <div id="month-popup" class="month-popup hidden">
           <div class="month-options">
             <label><input type="checkbox" value="0"> January</label>
