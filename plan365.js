@@ -22,6 +22,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const layout = localStorage.getItem('calendarLayout') || 'horizontal';
   const calendar = document.getElementById('calendar');
   calendar.classList.add(layout);
+
+  restoreHiddenMonths();
 });
 
 function saveHiddenMonths() {
