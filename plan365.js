@@ -397,11 +397,11 @@ document.addEventListener('DOMContentLoaded', function () {
       const popup = document.getElementById('month-popup');
       const toggle = document.getElementById('month-popup-toggle');
     
+      if (!popup || !toggle) return;
+    
       if (
-        popup &&
         !popup.classList.contains('hidden') &&
         !popup.contains(e.target) &&
-        e.target !== toggle &&
         !toggle.contains(e.target)
       ) {
         popup.classList.add('hidden');
