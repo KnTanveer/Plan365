@@ -305,7 +305,88 @@
     body.dark #restore-months-btn:hover {
       background: #333;
     }
+
+    .popup-wrapper {
+      position: relative;
+    }
     
+    #month-popup-toggle {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #eee;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    #month-popup-toggle:hover {
+      background-color: #ddd;
+    }
+    
+    #month-popup {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 220px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      z-index: 1002;
+    }
+    
+    #month-popup.hidden {
+      display: none;
+    }
+    
+    .month-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    
+    .month-options label {
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    body.dark #month-popup {
+      background: #2c2c2c;
+      border-color: #444;
+      color: white;
+    }
+    
+    body.dark #month-popup-toggle {
+      background: #444;
+      border-color: #666;
+      color: white;
+    }
+    
+    body.dark #month-popup-toggle:hover {
+      background: #333;
+    }
+    
+    body.dark #restore-months-btn {
+      background: #444;
+      color: white;
+      border: 1px solid #666;
+    }
+    
+    #restore-months-btn {
+      width: 100%;
+      padding: 6px;
+      border-radius: 4px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    
+    #restore-months-btn:hover {
+      background: #e0e0e0;
+    }
+
     /* Shared Modal Styles */
     .popup-overlay {
       position: fixed;
@@ -524,25 +605,28 @@
       <button onclick="toggleDarkMode()"><i id="theme-toggle-icon" class="fas fa-sun"></i> Toggle Theme</button>
       <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()"><i class="fas fa-sync-alt"></i> Show/Hide Recurring</button>
       <div class="settings-section">
-          <h4 class="section-heading"><i class="fas fa-eye-slash"></i> Hide Months</h4>
-          <div class="month-selector">
-            <select id="month-select" multiple size="6">
-              <option value="0">January</option>
-              <option value="1">February</option>
-              <option value="2">March</option>
-              <option value="3">April</option>
-              <option value="4">May</option>
-              <option value="5">June</option>
-              <option value="6">July</option>
-              <option value="7">August</option>
-              <option value="8">September</option>
-              <option value="9">October</option>
-              <option value="10">November</option>
-              <option value="11">December</option>
-            </select>
-            <button id="restore-months-btn" title="Restore all months"><i class="fas fa-undo-alt"></i></button>
+        <h4 class="section-heading"><i class="fas fa-eye-slash"></i> Hide Months</h4>
+        <div class="popup-wrapper">
+          <button id="month-popup-toggle"><i class="fas fa-calendar-times"></i> Select Months</button>
+          <div id="month-popup" class="month-popup hidden">
+            <div class="month-options">
+              <label><input type="checkbox" value="0"> January</label>
+              <label><input type="checkbox" value="1"> February</label>
+              <label><input type="checkbox" value="2"> March</label>
+              <label><input type="checkbox" value="3"> April</label>
+              <label><input type="checkbox" value="4"> May</label>
+              <label><input type="checkbox" value="5"> June</label>
+              <label><input type="checkbox" value="6"> July</label>
+              <label><input type="checkbox" value="7"> August</label>
+              <label><input type="checkbox" value="8"> September</label>
+              <label><input type="checkbox" value="9"> October</label>
+              <label><input type="checkbox" value="10"> November</label>
+              <label><input type="checkbox" value="11"> December</label>
+            </div>
+            <button id="restore-months-btn" title="Restore all months"><i class="fas fa-undo-alt"></i> Restore</button>
           </div>
         </div>
+      </div>
       <label><i class="fas fa-palette"></i> Today Color:
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
       </label>
@@ -660,6 +744,17 @@
         document.getElementById('toggle-recurring-btn').innerHTML = `<i class="fas fa-sync-alt"></i> Show Recurring`;
       }
     };
+
+    document.getElementById('month-popup-toggle').addEventListener('click', () => {
+    document.getElementById('month-popup').classList.toggle('hidden');
+  });
+  
+  document.getElementById('restore-months-btn').addEventListener('click', () => {
+    document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
+      cb.checked = false;
+    });
+  });
+
   </script>
 
   <script src="plan365.js"></script>
