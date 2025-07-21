@@ -674,6 +674,16 @@ function closeDeleteModal() {
   document.getElementById('delete-modal').style.display = 'none';
 }
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js').then(function (registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function (err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
+
 window.toggleRecurringEvents = toggleRecurringEvents;
 window.handleSignIn = handleSignIn;
 window.handleSignOut = handleSignOut;
