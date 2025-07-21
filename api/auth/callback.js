@@ -1,26 +1,25 @@
-import axios from 'axios';
+import { google } from 'googleapis';
 import cookie from 'cookie';
 
 export default async function handler(req, res) {
-  const code = req.query.code;
-  const { data } = await axios.post('https://oauth2.googleapis.com/token', null, {
-    params: {
-      code,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: 'https://YOUR_DOMAIN/api/auth/callback',
-      grant_type: 'authorization_code'
-    }
-  });
+  const { code } = req.query;
 
-  res.setHeader('Set-Cookie', [
-    cookie.serialize('access_token', data.access_token, {
-      httpOnly: true, secure: true, maxAge: 3600, path: '/',
-    }),
-    cookie.serialize('refresh_token', data.refresh_token, {
-      httpOnly: true, secure: true, maxAge: 60*60*24*30, path: '/',
-    })
-  ]);
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+
+  const { tokens } = await oauth2Client.getToken(code);
+  oauth2Client.setCredentials(tokens);
+
+  // Store token securely in cookie
+  res.setHeader('Set-Cookie', cookie.serialize('token', JSON.stringify(tokens), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7 // 7 days
+  }));
 
   res.redirect('/');
 }
