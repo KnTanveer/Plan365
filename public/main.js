@@ -468,25 +468,30 @@ async function initCalendarId() {
 async function initData() {
   if (!calendarId) return;
   showSpinner(true);
-  const timeMin = new Date(currentYear, 0, 1).toISOString();
-  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
 
   try {
-    const response = await gapi.client.calendar.events.list({
-      calendarId, timeMin, timeMax, showDeleted: false,
-      singleEvents: true, orderBy: "startTime"
-    });
+    const res = await fetch('/api/events');
+
+    if (res.status === 401) {
+      alert('Session expired. Please sign in again.');
+      handleSignOut?.();
+      return;
+    }
+
+    const data = await res.json();
+    const items = data.items || [];
 
     calendarData.clear();
 
-    response.result.items.forEach(ev => {
+    items.forEach(ev => {
       const start = ev.start?.date;
       const endRaw = ev.end?.date;
       if (!start || !endRaw) return;
 
       const rrule = ev.recurrence?.[0] || "";
       if (!showRecurringEvents && rrule) return;
-      const metadata = ev.description ? JSON.parse(ev.description) : {};
+
+      const metadata = ev.description ? JSON.parse(ev.description || '{}') : {};
       const color = metadata.color || '#b6eeb6';
 
       const staticize = (count, adjustFunc) => {
@@ -518,6 +523,7 @@ async function initData() {
       const endDateObj = new Date(endRaw);
       if (isNaN(endDateObj.getTime())) return;
       endDateObj.setDate(endDateObj.getDate() - 1);
+
       const newEvent = {
         text: ev.summary,
         color,
@@ -525,16 +531,14 @@ async function initData() {
         googleId: ev.id,
         recurrenceType: metadata.recurrence || null
       };
+
       addToRange(newEvent);
     });
 
     createCalendar();
   } catch (e) {
     console.error("Failed to fetch events:", e);
-    if (e.status === 401) {
-      alert("Session expired. Please sign in again.");
-      handleSignOut();
-    }
+    alert("Something went wrong loading calendar data.");
   } finally {
     showSpinner(false);
   }
