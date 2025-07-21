@@ -403,7 +403,6 @@ function createCalendar() {
     col.appendChild(header);
     col.appendChild(daysWrapper);
     container.appendChild(col);
-  }
 }
 
 function changeYear(delta) {
