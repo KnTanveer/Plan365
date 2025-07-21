@@ -122,6 +122,16 @@
       color: black;
     }
 
+    #event-color {
+      width: 100%;
+      height: 35px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    /* Font selector*/
     #font-select {
       padding: 6px;
       width: 100%;
@@ -150,27 +160,68 @@
 
     #font-picker-container {
       position: relative;
+      display: flex;
+      align-items: center;
       margin-top: 5px;
     }
     
-    #font-search {
-      padding: 6px;
-      width: 100%;
+    #font-label {
+      display: block;
       font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    #font-label input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .font-input-wrapper {
+      position: relative;
+      margin-top: 6px; 
+    }
+    
+    #font-dropdown.hidden {
+      display: none;
+    }
+    
+    #font-search {
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    #font-reset {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      padding: 0 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    
+    #font-reset:hover {
+      background: #ddd;
     }
     
     #font-dropdown {
       position: absolute;
-      top: 100%;
+      top: calc(100% + 2px);
       left: 0;
-      right: 0;
-      max-height: 200px;
+      width: 100%;
+      max-height: 220px;
       overflow-y: auto;
       background: white;
       border: 1px solid #ccc;
-      z-index: 9999;
+      border-radius: 0 0 4px 4px;
+      z-index: 2000; 
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      border-radius: 4px;
     }
     
     #font-dropdown div {
@@ -180,12 +231,9 @@
       border-bottom: 1px solid #eee;
     }
     
-    #font-dropdown div:hover {
-      background: #f0f0f0;
-    }
-    
-    .hidden {
-      display: none;
+    #font-dropdown div:hover,
+    #font-dropdown .highlighted {
+      background-color: #f0f0f0;
     }
     
     body.dark #font-search {
@@ -194,16 +242,27 @@
       border: 1px solid #555;
     }
     
+    body.dark #font-reset {
+      background: #444;
+      color: white;
+      border-color: #666;
+    }
+    
+    body.dark #font-reset:hover {
+      background: #333;
+    }
+    
     body.dark #font-dropdown {
       background: #2c2c2c;
       border-color: #444;
       color: white;
     }
     
-    body.dark #font-dropdown div:hover {
+    body.dark #font-dropdown div:hover,
+    body.dark #font-dropdown .highlighted {
       background: #444;
     }
-        
+    
     /* Shared Modal Styles */
     .popup-overlay {
       position: fixed;
@@ -240,18 +299,34 @@
       to { transform: scale(1); opacity: 1; }
     }
 
+    #modal-content label {
+      display: block;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    
     #modal-content input,
     #modal-content textarea,
     #modal-content select {
       width: 100%;
       margin-top: 5px;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
 
+    #modal-content textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    
     #modal-content .actions {
-      margin-top: 10px;
+      margin-top: 20px;
       display: flex;
       justify-content: space-between;
-      gap: 5px;
+      gap: 10px;
     }
 
     body.dark #modal-content input,
@@ -291,6 +366,9 @@
 
     #settings-panel {
       max-width: 300px;
+      width: 100%;
+      overflow: visible; 
+      position: relative;
     }
 
     #settings-panel h3 {
@@ -362,24 +440,18 @@
       padding: 8px 12px;
       border: none;
       border-radius: 6px;
-      background-color: #c0392b;
+      background-color: #c23232;
       color: white;
       cursor: pointer;
       flex: 1;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
 
     #delete-modal .button-row button:hover {
-      background-color: #a93226;
+      background-color: #c2323250;
+      transform: scale(1.02);
     }
 
-    body.dark #delete-modal .button-row button {
-      background-color: #e74c3c;
-    }
-
-    body.dark #delete-modal .button-row button:hover {
-      background-color: #c0392b;
-    }
   </style>
 </head>
 <body>
@@ -407,13 +479,17 @@
       <label><i class="fas fa-palette"></i> Today Color:
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
       </label>
-      <label><i class="fas fa-font"></i> Font:
-        <div id="font-picker-container">
+      <label id="font-label">
+        <i class="fas fa-font"></i> Font:
+        <div class="font-input-wrapper">
           <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
+          <button id="font-reset" title="Reset font">
+            <i class="fas fa-undo-alt"></i>
+          </button>
           <div id="font-dropdown" class="hidden"></div>
         </div>
       </label>
-      <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Plan365 (Hence will not be synced from Google calendar)</p>
+      <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Plan365. Hence will not be synced from Google calendar.</p>
     </div>
   </div>
 
@@ -437,9 +513,9 @@
       </label>
       <p id="duration-display"></p>
       <div class="actions">
-        <button id="cancel-btn" onclick="closeModal()">Cancel</button>
-        <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
         <button id="save-btn" onclick="saveNote()">Save</button>
+        <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
+        <button id="cancel-btn" onclick="closeModal()">Cancel</button>
       </div>
     </div>
   </div>
