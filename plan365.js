@@ -8,6 +8,22 @@ let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
 
+function toggleCalendarLayout() {
+  const calendar = document.getElementById('calendar');
+  const isVertical = calendar.classList.contains('vertical');
+
+  calendar.classList.toggle('vertical', !isVertical);
+  calendar.classList.toggle('horizontal', isVertical);
+
+  localStorage.setItem('calendarLayout', isVertical ? 'horizontal' : 'vertical');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const layout = localStorage.getItem('calendarLayout') || 'horizontal';
+  const calendar = document.getElementById('calendar');
+  calendar.classList.add(layout);
+});
+
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle("dark");
   const icon = document.getElementById("theme-toggle-icon");
