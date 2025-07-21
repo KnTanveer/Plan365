@@ -452,6 +452,39 @@
       transform: scale(1.02);
     }
 
+    /* Mobile optimization */
+    @media (max-width: 600px) {
+      #header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    
+      #calendar {
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+    
+      .month-column {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+    
+      .popup-content {
+        width: 90% !important;
+      }
+    
+      html {
+        font-size: 14px;
+      }
+    
+      button {
+        min-height: 44px;
+        min-width: 44px;
+      }
+    }
+
   </style>
 </head>
 <body>
