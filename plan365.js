@@ -13,8 +13,28 @@ function toggleDarkMode() {
   const isDark = document.body.classList.toggle("dark");
   const icon = document.getElementById("theme-toggle-icon");
   if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
+
   localStorage.setItem("theme", isDark ? "dark" : "light");
+
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute("content", isDark ? "#121212" : "#ffffff");
+  }
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme");
+  const isDark = savedTheme === "dark";
+  if (isDark) document.body.classList.add("dark");
+
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute("content", isDark ? "#121212" : "#ffffff");
+  }
+
+  const icon = document.getElementById("theme-toggle-icon");
+  if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
+});
 
 function changeTodayColor(color) {
   document.documentElement.style.setProperty('--today-color', color);
