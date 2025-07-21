@@ -329,15 +329,11 @@ async function deleteCurrentEvent() {
 function createCalendar() {
   const container = document.getElementById("calendar");
   if (!container) return;
-
   container.innerHTML = "";
   document.getElementById("year-label").textContent = `${currentYear}`;
 
-  const hiddenMonths = window.hiddenMonths;
-
   for (let month = 0; month < 12; month++) {
-    if (hiddenMonths.has(month)) continue;
-
+    if (hiddenMonths.has(month)) continue; 
     const col = document.createElement("div");
     col.className = "month-column";
 
@@ -348,6 +344,22 @@ function createCalendar() {
     const daysWrapper = document.createElement("div");
     daysWrapper.className = "days-wrapper";
 
+    header.onclick = () => {
+    if (hiddenMonths.has(month)) {
+      hiddenMonths.delete(month);
+    } else {
+      hiddenMonths.add(month);
+    }
+    localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
+  
+    const select = document.getElementById("month-select");
+    Array.from(select.options).forEach(opt => {
+      opt.selected = hiddenMonths.has(parseInt(opt.value));
+    });
+  
+    createCalendar(); 
+  };
+
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -355,7 +367,6 @@ function createCalendar() {
       cell.className = "day-cell";
       if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
       cell.innerHTML = `<div class='day-label'>${day}</div>`;
-
       if (calendarData.has(dateStr)) {
         calendarData.get(dateStr).forEach(e => {
           const n = document.createElement("div");
@@ -366,27 +377,9 @@ function createCalendar() {
           cell.appendChild(n);
         });
       }
-
       cell.onclick = () => openModal(dateStr);
       daysWrapper.appendChild(cell);
     }
-
-    header.onclick = () => {
-      if (hiddenMonths.has(month)) {
-        hiddenMonths.delete(month);
-      } else {
-        hiddenMonths.add(month);
-      }
-
-      localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
-
-      const select = document.getElementById("month-select");
-      Array.from(select.options).forEach(opt => {
-        opt.selected = hiddenMonths.has(parseInt(opt.value));
-      });
-
-      createCalendar();
-    };
 
     col.appendChild(header);
     col.appendChild(daysWrapper);
