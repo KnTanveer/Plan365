@@ -1,5 +1,4 @@
 // --- Constants and State ---
-let hiddenMonths = new Set(JSON.parse(localStorage.getItem("hiddenMonths") || "[]"));
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 const calendarData = new Map();
@@ -332,11 +331,7 @@ function createCalendar() {
   container.innerHTML = "";
   document.getElementById("year-label").textContent = `${currentYear}`;
 
-  const hiddenMonths = window.hiddenMonths || new Set();
-
   for (let month = 0; month < 12; month++) {
-    if (hiddenMonths.has(month)) continue;
-
     const col = document.createElement("div");
     col.className = "month-column";
 
@@ -348,21 +343,7 @@ function createCalendar() {
     daysWrapper.className = "days-wrapper";
 
     header.onclick = () => {
-      if (hiddenMonths.has(month)) {
-        hiddenMonths.delete(month);
-      } else {
-        hiddenMonths.add(month);
-      }
-
-      localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
-
-      const select = document.getElementById("month-select");
-      Array.from(select.options).forEach(opt => {
-        opt.selected = hiddenMonths.has(parseInt(opt.value));
-      });
-
-
-      createCalendar();
+      daysWrapper.style.display = daysWrapper.style.display === "none" ? "block" : "none";
     };
 
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
@@ -370,28 +351,19 @@ function createCalendar() {
       const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const cell = document.createElement("div");
       cell.className = "day-cell";
-      if (dateStr === new Date().toISOString().split("T")[0]) {
-        cell.classList.add("today");
-      }
-
+      if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
       cell.innerHTML = `<div class='day-label'>${day}</div>`;
-
       if (calendarData.has(dateStr)) {
         calendarData.get(dateStr).forEach(e => {
           const n = document.createElement("div");
           n.className = "note-text";
           n.style.background = e.color;
           n.textContent = e.text;
-          n.onclick = event => {
-            event.stopPropagation();
-            openModal(dateStr, e);
-          };
+          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
           cell.appendChild(n);
         });
       }
-
       cell.onclick = () => openModal(dateStr);
-
       daysWrapper.appendChild(cell);
     }
 
@@ -582,23 +554,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     changeTodayColor(storedColor);
     document.getElementById("today-color-input").value = storedColor;
   }
-
-  document.getElementById("month-select").addEventListener("change", () => {
-    const selected = Array.from(document.getElementById("month-select").selectedOptions)
-      .map(opt => parseInt(opt.value));
-    hiddenMonths = new Set(selected);
-    localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
-    createCalendar();
-  });
-  
-  window.addEventListener("load", () => {
-    const select = document.getElementById("month-select");
-    hiddenMonths.forEach(m => {
-      const opt = select.querySelector(`option[value="${m}"]`);
-      if (opt) opt.selected = true;
-    });
-  });
-
 
   const savedToken = localStorage.getItem("accessToken");
   if (savedToken) {
