@@ -1,4 +1,5 @@
 // --- Constants and State ---
+let hiddenMonths = new Set(JSON.parse(localStorage.getItem("hiddenMonths") || "[]"));
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 const calendarData = new Map();
@@ -332,6 +333,7 @@ function createCalendar() {
   document.getElementById("year-label").textContent = `${currentYear}`;
 
   for (let month = 0; month < 12; month++) {
+    if (hiddenMonths.has(month)) continue; 
     const col = document.createElement("div");
     col.className = "month-column";
 
@@ -554,6 +556,23 @@ window.addEventListener("DOMContentLoaded", async () => {
     changeTodayColor(storedColor);
     document.getElementById("today-color-input").value = storedColor;
   }
+
+  document.getElementById("month-select").addEventListener("change", () => {
+    const selected = Array.from(document.getElementById("month-select").selectedOptions)
+      .map(opt => parseInt(opt.value));
+    hiddenMonths = new Set(selected);
+    localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
+    createCalendar();
+  });
+  
+  window.addEventListener("load", () => {
+    const select = document.getElementById("month-select");
+    hiddenMonths.forEach(m => {
+      const opt = select.querySelector(`option[value="${m}"]`);
+      if (opt) opt.selected = true;
+    });
+  });
+
 
   const savedToken = localStorage.getItem("accessToken");
   if (savedToken) {
