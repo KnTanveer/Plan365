@@ -1,3 +1,4 @@
+
 // --- Constants and State ---
 let hiddenMonths = new Set(JSON.parse(localStorage.getItem("hiddenMonths") || "[]"));
 let currentYear = new Date().getFullYear();
@@ -345,8 +346,20 @@ function createCalendar() {
     daysWrapper.className = "days-wrapper";
 
     header.onclick = () => {
-      daysWrapper.style.display = daysWrapper.style.display === "none" ? "block" : "none";
-    };
+    if (hiddenMonths.has(month)) {
+      hiddenMonths.delete(month);
+    } else {
+      hiddenMonths.add(month);
+    }
+    localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
+  
+    const select = document.getElementById("month-select");
+    Array.from(select.options).forEach(opt => {
+      opt.selected = hiddenMonths.has(parseInt(opt.value));
+    });
+  
+    createCalendar(); 
+  };
 
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
@@ -567,10 +580,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   window.addEventListener("load", () => {
     const select = document.getElementById("month-select");
-    hiddenMonths.forEach(m => {
-      const opt = select.querySelector(`option[value="${m}"]`);
-      if (opt) opt.selected = true;
-    });
+      hiddenMonths.forEach(m => {
+        const opt = select.querySelector(`option[value="${m}"]`);
+        if (opt) opt.selected = true;
+      });
   });
 
 
