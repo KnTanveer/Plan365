@@ -312,6 +312,7 @@
 
     .popup-wrapper {
       position: relative;
+      display: inline-block;
     }
     
     #month-popup-toggle {
@@ -629,9 +630,7 @@
               <label><input type="checkbox" value="10"> November</label>
               <label><input type="checkbox" value="11"> December</label>
             </div>
-            <button id="restore-months-btn" title="Restore all months">
-              <i class="fas fa-undo-alt"></i> Restore
-            </button>
+            <button id="restore-months-btn"><i class="fas fa-undo-alt"></i> Restore</button>
           </div>
         </div>
       </div>
@@ -777,13 +776,13 @@
           cb.checked = false;
         });
       });
-    
+  
       document.addEventListener('click', function (e) {
         if (!popup.contains(e.target) && !toggle.contains(e.target)) {
           popup.classList.add('hidden');
         }
       });
-    }); 
+    });
 
   </script>
 
