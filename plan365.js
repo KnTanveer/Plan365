@@ -163,7 +163,8 @@ fontReset.addEventListener("click", () => {
 });
 
 document.addEventListener("click", (e) => {
-  if (!document.getElementById("font-picker-container").contains(e.target)) {
+  const container = document.getElementById("font-picker-container");
+  if (container && !container.contains(e.target)) {
     fontDropdown.classList.add("hidden");
   }
 });
