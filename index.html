@@ -538,6 +538,23 @@
       <button onclick="toggleDarkMode()"><i id="theme-toggle-icon" class="fas fa-sun"></i> Toggle Theme</button>
       <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()"><i class="fas fa-sync-alt"></i> Show/Hide Recurring</button>
       <button onclick="toggleCalendarLayout()"><i class="fas fa-columns"></i> Toggle Calendar Layout</button>
+      <div id="month-selector" style="margin: 1em;">
+        <label><strong>Hide Months:</strong></label><br>
+        <select id="month-select" multiple size="6" style="width: 200px;">
+          <option value="0">January</option>
+          <option value="1">February</option>
+          <option value="2">March</option>
+          <option value="3">April</option>
+          <option value="4">May</option>
+          <option value="5">June</option>
+          <option value="6">July</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">October</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
+        </select>
+      </div>
       <label><i class="fas fa-palette"></i> Today Color:
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
       </label>
