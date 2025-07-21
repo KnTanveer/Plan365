@@ -473,12 +473,18 @@ async function initData() {
     const res = await fetch('/api/events');
 
     if (res.status === 401) {
+      document.getElementById('signin-btn').style.display = 'inline-block';
+      document.getElementById('signout-btn').style.display = 'none';
+    
       alert('Session expired. Please sign in again.');
-      handleSignOut?.();
       return;
     }
 
-    const data = await res.json();
+    const data = await res.json(); // ✅ only call this once!
+
+    document.getElementById('signin-btn').style.display = 'none';
+    document.getElementById('signout-btn').style.display = 'inline-block';
+
     const items = data.items || [];
 
     calendarData.clear();
