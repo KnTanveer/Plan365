@@ -264,6 +264,10 @@
     }
 
     /* Hide months styling */
+    .hidden {
+      display: none;
+    }
+
     .section-heading {
       font-size: 15px;
       margin-bottom: 8px;
@@ -607,7 +611,9 @@
       <div class="settings-section">
         <h4 class="section-heading"><i class="fas fa-eye-slash"></i> Hide Months</h4>
         <div class="popup-wrapper">
-          <button id="month-popup-toggle"><i class="fas fa-calendar-times"></i> Select Months</button>
+          <button id="month-popup-toggle">
+            <i class="fas fa-calendar-times"></i> Select Months
+          </button>
           <div id="month-popup" class="month-popup hidden">
             <div class="month-options">
               <label><input type="checkbox" value="0"> January</label>
@@ -623,7 +629,9 @@
               <label><input type="checkbox" value="10"> November</label>
               <label><input type="checkbox" value="11"> December</label>
             </div>
-            <button id="restore-months-btn" title="Restore all months"><i class="fas fa-undo-alt"></i> Restore</button>
+            <button id="restore-months-btn" title="Restore all months">
+              <i class="fas fa-undo-alt"></i> Restore
+            </button>
           </div>
         </div>
       </div>
@@ -754,6 +762,28 @@
       cb.checked = false;
     });
   });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggle = document.getElementById('month-popup-toggle');
+      const popup = document.getElementById('month-popup');
+      const restore = document.getElementById('restore-months-btn');
+    
+      toggle.addEventListener('click', () => {
+        popup.classList.toggle('hidden');
+      });
+    
+      restore.addEventListener('click', () => {
+        document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
+          cb.checked = false;
+        });
+      });
+    
+      document.addEventListener('click', function (e) {
+        if (!popup.contains(e.target) && !toggle.contains(e.target)) {
+          popup.classList.add('hidden');
+        }
+      });
+    }); 
 
   </script>
 
