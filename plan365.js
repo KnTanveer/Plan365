@@ -554,7 +554,16 @@ function handleSignIn() {
       gapi.client.setToken({ access_token: accessToken });
       document.getElementById("signin-btn").style.display = "none";
       document.getElementById("signout-btn").style.display = "inline-block";
-      setInterval(() => tokenClient.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+      setInterval(async () => {
+        try {
+          await tokenClient.requestAccessToken({ prompt: '' });
+        } catch (err) {
+          console.error("Token refresh failed:", err);
+          alert("Session expired. Please sign in again.");
+          handleSignOut();
+        }
+      }, 55 * 60 * 1000);
+
       await initCalendarId();
       await initData();
     },
