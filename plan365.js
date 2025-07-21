@@ -128,7 +128,10 @@ function updateDropdown(query = "") {
     item.textContent = font;
     item.style.fontFamily = `'${font}', sans-serif`;
     item.addEventListener("mouseenter", () => clearHighlights());
-    item.addEventListener("click", () => selectFont(font));
+    item.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      selectFont(font);
+    });
     fontDropdown.appendChild(item);
   });
 
