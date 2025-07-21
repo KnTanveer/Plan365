@@ -184,12 +184,6 @@
     #font-dropdown.hidden {
       display: none;
     }
-
-    .font-search-wrapper {
-      display: flex;
-      align-items: stretch;
-      gap: 6px;
-    }
     
     #font-search {
       flex: 1;
@@ -589,10 +583,8 @@
       <label id="font-label">
         <i class="fas fa-font"></i> Font:
         <div class="font-input-wrapper">
-          <div class="font-search-wrapper">
             <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
             <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
-          </div>
           <div id="font-dropdown" class="hidden"></div>
         </div>
       </label>
