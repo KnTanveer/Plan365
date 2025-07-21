@@ -139,6 +139,12 @@
       font-size: 14px;
     }
     
+    .font-search-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
     body.dark #font-select {
       background-color: #3a3a3a;
       color: white;
@@ -191,7 +197,8 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       outline: none;
-      width: 100%;
+      flex: 1;
+      width: auto;
       box-sizing: border-box;
     }
     
@@ -200,7 +207,7 @@
       top: 0;
       right: 0;
       height: 100%;
-      padding: 0 10px;
+      padding: 6px 10px;
       border: none;
       background: transparent;
       cursor: pointer;
@@ -208,6 +215,7 @@
     
     #font-reset:hover, {
       background: #ddd;
+      border-radius: 4px;
     }
     
     #font-dropdown {
@@ -580,8 +588,10 @@
       <label id="font-label">
         <i class="fas fa-font"></i> Font:
         <div class="font-input-wrapper">
-          <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
-          <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
+          <div class="font-search-wrapper">
+            <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
+            <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
+          </div>
           <div id="font-dropdown" class="hidden"></div>
         </div>
       </label>
