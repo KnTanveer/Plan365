@@ -24,6 +24,20 @@ window.addEventListener('DOMContentLoaded', () => {
   calendar.classList.add(layout);
 });
 
+function saveHiddenMonths() {
+  const hidden = Array.from(document.querySelectorAll('.month-column.hidden'))
+    .map(el => el.dataset.month);
+  localStorage.setItem('hiddenMonths', JSON.stringify(hidden));
+}
+
+function restoreHiddenMonths() {
+  const hidden = JSON.parse(localStorage.getItem('hiddenMonths') || '[]');
+  hidden.forEach(index => {
+    const el = document.querySelector(`.month-column[data-month="${index}"]`);
+    if (el) el.classList.add('hidden');
+  });
+}
+
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle("dark");
   const icon = document.getElementById("theme-toggle-icon");
