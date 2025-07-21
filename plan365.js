@@ -332,7 +332,7 @@ function createCalendar() {
   container.innerHTML = "";
   document.getElementById("year-label").textContent = `${currentYear}`;
 
-  const hiddenMonths = window.hiddenMonths;
+  const hiddenMonths = window.hiddenMonths || new Set();
 
   for (let month = 0; month < 12; month++) {
     if (hiddenMonths.has(month)) continue;
