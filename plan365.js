@@ -475,7 +475,23 @@ async function initData() {
 
 function toggleRecurringEvents() {
   showRecurringEvents = !showRecurringEvents;
-  document.getElementById("toggle-recurring-btn").textContent = showRecurringEvents ? "Hide Recurring" : "Show Recurring";
+
+  const button = document.getElementById("toggle-recurring-btn");
+
+  const icon = document.createElement("i");
+  icon.className = "fas fa-sync-alt fa-spin";
+  icon.style.marginRight = "5px";
+
+  const label = document.createTextNode(showRecurringEvents ? "Hide Recurring" : "Show Recurring");
+
+  button.innerHTML = "";
+  button.appendChild(icon);
+  button.appendChild(label);
+
+  setTimeout(() => {
+    icon.classList.remove("fa-spin");
+  }, 1000);
+
   initData();
 }
 
