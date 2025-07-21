@@ -751,17 +751,7 @@
         document.getElementById('toggle-recurring-btn').innerHTML = `<i class="fas fa-sync-alt"></i> Show Recurring`;
       }
     };
-
-    document.getElementById('month-popup-toggle').addEventListener('click', () => {
-    document.getElementById('month-popup').classList.toggle('hidden');
-  });
-  
-  document.getElementById('restore-months-btn').addEventListener('click', () => {
-    document.querySelectorAll('#month-popup input[type="checkbox"]').forEach(cb => {
-      cb.checked = false;
-    });
-  });
-
+    
     document.addEventListener('DOMContentLoaded', function () {
       const toggle = document.getElementById('month-popup-toggle');
       const popup = document.getElementById('month-popup');
@@ -776,7 +766,7 @@
           cb.checked = false;
         });
       });
-  
+      
       document.addEventListener('click', function (e) {
         if (!popup.contains(e.target) && !toggle.contains(e.target)) {
           popup.classList.add('hidden');
