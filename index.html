@@ -139,12 +139,6 @@
       font-size: 14px;
     }
     
-    .font-search-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
     body.dark #font-select {
       background-color: #3a3a3a;
       color: white;
@@ -190,13 +184,17 @@
     #font-dropdown.hidden {
       display: none;
     }
+
+    .font-search-wrapper {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+    }
     
     #font-search {
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      font-size: 16px;
-      text-align: center;
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
       border: 1px solid #555;
       border-radius: 4px;
       background-color: #3a3a3a;
@@ -206,7 +204,6 @@
     
     #font-reset {
       width: 40px;
-      height: 40px;
       border: 1px solid #555;
       border-radius: 4px;
       background-color: #444;
