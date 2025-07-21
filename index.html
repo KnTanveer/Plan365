@@ -195,7 +195,7 @@
       box-sizing: border-box;
     }
     
-    #font-reset, restore-months-btn {
+    #font-reset {
       position: absolute;
       top: 0;
       right: 0;
@@ -206,7 +206,7 @@
       cursor: pointer;
     }
     
-    #font-reset:hover, restore-months-btn:hover {
+    #font-reset:hover {
       background: #ddd;
     }
     
@@ -242,13 +242,13 @@
       border: 1px solid #555;
     }
     
-    body.dark #font-reset, restore-months-btn {
+    body.dark #font-reset {
       background: #444;
       color: white;
       border-color: #666;
     }
     
-    body.dark #font-reset:hover, restore-months-btn:hover {
+    body.dark #font-reset:hover {
       background: #333;
     }
     
@@ -538,24 +538,6 @@
       <button onclick="toggleDarkMode()"><i id="theme-toggle-icon" class="fas fa-sun"></i> Toggle Theme</button>
       <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()"><i class="fas fa-sync-alt"></i> Show/Hide Recurring</button>
       <button onclick="toggleCalendarLayout()"><i class="fas fa-columns"></i> Toggle Calendar Layout</button>
-      <div id="month-selector" style="margin: 1em;">
-        <label><strong>Hide Months:</strong></label><br>
-        <select id="month-select" multiple size="6" style="width: 200px;">
-          <option value="0">January</option>
-          <option value="1">February</option>
-          <option value="2">March</option>
-          <option value="3">April</option>
-          <option value="4">May</option>
-          <option value="5">June</option>
-          <option value="6">July</option>
-          <option value="7">August</option>
-          <option value="8">September</option>
-          <option value="9">October</option>
-          <option value="10">November</option>
-          <option value="11">December</option>
-        </select>
-        <button id="restore-months-btn"><i class="fas fa-undo-alt"></i></button>
-      </div>
       <label><i class="fas fa-palette"></i> Today Color:
         <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
       </label>
@@ -563,7 +545,9 @@
         <i class="fas fa-font"></i> Font:
         <div class="font-input-wrapper">
           <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
-          <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
+          <button id="font-reset" title="Reset font">
+            <i class="fas fa-undo-alt"></i>
+          </button>
           <div id="font-dropdown" class="hidden"></div>
         </div>
       </label>
