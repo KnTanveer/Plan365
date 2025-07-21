@@ -615,23 +615,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("today-color-input").value = storedColor;
   }
 
-  document.getElementById("month-select").addEventListener("change", () => {
-    const selected = Array.from(document.getElementById("month-select").selectedOptions)
-      .map(opt => parseInt(opt.value));
-    hiddenMonths = new Set(selected);
-    localStorage.setItem("hiddenMonths", JSON.stringify([...hiddenMonths]));
-    createCalendar();
-  });
-  
-  window.addEventListener("load", () => {
-    const select = document.getElementById("month-select");
-      hiddenMonths.forEach(m => {
-        const opt = select.querySelector(`option[value="${m}"]`);
-        if (opt) opt.selected = true;
-      });
-  });
-
-
   const savedToken = localStorage.getItem("accessToken");
   if (savedToken) {
     accessToken = savedToken;
