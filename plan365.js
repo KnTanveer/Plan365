@@ -579,10 +579,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   window.addEventListener("load", () => {
     const select = document.getElementById("month-select");
-    hiddenMonths.forEach(m => {
-      const opt = select.querySelector(`option[value="${m}"]`);
-      if (opt) opt.selected = true;
-    });
+      hiddenMonths.forEach(m => {
+        const opt = select.querySelector(`option[value="${m}"]`);
+        if (opt) opt.selected = true;
+      });
   });
 
 
