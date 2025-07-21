@@ -23,7 +23,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const calendar = document.getElementById('calendar');
   calendar.classList.add(layout);
 
-  restoreHiddenMonths();
 });
 
 function saveHiddenMonths() {
