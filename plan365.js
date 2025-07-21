@@ -329,7 +329,6 @@ async function deleteCurrentEvent() {
 function createCalendar() {
   const container = document.getElementById("calendar");
   if (!container) return;
-
   container.innerHTML = "";
   document.getElementById("year-label").textContent = `${currentYear}`;
 
@@ -348,14 +347,6 @@ function createCalendar() {
     const daysWrapper = document.createElement("div");
     daysWrapper.className = "days-wrapper";
 
-    const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayEl = document.createElement("div");
-      dayEl.className = "day-cell";
-      dayEl.textContent = day;
-      daysWrapper.appendChild(dayEl);
-    }
-
     header.onclick = () => {
       if (hiddenMonths.has(month)) {
         hiddenMonths.delete(month);
@@ -370,33 +361,37 @@ function createCalendar() {
         opt.selected = hiddenMonths.has(parseInt(opt.value));
       });
 
+
       createCalendar();
     };
-
-    col.appendChild(header);
-    col.appendChild(daysWrapper);
-    container.appendChild(col);
-  }
-}
 
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const cell = document.createElement("div");
       cell.className = "day-cell";
-      if (dateStr === new Date().toISOString().split("T")[0]) cell.classList.add("today");
+      if (dateStr === new Date().toISOString().split("T")[0]) {
+        cell.classList.add("today");
+      }
+
       cell.innerHTML = `<div class='day-label'>${day}</div>`;
+
       if (calendarData.has(dateStr)) {
         calendarData.get(dateStr).forEach(e => {
           const n = document.createElement("div");
           n.className = "note-text";
           n.style.background = e.color;
           n.textContent = e.text;
-          n.onclick = event => { event.stopPropagation(); openModal(dateStr, e); };
+          n.onclick = event => {
+            event.stopPropagation();
+            openModal(dateStr, e);
+          };
           cell.appendChild(n);
         });
       }
+
       cell.onclick = () => openModal(dateStr);
+
       daysWrapper.appendChild(cell);
     }
 
@@ -598,10 +593,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   window.addEventListener("load", () => {
     const select = document.getElementById("month-select");
-      hiddenMonths.forEach(m => {
-        const opt = select.querySelector(`option[value="${m}"]`);
-        if (opt) opt.selected = true;
-      });
+    hiddenMonths.forEach(m => {
+      const opt = select.querySelector(`option[value="${m}"]`);
+      if (opt) opt.selected = true;
+    });
   });
 
 
