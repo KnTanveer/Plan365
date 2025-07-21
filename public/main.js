@@ -673,6 +673,14 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+document.getElementById('signin-btn').addEventListener('click', () => {
+  window.location.href = '/api/auth';
+});
+
+document.getElementById('signout-btn').addEventListener('click', () => {
+  window.location.href = '/api/signout';
+});
+
 window.onload = () => { initData(); };
 window.toggleRecurringEvents = toggleRecurringEvents;
 window.toggleDarkMode = toggleDarkMode;
