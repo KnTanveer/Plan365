@@ -3,15 +3,15 @@ import { getSessionClient } from "./_google";
 import { getTokensFromCookies } from "./_session"; 
 
 export default async function handler(req, res) {
-  // lines for debugging
-  console.log("Headers:", req.headers);
-  console.log("Cookies:", req.headers.cookie);
-  const tokens = getTokensFromCookies(req, res);
-  console.log("Extracted tokens:", tokens);
-
   try {
+    console.log("headers:", req.headers);
+    console.log("raw cookies:", req.headers.cookie);
+
+    const tokens = getTokensFromCookies(req, res);
+    console.log("parsed tokens:", tokens);
+
     if (!tokens?.access_token) {
-      return res.status(401).json({ error: "Not authenticated" });
+      return res.status(401).json({ error: "Not authenticated", tokens });
     }
 
     const auth = getSessionClient(tokens);
