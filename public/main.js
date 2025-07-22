@@ -57,6 +57,69 @@ function smoothScrollCalendar(delta) {
   container.scrollBy({ left: delta, behavior: "smooth" });
 }
 
+// --- Auth and Startup ---
+function handleLogin() {
+  window.location.href = "/api/auth";
+}
+
+function handleLogout() {
+  window.location.href = "/api/signout";
+}
+
+async function fetchEvents() {
+  const res = await fetch("/api/events");
+  const out = document.getElementById("output");
+
+  if (!res.ok) {
+    out.textContent = "Session expired or unauthorized. Please sign in again.";
+    return;
+  }
+
+  const data = await res.json();
+  out.textContent = JSON.stringify(data.items, null, 2);
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") smoothScrollCalendar(100);
+  if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
+});
+
+const storedColor = localStorage.getItem("todayColor");
+if (storedColor) {
+  document.documentElement.style.setProperty('--today-color', storedColor);
+  const picker = document.getElementById("today-color-input");
+  if (picker) picker.value = storedColor;
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+  }
+
+  const themeIcon = document.getElementById("theme-toggle-icon");
+  if (themeIcon) {
+    themeIcon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
+  }
+
+  const storedColor = localStorage.getItem("todayColor");
+  if (storedColor) {
+    changeTodayColor(storedColor);
+    const input = document.getElementById("today-color-input");
+    if (input) input.value = storedColor;
+  }
+
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) loginBtn.addEventListener("click", handleLogin);
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
+
+  setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+
+  await initData();
+});
+
 function addToRange(event) {
   if (!showRecurringEvents && event.recurrenceType) return;
   const start = new Date(event.range.start);
@@ -549,69 +612,6 @@ function toggleRecurringEvents() {
 
   initData();
 }
-
-// --- Auth and Startup ---
-function handleLogin() {
-  window.location.href = "/api/auth";
-}
-
-function handleLogout() {
-  window.location.href = "/api/signout";
-}
-
-async function fetchEvents() {
-  const res = await fetch("/api/events");
-  const out = document.getElementById("output");
-
-  if (!res.ok) {
-    out.textContent = "Session expired or unauthorized. Please sign in again.";
-    return;
-  }
-
-  const data = await res.json();
-  out.textContent = JSON.stringify(data.items, null, 2);
-}
-
-window.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowRight") smoothScrollCalendar(100);
-  if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
-});
-
-const storedColor = localStorage.getItem("todayColor");
-if (storedColor) {
-  document.documentElement.style.setProperty('--today-color', storedColor);
-  const picker = document.getElementById("today-color-input");
-  if (picker) picker.value = storedColor;
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-  }
-
-  const themeIcon = document.getElementById("theme-toggle-icon");
-  if (themeIcon) {
-    themeIcon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
-  }
-
-  const storedColor = localStorage.getItem("todayColor");
-  if (storedColor) {
-    changeTodayColor(storedColor);
-    const input = document.getElementById("today-color-input");
-    if (input) input.value = storedColor;
-  }
-
-  const loginBtn = document.getElementById("loginBtn");
-  if (loginBtn) loginBtn.addEventListener("click", handleLogin);
-
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
-
-  setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
-
-  await initData();
-});
 
 function showDeleteChoiceModal() {
   return new Promise(resolve => {
