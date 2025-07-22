@@ -1,5 +1,5 @@
 export default function handler(req, res) {
-  const redirect_uri = 'https://your-vercel-site.vercel.app/api/auth/callback';
+  const redirect_uri = 'https://plan365.vercel.app/api/auth/callback';
   const client_id = process.env.GOOGLE_CLIENT_ID;
   const scope = [
     'https://www.googleapis.com/auth/calendar.events',
