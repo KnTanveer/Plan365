@@ -6,6 +6,7 @@ import { getTokensFromCookies } from "./_session"; // cookie/session helper
 export default async function handler(req, res) {
   try {
     const tokens = getTokensFromCookies(req, res);
+    console.log("DEBUG: tokens =", tokens);
     if (!tokens?.access_token) return res.status(401).json({ error: "Not authenticated" });
 
     const auth = getSessionClient(tokens);
