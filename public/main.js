@@ -261,25 +261,21 @@ async function saveNote() {
   const cleanText = text.replace(/↻/g, "").trim();
   const displayText = recurrence ? `${cleanText} ↻` : cleanText;
 
+  // If editing, delete the previous one
   if (currentEditingEvent) {
-    try {
-      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: currentEditingEvent.googleId });
-      const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
-      await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
-    } catch (e) {
-      console.error("Failed to delete previous event:", e);
-    }
+    await deleteEventById(currentEditingEvent.googleId, currentEditingEvent.recurrenceType);
   }
 
-  await gapi.client.calendar.events.insert({
-    calendarId,
-    resource: {
+  await fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       summary: displayText,
       description: metadata,
-      start: { date: start },
-      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-      recurrence: recurrenceRule || []
-    }
+      start,
+      end: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0],
+      recurrence: recurrenceRule
+    })
   });
 
   closeModal();
@@ -288,42 +284,25 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
+
   const isRecurring = currentEditingEvent.recurrenceType != null;
   const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
+  let eventIdToDelete = currentEditingEvent.googleId;
 
-  try {
-    let eventIdToDelete = currentEditingEvent.googleId;
-
-    if (deleteWholeSeries) {
-      try {
-        const fullEvent = await gapi.client.calendar.events.get({
-          calendarId,
-          eventId: eventIdToDelete
-        });
-
-        if (fullEvent.result.recurringEventId) {
-          eventIdToDelete = fullEvent.result.recurringEventId;
-        }
-      } catch (e) {
-        if (e.status !== 410) {
-          console.warn("Failed to fetch full event info:", e);
-        }
-      }
-    }
-
-    await gapi.client.calendar.events.delete({
-      calendarId,
-      eventId: eventIdToDelete
-    });
-
-  } catch (e) {
-    if (e.status === 410) {
-      console.info("Event already deleted, skipping.");
-    } else {
-      console.error("Failed to delete event:", e);
-      alert("Could not delete event.");
+  // Handle recurring master deletion
+  if (deleteWholeSeries) {
+    const full = await fetch(`/api/events?id=${eventIdToDelete}`);
+    const data = await full.json();
+    if (data.recurringEventId) {
+      eventIdToDelete = data.recurringEventId;
     }
   }
+
+  await fetch("/api/events", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ eventId: eventIdToDelete })
+  });
 
   closeModal();
   await initData();
@@ -466,26 +445,24 @@ async function initCalendarId() {
 }
 
 async function initData() {
-  if (!calendarId) return;
   showSpinner(true);
-  const timeMin = new Date(currentYear, 0, 1).toISOString();
-  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
+  calendarData.clear();
 
   try {
-    const response = await gapi.client.calendar.events.list({
-      calendarId, timeMin, timeMax, showDeleted: false,
-      singleEvents: true, orderBy: "startTime"
-    });
+    const response = await fetch("/api/events");
+    if (!response.ok) throw new Error("Failed to fetch events");
 
-    calendarData.clear();
+    const result = await response.json();
+    const year = new Date().getFullYear();
 
-    response.result.items.forEach(ev => {
+    result.items.forEach(ev => {
       const start = ev.start?.date;
       const endRaw = ev.end?.date;
       if (!start || !endRaw) return;
 
       const rrule = ev.recurrence?.[0] || "";
       if (!showRecurringEvents && rrule) return;
+
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
 
@@ -516,7 +493,6 @@ async function initData() {
       if (rrule) return;
 
       const endDateObj = new Date(endRaw);
-      if (isNaN(endDateObj.getTime())) return;
       endDateObj.setDate(endDateObj.getDate() - 1);
       const newEvent = {
         text: ev.summary,
@@ -531,12 +507,32 @@ async function initData() {
     createCalendar();
   } catch (e) {
     console.error("Failed to fetch events:", e);
-    if (e.status === 401) {
-      alert("Session expired. Please sign in again.");
-      handleSignOut();
-    }
+    alert("Session expired. Please sign in again.");
+    handleSignOut();
   } finally {
     showSpinner(false);
+  }
+}
+
+async function deleteEventById(id, recurrenceType) {
+  try {
+    let realId = id;
+
+    if (recurrenceType) {
+      const res = await fetch(`/api/events?id=${id}`);
+      const data = await res.json();
+      if (data.recurringEventId) {
+        realId = data.recurringEventId;
+      }
+    }
+
+    await fetch("/api/events", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId: realId })
+    });
+  } catch (e) {
+    console.warn("Failed to delete event:", e);
   }
 }
 
