@@ -261,7 +261,6 @@ async function saveNote() {
   const cleanText = text.replace(/↻/g, "").trim();
   const displayText = recurrence ? `${cleanText} ↻` : cleanText;
 
-  // If editing, delete the previous one
   if (currentEditingEvent) {
     await deleteEventById(currentEditingEvent.googleId, currentEditingEvent.recurrenceType);
   }
@@ -289,7 +288,6 @@ async function deleteCurrentEvent() {
   const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
   let eventIdToDelete = currentEditingEvent.googleId;
 
-  // Handle recurring master deletion
   if (deleteWholeSeries) {
     const full = await fetch(`/api/events?id=${eventIdToDelete}`);
     const data = await full.json();
