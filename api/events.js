@@ -1,42 +1,78 @@
-import { google } from 'googleapis';
-import axios from 'axios';
-import cookie from 'cookie';
+// /api/events.js
+import { google } from "googleapis";
+import { getSessionClient } from "./_google"; // helper to create OAuth client
+import { getTokensFromCookies } from "./_session"; // cookie/session helper
 
 export default async function handler(req, res) {
-  const cookies = cookie.parse(req.headers.cookie || '');
-  let access_token = cookies.access_token;
+  try {
+    const tokens = getTokensFromCookies(req, res);
+    if (!tokens?.access_token) return res.status(401).json({ error: "Not authenticated" });
 
-  if (!access_token) {
-    const refresh_token = cookies.refresh_token;
-    if (!refresh_token) return res.status(401).send('Not logged in');
+    const auth = getSessionClient(tokens);
+    const calendar = google.calendar({ version: "v3", auth });
+    const calendarId = await getOrCreatePlan365Calendar(calendar);
 
-    const { data } = await axios.post('https://oauth2.googleapis.com/token', null, {
-      params: {
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        refresh_token,
-        grant_type: 'refresh_token'
+    if (req.method === "GET") {
+      const timeMin = new Date(new Date().getFullYear(), 0, 1).toISOString();
+      const timeMax = new Date(new Date().getFullYear() + 1, 0, 1).toISOString();
+
+      const result = await calendar.events.list({
+        calendarId,
+        timeMin,
+        timeMax,
+        showDeleted: false,
+        singleEvents: false,
+        orderBy: "startTime"
+      });
+
+      // Optional: return single event if ?id=... is provided
+      if (req.query.id) {
+        const match = result.data.items.find(ev => ev.id === req.query.id);
+        if (match) return res.json(match);
+        return res.status(404).json({ error: "Event not found" });
       }
-    });
 
-    access_token = data.access_token;
-    res.setHeader('Set-Cookie', cookie.serialize('access_token', access_token, {
-      httpOnly: true, secure: true, maxAge: 3600, path: '/',
-    }));
+      return res.json(result.data);
+    }
+
+    if (req.method === "POST") {
+      const { summary, description, start, end, recurrence } = req.body;
+
+      const response = await calendar.events.insert({
+        calendarId,
+        requestBody: {
+          summary,
+          description,
+          start: { date: start },
+          end: { date: end },
+          recurrence: recurrence || []
+        }
+      });
+
+      return res.status(200).json(response.data);
+    }
+
+    if (req.method === "DELETE") {
+      const { eventId } = req.body;
+      if (!eventId) return res.status(400).json({ error: "Missing eventId" });
+
+      await calendar.events.delete({ calendarId, eventId });
+      return res.status(204).end();
+    }
+
+    return res.status(405).json({ error: "Method not allowed" });
+  } catch (e) {
+    console.error("API error in /api/events.js:", e);
+    return res.status(500).json({ error: "Internal Server Error", details: e.message });
   }
+}
 
-  const auth = new google.auth.OAuth2();
-  auth.setCredentials({ access_token });
+// Ensures a calendar named "Plan365" exists
+async function getOrCreatePlan365Calendar(calendar) {
+  const list = await calendar.calendarList.list();
+  const existing = list.data.items.find(c => c.summary === "Plan365");
+  if (existing) return existing.id;
 
-  const calendar = google.calendar({ version: 'v3', auth });
-
-  const events = await calendar.events.list({
-    calendarId: 'primary',
-    timeMin: new Date().toISOString(),
-    maxResults: 10,
-    singleEvents: true,
-    orderBy: 'startTime',
-  });
-
-  res.json(events.data);
+  const created = await calendar.calendars.insert({ requestBody: { summary: "Plan365" } });
+  return created.data.id;
 }
