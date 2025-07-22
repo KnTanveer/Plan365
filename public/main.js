@@ -67,7 +67,7 @@ function handleLogout() {
 }
 
 async function fetchEvents() {
-  const res = await fetch("/api/events");
+  const res = await fetch("/api/events", { credentials: "include" });
   const out = document.getElementById("output");
 
   if (!res.ok) {
@@ -563,7 +563,7 @@ async function initData() {
   } catch (e) {
     console.error("Failed to fetch events:", e);
     alert("Session expired. Please sign in again.");
-    handlelogout();
+    handleLogout();
   } finally {
     showSpinner(false);
   }
