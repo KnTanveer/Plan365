@@ -573,13 +573,15 @@ function handleLogout() {
 
 async function fetchEvents() {
   const res = await fetch("/api/events");
+  const out = document.getElementById("output");
+
   if (!res.ok) {
-    alert("Session expired. Please sign in again.");
-    return handleLogout();
+    out.textContent = "Session expired or unauthorized. Please sign in again.";
+    return;
   }
 
   const data = await res.json();
-  console.log(data.items); // update calendar UI here
+  out.textContent = JSON.stringify(data.items, null, 2);
 }
 
 function gapiLoad() {
