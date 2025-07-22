@@ -1,13 +1,18 @@
-// /api/events.js
 import { google } from "googleapis";
-import { getSessionClient } from "./_google"; // helper to create OAuth client
-import { getTokensFromCookies } from "./_session"; // cookie/session helper
+import { getSessionClient } from "./_google"; 
+import { getTokensFromCookies } from "./_session"; 
 
 export default async function handler(req, res) {
+  // lines for debugging
+  console.log("Headers:", req.headers);
+  console.log("Cookies:", req.headers.cookie);
+  const tokens = getTokensFromCookies(req, res);
+  console.log("Extracted tokens:", tokens);
+
   try {
-    const tokens = getTokensFromCookies(req, res);
-    console.log("DEBUG: tokens =", tokens);
-    if (!tokens?.access_token) return res.status(401).json({ error: "Not authenticated" });
+    if (!tokens?.access_token) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
 
     const auth = getSessionClient(tokens);
     const calendar = google.calendar({ version: "v3", auth });
