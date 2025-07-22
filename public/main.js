@@ -13,13 +13,7 @@ function toggleDarkMode() {
   const isDark = document.body.classList.toggle("dark");
   const icon = document.getElementById("theme-toggle-icon");
   if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
-
   localStorage.setItem("theme", isDark ? "dark" : "light");
-
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-  if (themeColorMeta) {
-    themeColorMeta.setAttribute("content", isDark ? "#121212" : "#ffffff");
-  }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -39,11 +33,8 @@ window.addEventListener("DOMContentLoaded", () => {
 function changeTodayColor(color) {
   document.documentElement.style.setProperty('--today-color', color);
   localStorage.setItem('todayColor', color);
-
   const colorPicker = document.getElementById('today-color-input');
-  if (colorPicker) {
-    colorPicker.value = color;
-  }
+  if (colorPicker) colorPicker.value = color;
 }
 
 function showSpinner(show) {
@@ -53,8 +44,7 @@ function showSpinner(show) {
 
 function smoothScrollCalendar(delta) {
   const container = document.getElementById("calendar");
-  if (!container) return;
-  container.scrollBy({ left: delta, behavior: "smooth" });
+  if (container) container.scrollBy({ left: delta, behavior: "smooth" });
 }
 
 function addToRange(event) {
@@ -215,7 +205,7 @@ function openModal(dateStr, event = null) {
 
 function closeModal() {
   const modal = document.getElementById("modal");
-  const content = document.getElementById("modal-content"); // Ensure modal-content exists
+  const content = document.getElementById("modal-content");
   if (modal && content) {
     content.classList.add("fade-out");
     modal.classList.add("fade-out");
@@ -254,33 +244,25 @@ async function saveNote() {
 
   if (!start || !end || !text) return alert("Please fill all fields");
 
-  const metadata = JSON.stringify({ color, recurrence });
-  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
-  localStorage.setItem("lastColor", color);
-
   const cleanText = text.replace(/↻/g, "").trim();
   const displayText = recurrence ? `${cleanText} ↻` : cleanText;
 
-  if (currentEditingEvent) {
-    try {
-      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: currentEditingEvent.googleId });
-      const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
-      await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
-    } catch (e) {
-      console.error("Failed to delete previous event:", e);
-    }
-  }
+  const payload = {
+    start,
+    end,
+    text: displayText,
+    color,
+    recurrence,
+    editId: currentEditingEvent?.googleId || null
+  };
 
-  await gapi.client.calendar.events.insert({
-    calendarId,
-    resource: {
-      summary: displayText,
-      description: metadata,
-      start: { date: start },
-      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
-      recurrence: recurrenceRule || []
-    }
+  const res = await fetch("/api/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
   });
+
+  if (!res.ok) return alert("Failed to save event");
 
   closeModal();
   await initData();
@@ -291,39 +273,18 @@ async function deleteCurrentEvent() {
   const isRecurring = currentEditingEvent.recurrenceType != null;
   const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
 
-  try {
-    let eventIdToDelete = currentEditingEvent.googleId;
+  const payload = {
+    googleId: currentEditingEvent.googleId,
+    deleteSeries: deleteWholeSeries
+  };
 
-    if (deleteWholeSeries) {
-      try {
-        const fullEvent = await gapi.client.calendar.events.get({
-          calendarId,
-          eventId: eventIdToDelete
-        });
+  const res = await fetch("/api/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
-        if (fullEvent.result.recurringEventId) {
-          eventIdToDelete = fullEvent.result.recurringEventId;
-        }
-      } catch (e) {
-        if (e.status !== 410) {
-          console.warn("Failed to fetch full event info:", e);
-        }
-      }
-    }
-
-    await gapi.client.calendar.events.delete({
-      calendarId,
-      eventId: eventIdToDelete
-    });
-
-  } catch (e) {
-    if (e.status === 410) {
-      console.info("Event already deleted, skipping.");
-    } else {
-      console.error("Failed to delete event:", e);
-      alert("Could not delete event.");
-    }
-  }
+  if (!res.ok) return alert("Failed to delete event");
 
   closeModal();
   await initData();
@@ -466,27 +427,19 @@ async function initCalendarId() {
 }
 
 async function initData() {
-  if (!calendarId) return;
   showSpinner(true);
 
   try {
-    const res = await fetch('/api/events');
-
+    const res = await fetch("/api/events");
     if (res.status === 401) {
-      document.getElementById('signin-btn').style.display = 'inline-block';
-      document.getElementById('signout-btn').style.display = 'none';
-    
-      alert('Session expired. Please sign in again.');
+      document.getElementById("signin-btn").style.display = "inline-block";
+      document.getElementById("signout-btn").style.display = "none";
+      alert("Session expired. Please sign in again.");
       return;
     }
 
-    const data = await res.json(); // ✅ only call this once!
-
-    document.getElementById('signin-btn').style.display = 'none';
-    document.getElementById('signout-btn').style.display = 'inline-block';
-
+    const data = await res.json();
     const items = data.items || [];
-
     calendarData.clear();
 
     items.forEach(ev => {
@@ -688,5 +641,7 @@ document.getElementById('signout-btn').addEventListener('click', () => {
 }); 
 
 window.onload = () => { initData(); };
-window.toggleRecurringEvents = toggleRecurringEvents;
+window.handleSignIn = handleSignIn;
+window.handleSignOut = handleSignOut;
+window.toggleRecurringEvents = () => { showRecurringEvents = !showRecurringEvents; initData(); };
 window.toggleDarkMode = toggleDarkMode;
