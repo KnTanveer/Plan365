@@ -438,12 +438,6 @@ function goToToday() {
   initData();
 }
 
-async function initCalendarId() {
-  const result = await gapi.client.calendar.calendarList.list();
-  const exists = result.result.items.find(c => c.summary === "Plan365");
-  calendarId = exists ? exists.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
-}
-
 async function initData() {
   showSpinner(true);
   calendarData.clear();
@@ -580,15 +574,6 @@ async function fetchEvents() {
   out.textContent = JSON.stringify(data.items, null, 2);
 }
 
-function gapiLoad() {
-  return new Promise(resolve => {
-    gapi.load("client", async () => {
-      await gapi.client.init({ discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"] });
-      resolve();
-    });
-  });
-}
-
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") smoothScrollCalendar(100);
   if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
@@ -618,18 +603,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("today-color-input").value = storedColor;
   }
 
-  const savedToken = localStorage.getItem("accessToken");
-  if (savedToken) {
-    accessToken = savedToken;
-    await gapiLoad();
-    gapi.client.setToken({ access_token: accessToken });
-
     document.getElementById("loginBtn").addEventListener("click", handleLogin);
     document.getElementById("logoutBtn").addEventListener("click", handleLogout);
 
     setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
 
-    await initCalendarId();
     await initData();
   }
 });
