@@ -69,11 +69,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   } catch (e) {
     console.error("API error in /api/events.js:", e);
-    return res.status(500).json({ error: "Internal Server Error", details: e.message });
+        return res.status(500).json({
+          error: "Internal Server Error",
+          message: e.message,
+          stack: e.stack,
+        });
   }
 }
 
-// Ensures a calendar named "Plan365" exists
 async function getOrCreatePlan365Calendar(calendar) {
   const list = await calendar.calendarList.list();
   const existing = list.data.items.find(c => c.summary === "Plan365");
