@@ -504,7 +504,7 @@ async function initData() {
   calendarData.clear();
 
   try {
-    const response = await fetch("/api/events" { credentials: "include" });
+    const response = await fetch("/api/events", { credentials: "include" });
     if (!response.ok) throw new Error("Failed to fetch events");
 
     const result = await response.json();
