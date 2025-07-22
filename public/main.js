@@ -600,17 +600,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   const storedColor = localStorage.getItem("todayColor");
   if (storedColor) {
     changeTodayColor(storedColor);
-    document.getElementById("today-color-input").value = storedColor;
+    const input = document.getElementById("today-color-input");
+    if (input) input.value = storedColor;
   }
 
-    document.getElementById("loginBtn").addEventListener("click", handleLogin);
-    document.getElementById("logoutBtn").addEventListener("click", handleLogout);
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) loginBtn.addEventListener("click", handleLogin);
 
-    setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
 
-    await initData();
+  setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
+
+  await initData();
 });
-
 
 function showDeleteChoiceModal() {
   return new Promise(resolve => {
