@@ -3,33 +3,31 @@ import cookie from 'cookie';
 
 export default async function handler(req, res) {
   const cookies = cookie.parse(req.headers.cookie || '');
-  const token = cookies.token ? JSON.parse(cookies.token) : null;
+  const access_token = cookies.access_token;
 
-  if (!token) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
+  if (!access_token) return res.status(401).send('Unauthorized');
 
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
+  const auth = new google.auth.OAuth2();
+  auth.setCredentials({ access_token });
+  const calendar = google.calendar({ version: 'v3', auth });
 
-  oauth2Client.setCredentials(token);
-
-  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+  const currentYear = new Date().getFullYear();
+  const timeMin = new Date(currentYear, 0, 1).toISOString();
+  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
 
   try {
     const result = await calendar.events.list({
       calendarId: 'primary',
-      timeMin: new Date().toISOString(),
-      maxResults: 10,
-      singleEvents: true,
+      timeMin,
+      timeMax,
+      singleEvents: false,
+      showDeleted: false,
       orderBy: 'startTime'
     });
 
-    res.status(200).json(result.data);
+    res.status(200).json({ items: result.data.items });
   } catch (err) {
-    return res.status(401).json({ error: 'Token expired or invalid' });
+    console.error('Fetch events failed:', err.message);
+    res.status(500).json({ error: err.message });
   }
 }
