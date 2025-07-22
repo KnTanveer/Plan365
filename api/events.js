@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import cookie from 'cookie';
- 
+  
 export default async function handler(req, res) {
   const cookies = cookie.parse(req.headers.cookie || '');
   const token = cookies.token ? JSON.parse(cookies.token) : null;
