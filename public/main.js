@@ -609,7 +609,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
 
     await initData();
-  }
 });
 
 
