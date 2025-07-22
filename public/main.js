@@ -1,4 +1,4 @@
-// --- Constants and State ---
+iy=// --- Constants and State ---
 let hiddenMonths = new Set(JSON.parse(localStorage.getItem("hiddenMonths") || "[]"));
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
