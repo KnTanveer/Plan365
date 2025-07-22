@@ -502,7 +502,7 @@ async function initData() {
   } catch (e) {
     console.error("Failed to fetch events:", e);
     alert("Session expired. Please sign in again.");
-    handleSignOut();
+    handlelogout();
   } finally {
     showSpinner(false);
   }
