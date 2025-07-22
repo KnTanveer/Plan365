@@ -62,25 +62,49 @@ function handleLogin() {
   window.location.href = "/api/auth";
 }
 
-function handleLogout() {
-  window.location.href = "/api/signout";
+async function handleLogout() {
+  try {
+    const res = await fetch("/api/signout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      console.warn("Signout error:", msg);
+    }
+  } catch (err) {
+    console.error("Logout failed:", err);
+  } finally {
+    window.location.href = "/";
+  }
 }
 
+
 async function fetchEvents() {
-  const res = await fetch("/api/events", {
-      method: "GET",
-      credentials: "include" 
-    })
-    .then(res => res.json())
-    .then(data => console.log(data))
-    .catch(err => console.error("Failed to fetch events:", err));
+  try {
+  const response = await fetch("/api/events", {
+    method: "GET",
+    credentials: "include"
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error("Failed to fetch events: " + errorText);
+  }
+
+  const data = await response.json();
+  console.log(data);
 
   const out = document.getElementById("output");
+  out.textContent = "Events loaded successfully.";
 
-  if (!res.ok) {
-    out.textContent = "Session expired or unauthorized. Please sign in again.";
-    return;
-  }
+} catch (err) {
+  console.error(err);
+  const out = document.getElementById("output");
+  out.textContent = "Session expired or unauthorized. Please sign in again.";
+  handleLogout(); 
+}
 
   const data = await res.json();
   out.textContent = JSON.stringify(data.items, null, 2);
