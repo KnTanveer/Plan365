@@ -64,22 +64,16 @@ function handleLogin() {
 
 async function handleLogout() {
   try {
-    const res = await fetch("/api/signout", {
+    await fetch("/api/signout", {
       method: "POST",
       credentials: "include",
     });
-
-    if (!res.ok) {
-      const msg = await res.text();
-      console.warn("Signout error:", msg);
-    }
   } catch (err) {
-    console.error("Logout failed:", err);
+    console.error("Logout error:", err);
   } finally {
-    window.location.href = "/";
+    window.location.href = "/"; 
   }
 }
-
 
 async function fetchEvents() {
   try {
