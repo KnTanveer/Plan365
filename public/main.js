@@ -420,12 +420,6 @@ function goToToday() {
   initData();
 }
 
-async function initCalendarId() {
-  const result = await gapi.client.calendar.calendarList.list();
-  const exists = result.result.items.find(c => c.summary === "Plan365");
-  calendarId = exists ? exists.id : (await gapi.client.calendar.calendars.insert({ summary: "Plan365" })).result.id;
-}
-
 async function initData() {
   showSpinner(true);
 
@@ -534,15 +528,6 @@ function handleSignOut() {
   window.location.href = "/api/signout";
 }
 
-function gapiLoad() {
-  return new Promise(resolve => {
-    gapi.load("client", async () => {
-      await gapi.client.init({ discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"] });
-      resolve();
-    });
-  });
-}
-
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") smoothScrollCalendar(100);
   if (e.key === "ArrowLeft") smoothScrollCalendar(-100);
@@ -561,32 +546,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.body.classList.add("dark");
   }
 
-  const themeIcon = document.getElementById("theme-toggle-icon");
-  if (themeIcon) {
-    themeIcon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
-  }
+const themeIcon = document.getElementById("theme-toggle-icon");
+if (themeIcon) {
+  themeIcon.className = savedTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
+}
 
-  const storedColor = localStorage.getItem("todayColor");
-  if (storedColor) {
-    changeTodayColor(storedColor);
-    document.getElementById("today-color-input").value = storedColor;
-  }
-
-  const savedToken = localStorage.getItem("accessToken");
-  if (savedToken) {
-    accessToken = savedToken;
-    await gapiLoad();
-    gapi.client.setToken({ access_token: accessToken });
-
-    document.getElementById("signin-btn").style.display = "none";
-    document.getElementById("signout-btn").style.display = "inline-block";
-
-    setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
-
-    await initCalendarId();
-    await initData();
-  }
-});
+const storedColor = localStorage.getItem("todayColor");
+if (storedColor) {
+  changeTodayColor(storedColor);
+  document.getElementById("today-color-input").value = storedColor;
+}
 
 
 function showDeleteChoiceModal() {
