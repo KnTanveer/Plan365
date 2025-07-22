@@ -685,7 +685,7 @@ document.getElementById('signin-btn').addEventListener('click', () => {
 
 document.getElementById('signout-btn').addEventListener('click', () => {
   window.location.href = '/api/signout';
-});
+}); 
 
 window.onload = () => { initData(); };
 window.toggleRecurringEvents = toggleRecurringEvents;
