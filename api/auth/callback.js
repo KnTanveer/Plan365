@@ -14,10 +14,10 @@ export default async function handler(req, res) {
     }
   });
 
-  res.setHeader('Set-Cookie', [
-    cookie.serialize('access_token', data.access_token, {
-      httpOnly: true, secure: true, maxAge: 3600, path: '/',
-    }),
+  res.setHeader("Set-Cookie", [
+      `token=${tokens.access_token}; Path=/; HttpOnly; Max-Age=3600; SameSite=Lax`,
+      `refresh=${tokens.refresh_token}; Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax`
+    ]);
     cookie.serialize('refresh_token', data.refresh_token || '', {
       httpOnly: true, secure: true, maxAge: 60 * 60 * 24 * 30, path: '/',
     }),
