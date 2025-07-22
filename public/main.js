@@ -657,6 +657,4 @@ if ('serviceWorker' in navigator) {
 }
 
 window.toggleRecurringEvents = toggleRecurringEvents;
-window.handleSignIn = handleSignIn;
-window.handleSignOut = handleSignOut;
 window.toggleDarkMode = toggleDarkMode;
