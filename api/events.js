@@ -1,16 +1,3 @@
-import fs from "fs";
-import path from "path";
-
-// Debug deployed file structure
-try {
-  const apiDir = path.resolve(__dirname);
-  const files = fs.readdirSync(apiDir);
-  console.log("Files in /api dir:", files);
-} catch (e) {
-  console.error("Failed to read /api dir:", e);
-}
-
-
 import { google } from "googleapis";
 import { getSessionClient } from "./google";
 import { getTokensFromCookies } from "./_session";
