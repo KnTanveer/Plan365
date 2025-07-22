@@ -1,6 +1,12 @@
 export default function handler(req, res) {
-  const redirect_uri = 'https://plan365.vercel.app/api/auth/callback';
   const client_id = process.env.GOOGLE_CLIENT_ID;
+
+  if (!client_id) {
+    console.error("Missing GOOGLE_CLIENT_ID in environment");
+    return res.status(500).send("Missing Google credentials");
+  }
+
+  const redirect_uri = 'https://plan365.vercel.app/api/auth/callback';
   const scope = [
     'https://www.googleapis.com/auth/calendar.events',
     'https://www.googleapis.com/auth/calendar.readonly'
