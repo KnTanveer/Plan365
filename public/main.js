@@ -69,8 +69,12 @@ function handleLogout() {
 async function fetchEvents() {
   const res = await fetch("/api/events", {
       method: "GET",
-      credentials: "include",
-    });
+      credentials: "include" 
+    })
+    .then(res => res.json())
+    .then(data => console.log(data))
+    .catch(err => console.error("Failed to fetch events:", err));
+
   const out = document.getElementById("output");
 
   if (!res.ok) {
