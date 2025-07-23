@@ -476,10 +476,22 @@ function createCalendar() {
           n.className = "note-text";
           n.style.background = e.color;
           n.textContent = e.text;
-          n.onclick = event => {
+          n.onclick = async event => {
             event.stopPropagation();
+          
+            if (e.recurrenceType) {
+              const editAll = confirm("Edit all occurrences?");
+              const modal = document.getElementById("modal-content");
+              if (editAll && modal) {
+                modal.dataset.eventId = e.googleId.split("_repeat_")[0]; // base series ID
+              } else if (modal) {
+                modal.dataset.eventId = e.googleId;
+              }
+            }
+          
             openModal(dateStr, e);
           };
+          
           cell.appendChild(n);
         });
       }
