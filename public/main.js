@@ -75,6 +75,28 @@ async function handleLogout() {
   }
 }
 
+async function updateAuthButtons() {
+  try {
+    const res = await fetch("/api/events", {
+      method: "GET",
+      credentials: "include",
+    });
+
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (res.status === 401) {
+      loginBtn.style.display = "inline-block";
+      logoutBtn.style.display = "none";
+    } else {
+      loginBtn.style.display = "none";
+      logoutBtn.style.display = "inline-block";
+    }
+  } catch (err) {
+    console.error("Error checking auth state:", err);
+  }
+}
+
 async function fetchEvents() {
   const out = document.getElementById("output");
 
@@ -119,7 +141,9 @@ async function fetchEvents() {
 
 window.addEventListener("DOMContentLoaded", () => {
   fetchEvents();
+  updateAuthButtons(); 
 });
+
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") smoothScrollCalendar(100);
