@@ -293,9 +293,17 @@ window.addEventListener("load", () => {
 // --- Modal and Event Handling Updates ---
 function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
-  document.getElementById("end-date").value = event ? event.range.end : dateStr;
+  // Show the correct end date (subtract 1 day if editing)
+  if (event) {
+    const endDate = new Date(event.range.end);
+    endDate.setDate(endDate.getDate() + 1); // Show the correct end date to user
+    document.getElementById("end-date").value = endDate.toISOString().split("T")[0];
+  } else {
+    document.getElementById("end-date").value = dateStr;
+  }
   document.getElementById("note-text").value = event ? event.text.replace(/\u21bb$/, '').trim() : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
+  // Preselect repeat option
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
@@ -304,7 +312,6 @@ function openModal(dateStr, event = null) {
   const modal = document.getElementById("modal-content");
   if (modal) {
     if (event && event.googleId) {
-      // For recurring events, use base ID for 'edit all', full ID for single
       modal.dataset.eventId = event.googleId.includes('_repeat_') ? event.googleId.split('_repeat_')[0] : event.googleId;
       modal.dataset.fullEventId = event.googleId;
       modal.dataset.recurrenceType = event.recurrenceType || '';
@@ -354,7 +361,13 @@ async function saveNote() {
   const eventId = modal?.dataset?.eventId || null;
   const summary = document.getElementById("note-text")?.value;
   const start = document.getElementById("start-date")?.value;
-  const end = document.getElementById("end-date")?.value;
+  let end = document.getElementById("end-date")?.value;
+  // Add 1 day to end date before saving (Google Calendar exclusive end)
+  if (end) {
+    const endDate = new Date(end);
+    endDate.setDate(endDate.getDate() + 1);
+    end = endDate.toISOString().split("T")[0];
+  }
   const color = document.getElementById("event-color")?.value;
   const repeat = document.getElementById("repeat-select")?.value;
   const recurrence = repeat ? [`RRULE:FREQ=${repeat}`] : undefined;
@@ -379,7 +392,7 @@ async function saveNote() {
     });
     if (!response.ok) throw new Error("Failed to save event");
     closeModal();
-    await initData(); // Use initData to refresh calendar
+    await initData();
   } catch (err) {
     console.error("Save error:", err);
     alert("Could not save the event.");
@@ -396,9 +409,9 @@ async function deleteCurrentEvent() {
     // Show custom modal for delete type
     const userChoice = await showDeleteChoiceModal();
     if (userChoice) {
-      // Delete all occurrences: use base event ID (series)
-      eventId = eventId.split('_repeat_')[0];
-    } // else: delete only this instance (full eventId)
+      // Delete all occurrences: use base event ID (series, no _repeat_)
+      eventId = (modal.dataset.fullEventId || '').split('_repeat_')[0];
+    }
   }
   if (!eventId) return;
   try {
@@ -473,11 +486,9 @@ function createCalendar() {
           const n = document.createElement("div");
           n.className = "note-text";
           n.style.background = e.color;
-          // Add recurring icon if event is recurring
-          n.innerHTML = e.text + (e.recurrenceType ? ' <i class="fas fa-sync-alt" title="Recurring"></i>' : '');
+          n.innerHTML = e.text + (e.recurrenceType ? ' \u21bb' : '');
           n.onclick = event => {
             event.stopPropagation();
-            // Always edit only the selected instance
             openModal(dateStr, e);
           };
           cell.appendChild(n);
