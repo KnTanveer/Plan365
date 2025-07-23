@@ -62,6 +62,19 @@ function handleLogin() {
   window.location.href = "/api/auth";
 }
 
+async function handleLogout() {
+  try {
+    await fetch("/api/signout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (err) {
+    console.error("Logout error:", err);
+  } finally {
+    window.location.href = "/"; 
+  }
+}
+
 async function fetchEvents() {
   try {
     const response = await fetch("/api/events", {
@@ -87,6 +100,9 @@ async function fetchEvents() {
   }
 }
 
+window.addEventListener("DOMContentLoaded", () => {
+  fetchEvents();
+});
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") smoothScrollCalendar(100);
