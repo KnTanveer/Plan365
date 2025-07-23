@@ -71,7 +71,7 @@ async function handleLogout() {
   } catch (err) {
     console.error("Logout error:", err);
   } finally {
-    window.location.href = "/"; 
+    window.location.href = "/";
   }
 }
 
@@ -98,9 +98,6 @@ async function updateAuthButtons() {
 }
 
 async function fetchEvents() {
-  const out = document.getElementById("output");
-  if (!out) return console.warn("No #output element found");
-
   try {
     const response = await fetch("/api/events", {
       method: "GET",
@@ -108,12 +105,16 @@ async function fetchEvents() {
     });
 
     if (response.status === 401) {
-      out.textContent = "Session expired. Please sign in again.";
+      const out = document.getElementById("output");
+      if (out) out.textContent = "Session expired. Please sign in again.";
       return;
     }
 
     const data = await response.json();
     console.log(data);
+
+    const out = document.getElementById("output");
+    if (!out) return;
 
     if (!data.items || data.items.length === 0) {
       out.innerHTML = "<p>No upcoming events found.</p>";
@@ -123,9 +124,9 @@ async function fetchEvents() {
     const list = document.createElement("ul");
     list.style.paddingLeft = "1.2rem";
 
-    data.items.forEach(event => {
+    data.items.forEach((event) => {
       const li = document.createElement("li");
-      const start = event.start?.dateTime || event.start?.date || "No start";
+      const start = event.start?.dateTime || event.start?.date || "No start date";
       const end = event.end?.dateTime || event.end?.date || "";
       li.textContent = `${event.summary || "Untitled"} — ${start}${end ? " → " + end : ""}`;
       list.appendChild(li);
@@ -133,10 +134,10 @@ async function fetchEvents() {
 
     out.innerHTML = "<strong>Upcoming Google Calendar Events:</strong>";
     out.appendChild(list);
-
   } catch (err) {
     console.error(err);
-    out.textContent = "Something went wrong while fetching events.";
+    const out = document.getElementById("output");
+    if (out) out.textContent = "Something went wrong while fetching events.";
   }
 }
 
@@ -376,64 +377,69 @@ function closeSettings() {
 }
 
 async function saveNote() {
-  const start = document.getElementById("start-date").value;
-  const end = document.getElementById("end-date").value;
-  const text = document.getElementById("note-text").value;
-  const color = document.getElementById("event-color").value;
-  const recurrence = document.getElementById("repeat-select").value;
+  const modal = document.getElementById("modal-content");
+  const eventId = modal?.dataset?.eventId || null;
 
-  if (!start || !end || !text) return alert("Please fill all fields");
+  const summary = document.getElementById("note-text")?.value;
+  const start = document.getElementById("start-date")?.value;
+  const end = document.getElementById("end-date")?.value;
+  const color = document.getElementById("event-color")?.value;
+  const repeat = document.getElementById("repeat-select")?.value;
 
-  const metadata = JSON.stringify({ color, recurrence });
-  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
-  localStorage.setItem("lastColor", color);
+  const recurrence = repeat ? [`RRULE:FREQ=${repeat}`] : undefined;
 
-  const cleanText = text.replace(/↻/g, "").trim();
-  const displayText = recurrence ? `${cleanText} ↻` : cleanText;
+  const payload = {
+    summary,
+    description: summary,
+    start,
+    end,
+    color,
+    recurrence,
+  };
 
-  if (currentEditingEvent) {
-    await deleteEventById(currentEditingEvent.googleId, currentEditingEvent.recurrenceType);
+  const method = eventId ? "PUT" : "POST";
+  const body = eventId ? { eventId, updates: payload } : payload;
+
+  try {
+    const response = await fetch("/api/events", {
+      method,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) throw new Error("Failed to save event");
+
+    closeModal();
+    fetchEvents();
+  } catch (err) {
+    console.error("Save error:", err);
+    alert("Could not save the event.");
   }
-
-  await fetch("/api/events", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      summary: displayText,
-      description: metadata,
-      start,
-      end: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0],
-      recurrence: recurrenceRule
-    })
-  });
-
-  closeModal();
-  await initData();
 }
 
-async function deleteCurrentEvent() {
-  if (!currentEditingEvent) return;
+function deleteCurrentEvent() {
+  const modal = document.getElementById("modal-content");
+  const eventId = modal?.dataset?.eventId;
+  if (!eventId) return;
 
-  const isRecurring = currentEditingEvent.recurrenceType != null;
-  const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
-  let eventIdToDelete = currentEditingEvent.googleId;
-
-  if (deleteWholeSeries) {
-    const full = await fetch(`/api/events?id=${eventIdToDelete}`);
-    const data = await full.json();
-    if (data.recurringEventId) {
-      eventIdToDelete = data.recurringEventId;
-    }
-  }
-
-  await fetch("/api/events", {
+  fetch("/api/events", {
     method: "DELETE",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ eventId: eventIdToDelete })
-  });
-
-  closeModal();
-  await initData();
+    body: JSON.stringify({ eventId }),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to delete");
+      closeModal();
+      fetchEvents();
+    })
+    .catch((err) => {
+      console.error("Delete failed:", err);
+      alert("Failed to delete the event");
+    });
 }
 
 function createCalendar() {
