@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         start: { date: start },
         end: { date: end },
         recurrence,
-        description: JSON.stringify({ color, recurrence }), 
+        description: JSON.stringify({ color, recurrence }), // Store metadata here
       };
 
       const result = await calendar.events.insert({
