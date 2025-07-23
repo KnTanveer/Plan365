@@ -379,27 +379,19 @@ async function saveNote() {
     });
     if (!response.ok) throw new Error("Failed to save event");
     closeModal();
-    await fetchEvents(); // Ensure fetchEvents is called after save
+    await initData(); // Use initData to refresh calendar
   } catch (err) {
     console.error("Save error:", err);
     alert("Could not save the event.");
   }
 }
 
-// Update deleteCurrentEvent to use custom delete modal for recurring events
+// Remove custom delete modal logic and always delete only the selected instance
 async function deleteCurrentEvent() {
   const modal = document.getElementById("modal-content");
   if (!modal) return;
-  const recurrenceType = modal.dataset.recurrenceType;
-  let eventId = modal.dataset.eventId;
-  if (recurrenceType) {
-    // Use custom modal instead of confirm
-    const userChoice = await showDeleteChoiceModal();
-    if (!userChoice) {
-      // For single instance, use the full eventId (with _repeat_)
-      eventId = modal.dataset.fullEventId;
-    }
-  }
+  // Always use the full eventId (including _repeat_ if present)
+  const eventId = modal.dataset.fullEventId || modal.dataset.eventId;
   if (!eventId) return;
   try {
     const response = await fetch("/api/events", {
@@ -410,7 +402,7 @@ async function deleteCurrentEvent() {
     });
     if (!response.ok) throw new Error("Failed to delete");
     closeModal();
-    await fetchEvents(); // Ensure fetchEvents is called after delete
+    await initData(); // Use initData to refresh calendar
   } catch (err) {
     console.error("Delete failed:", err);
     alert("Failed to delete the event");
@@ -451,22 +443,10 @@ function createCalendar() {
           n.className = "note-text";
           n.style.background = e.color;
           n.textContent = e.text;
-          n.onclick = async event => {
+          n.onclick = event => {
             event.stopPropagation();
-          
-            if (e.recurrenceType) {
-              const editAll = confirm("Edit all occurrences?");
-              const modal = document.getElementById("modal-content");
-              if (editAll && modal) {
-                modal.dataset.eventId = e.googleId.split("_repeat_")[0]; // base series ID
-              } else if (modal) {
-                modal.dataset.eventId = e.googleId;
-              }
-            }
-          
             openModal(dateStr, e);
           };
-          
           cell.appendChild(n);
         });
       }
@@ -675,29 +655,6 @@ function toggleRecurringEvents() {
   }, 1000);
 
   initData();
-}
-
-// Custom delete modal logic
-function showDeleteChoiceModal() {
-  return new Promise(resolve => {
-    const modal = document.getElementById("delete-modal");
-    const deleteAllBtn = document.getElementById("delete-all-btn");
-    const deleteInstanceBtn = document.getElementById("delete-instance-btn");
-    modal.style.display = "flex";
-    const cleanup = () => {
-      modal.style.display = "none";
-      deleteAllBtn.removeEventListener("click", handleAll);
-      deleteInstanceBtn.removeEventListener("click", handleInstance);
-    };
-    const handleAll = () => { cleanup(); resolve(true); };
-    const handleInstance = () => { cleanup(); resolve(false); };
-    deleteAllBtn.addEventListener("click", handleAll);
-    deleteInstanceBtn.addEventListener("click", handleInstance);
-  });
-}
-
-function closeDeleteModal() {
-  document.getElementById('delete-modal').style.display = 'none';
 }
 
 if ('serviceWorker' in navigator) {
