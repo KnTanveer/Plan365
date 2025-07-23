@@ -40,10 +40,8 @@ export default async function handler(req, res) {
     };
 
     res.setHeader('Set-Cookie', [
-      cookie.serialize('tokens', JSON.stringify({
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token || null
-      }), cookieOptions),
+      cookie.serialize('access_token', tokenData.access_token, cookieOptions),
+      cookie.serialize('refresh_token', tokenData.refresh_token || '', cookieOptions),
     ]);
 
     res.redirect('/');
