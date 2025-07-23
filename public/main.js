@@ -104,19 +104,6 @@ async function fetchEvents() {
       credentials: "include",
     });
 
-    if (response.status === 401) {
-      const out = document.getElementById("output");
-      if (out) out.textContent = "Session expired. Please sign in again.";
-    
-      const loginBtn = document.getElementById("loginBtn");
-      const logoutBtn = document.getElementById("logoutBtn");
-      if (loginBtn) loginBtn.style.display = "inline-block";
-      if (logoutBtn) logoutBtn.style.display = "none";
-    
-      return; 
-    }
-
-
     const data = await response.json();
     console.log(data);
 
