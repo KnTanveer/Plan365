@@ -755,5 +755,9 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-window.toggleRecurringEvents = toggleRecurringEvents;
+window.saveNote = saveNote;
+window.deleteCurrentEvent = deleteCurrentEvent;
+window.closeModal = closeModal;
+window.openModal = openModal;
 window.toggleDarkMode = toggleDarkMode;
+window.toggleRecurringEvents = toggleRecurringEvents;
