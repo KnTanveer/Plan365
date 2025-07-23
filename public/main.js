@@ -97,46 +97,10 @@ async function updateAuthButtons() {
   }
 }
 
-async function fetchEvents() {
-  try {
-    const response = await fetch("/api/events", {
-      method: "GET",
-      credentials: "include",
-    });
-
-    const data = await response.json();
-    console.log(data);
-
-    const out = document.getElementById("output");
-    if (!out) return;
-
-    if (!data.items || data.items.length === 0) {
-      out.innerHTML = "<p>No upcoming events found.</p>";
-      return;
-    }
-
-    const list = document.createElement("ul");
-    list.style.paddingLeft = "1.2rem";
-
-    data.items.forEach((event) => {
-      const li = document.createElement("li");
-      const start = event.start?.dateTime || event.start?.date || "No start date";
-      const end = event.end?.dateTime || event.end?.date || "";
-      li.textContent = `${event.summary || "Untitled"} — ${start}${end ? " → " + end : ""}`;
-      list.appendChild(li);
-    });
-
-    out.innerHTML = "<strong>Upcoming Google Calendar Events:</strong>";
-    out.appendChild(list);
-  } catch (err) {
-    console.error(err);
-    const out = document.getElementById("output");
-    if (out) out.textContent = "Something went wrong while fetching events.";
-  }
-}
+// Remove fetchEvents() and output div update logic for upcoming events
 
 window.addEventListener("DOMContentLoaded", () => {
-  fetchEvents();
+  // fetchEvents(); // Removed as per edit hint
   updateAuthButtons(); 
 });
 
@@ -415,22 +379,23 @@ async function saveNote() {
     });
     if (!response.ok) throw new Error("Failed to save event");
     closeModal();
-    fetchEvents();
+    await fetchEvents(); // Ensure fetchEvents is called after save
   } catch (err) {
     console.error("Save error:", err);
     alert("Could not save the event.");
   }
 }
 
+// Update deleteCurrentEvent to use custom delete modal for recurring events
 async function deleteCurrentEvent() {
   const modal = document.getElementById("modal-content");
   if (!modal) return;
-  // For recurring events, ask user if they want to delete all or just one
   const recurrenceType = modal.dataset.recurrenceType;
   let eventId = modal.dataset.eventId;
   if (recurrenceType) {
-    const deleteAll = confirm("Delete all occurrences of this recurring event? Click 'Cancel' to delete only this instance.");
-    if (!deleteAll) {
+    // Use custom modal instead of confirm
+    const userChoice = await showDeleteChoiceModal();
+    if (!userChoice) {
       // For single instance, use the full eventId (with _repeat_)
       eventId = modal.dataset.fullEventId;
     }
@@ -445,7 +410,7 @@ async function deleteCurrentEvent() {
     });
     if (!response.ok) throw new Error("Failed to delete");
     closeModal();
-    fetchEvents();
+    await fetchEvents(); // Ensure fetchEvents is called after delete
   } catch (err) {
     console.error("Delete failed:", err);
     alert("Failed to delete the event");
@@ -712,30 +677,20 @@ function toggleRecurringEvents() {
   initData();
 }
 
+// Custom delete modal logic
 function showDeleteChoiceModal() {
   return new Promise(resolve => {
     const modal = document.getElementById("delete-modal");
     const deleteAllBtn = document.getElementById("delete-all-btn");
     const deleteInstanceBtn = document.getElementById("delete-instance-btn");
-
     modal.style.display = "flex";
-
     const cleanup = () => {
       modal.style.display = "none";
       deleteAllBtn.removeEventListener("click", handleAll);
       deleteInstanceBtn.removeEventListener("click", handleInstance);
     };
-
-    const handleAll = () => {
-      cleanup();
-      resolve(true); 
-    };
-
-    const handleInstance = () => {
-      cleanup();
-      resolve(false); 
-    };
-
+    const handleAll = () => { cleanup(); resolve(true); };
+    const handleInstance = () => { cleanup(); resolve(false); };
     deleteAllBtn.addEventListener("click", handleAll);
     deleteInstanceBtn.addEventListener("click", handleInstance);
   });
