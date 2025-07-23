@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import cookie from 'cookie'; 
+import cookie from 'cookie';
 
 export default async function handler(req, res) {
   try {
@@ -12,6 +12,11 @@ export default async function handler(req, res) {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const client_secret = process.env.GOOGLE_CLIENT_SECRET;
     const redirect_uri = 'https://plan365.vercel.app/api/auth/callback';
+
+    if (!client_id || !client_secret) {
+      console.error("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET");
+      return res.status(500).json({ error: 'Missing Google credentials' });
+    }
 
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -27,7 +32,7 @@ export default async function handler(req, res) {
 
     const tokenData = await tokenRes.json();
 
-    if (tokenRes.status !== 200) {
+    if (tokenRes.status !== 200 || !tokenData.access_token) {
       console.error("Token fetch failed:", tokenData);
       return res.status(500).json({ error: 'Failed to fetch access token' });
     }
@@ -37,7 +42,7 @@ export default async function handler(req, res) {
       secure: true,
       path: '/',
       sameSite: 'lax',
-      maxAge: 3600, 
+      maxAge: tokenData.expires_in || 3600, 
     };
 
     res.setHeader('Set-Cookie', [
