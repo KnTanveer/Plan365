@@ -473,7 +473,8 @@ function createCalendar() {
           const n = document.createElement("div");
           n.className = "note-text";
           n.style.background = e.color;
-          n.textContent = e.text;
+          // Add recurring icon if event is recurring
+          n.innerHTML = e.text + (e.recurrenceType ? ' <i class="fas fa-sync-alt" title="Recurring"></i>' : '');
           n.onclick = event => {
             event.stopPropagation();
             // Always edit only the selected instance
@@ -699,7 +700,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Ensure all modal/button functions are accessible from HTML
 window.saveNote = saveNote;
 window.deleteCurrentEvent = deleteCurrentEvent;
 window.closeModal = closeModal;
