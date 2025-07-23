@@ -326,15 +326,30 @@ window.addEventListener("load", () => {
   }
 });
 
+// --- Modal and Event Handling Updates ---
 function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
-  document.getElementById("note-text").value = event ? event.text.replace(/↻$/, '').trim() : "";
+  document.getElementById("note-text").value = event ? event.text.replace(/\u21bb$/, '').trim() : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
+  // Set eventId on modal for edit/delete
+  const modal = document.getElementById("modal-content");
+  if (modal) {
+    if (event && event.googleId) {
+      // For recurring events, use base ID for 'edit all', full ID for single
+      modal.dataset.eventId = event.googleId.includes('_repeat_') ? event.googleId.split('_repeat_')[0] : event.googleId;
+      modal.dataset.fullEventId = event.googleId;
+      modal.dataset.recurrenceType = event.recurrenceType || '';
+    } else {
+      delete modal.dataset.eventId;
+      delete modal.dataset.fullEventId;
+      delete modal.dataset.recurrenceType;
+    }
+  }
   document.getElementById("modal").style.display = "flex";
 }
 
@@ -373,15 +388,12 @@ function closeSettings() {
 async function saveNote() {
   const modal = document.getElementById("modal-content");
   const eventId = modal?.dataset?.eventId || null;
-
   const summary = document.getElementById("note-text")?.value;
   const start = document.getElementById("start-date")?.value;
   const end = document.getElementById("end-date")?.value;
   const color = document.getElementById("event-color")?.value;
   const repeat = document.getElementById("repeat-select")?.value;
-
   const recurrence = repeat ? [`RRULE:FREQ=${repeat}`] : undefined;
-
   const payload = {
     summary,
     description: summary,
@@ -390,10 +402,8 @@ async function saveNote() {
     color,
     recurrence,
   };
-
   const method = eventId ? "PUT" : "POST";
   const body = eventId ? { eventId, updates: payload } : payload;
-
   try {
     const response = await fetch("/api/events", {
       method,
@@ -403,9 +413,7 @@ async function saveNote() {
       },
       body: JSON.stringify(body),
     });
-
     if (!response.ok) throw new Error("Failed to save event");
-
     closeModal();
     fetchEvents();
   } catch (err) {
@@ -414,26 +422,34 @@ async function saveNote() {
   }
 }
 
-function deleteCurrentEvent() {
+async function deleteCurrentEvent() {
   const modal = document.getElementById("modal-content");
-  const eventId = modal?.dataset?.eventId;
+  if (!modal) return;
+  // For recurring events, ask user if they want to delete all or just one
+  const recurrenceType = modal.dataset.recurrenceType;
+  let eventId = modal.dataset.eventId;
+  if (recurrenceType) {
+    const deleteAll = confirm("Delete all occurrences of this recurring event? Click 'Cancel' to delete only this instance.");
+    if (!deleteAll) {
+      // For single instance, use the full eventId (with _repeat_)
+      eventId = modal.dataset.fullEventId;
+    }
+  }
   if (!eventId) return;
-
-  fetch("/api/events", {
-    method: "DELETE",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ eventId }),
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to delete");
-      closeModal();
-      fetchEvents();
-    })
-    .catch((err) => {
-      console.error("Delete failed:", err);
-      alert("Failed to delete the event");
+  try {
+    const response = await fetch("/api/events", {
+      method: "DELETE",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId }),
     });
+    if (!response.ok) throw new Error("Failed to delete");
+    closeModal();
+    fetchEvents();
+  } catch (err) {
+    console.error("Delete failed:", err);
+    alert("Failed to delete the event");
+  }
 }
 
 function createCalendar() {
