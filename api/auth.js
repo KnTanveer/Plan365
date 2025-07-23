@@ -12,8 +12,14 @@ export default function handler(req, res) {
     'https://www.googleapis.com/auth/calendar.readonly',
   ].join(' ');
 
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+  const oauthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  oauthUrl.searchParams.set('response_type', 'code');
+  oauthUrl.searchParams.set('client_id', client_id);
+  oauthUrl.searchParams.set('redirect_uri', redirect_uri);
+  oauthUrl.searchParams.set('scope', scope);
+  oauthUrl.searchParams.set('access_type', 'offline');
+  oauthUrl.searchParams.set('prompt', 'consent');
 
-  console.log("Redirecting to Google OAuth:", url);
-  res.redirect(url);
+  res.writeHead(302, { Location: oauthUrl.toString() });
+  res.end();
 }
