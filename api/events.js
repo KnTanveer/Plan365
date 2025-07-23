@@ -3,84 +3,93 @@ import { getSessionClient } from "./google.js";
 import { getTokensFromCookies } from "./session.js";
 
 export default async function handler(req, res) {
+  const tokens = getTokensFromCookies(req, res);
+
+  if (!tokens?.access_token) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  const auth = getSessionClient(tokens);
+  const calendar = google.calendar({ version: "v3", auth });
+
+  let calendarId;
+
   try {
-    console.log("Request headers:", req.headers);
+    calendarId = await getOrCreatePlan365Calendar(calendar);
+  } catch (err) {
+    console.error("Calendar access error:", err);
+    return res.status(500).json({ error: "Failed to access calendar", detail: err.message });
+  }
 
-    const tokens = getTokensFromCookies(req, res);
-    console.log("Parsed tokens:", tokens);
-
-    if (!tokens?.access_token) {
-      console.warn("No access_token found");
-      return res.status(401).json({ error: "Not authenticated", tokens });
-    }
-
-    const auth = getSessionClient(tokens);
-    const calendar = google.calendar({ version: "v3", auth });
-
-    let calendarId;
-
-    try {
-      calendarId = await getOrCreatePlan365Calendar(calendar);
-    } catch (err) {
-      console.error("Failed to get or create calendar:", err);
-      return res.status(500).json({
-        error: "Failed to access or create calendar",
-        detail: err.message
-      });
-    }
-
+  try {
     if (req.method === "GET") {
-      const timeMin = new Date(new Date().getFullYear(), 0, 1).toISOString();
-      const timeMax = new Date(new Date().getFullYear() + 1, 0, 1).toISOString();
+      const now = new Date();
+      const timeMin = new Date(now.getFullYear(), 0, 1).toISOString();
+      const timeMax = new Date(now.getFullYear() + 1, 0, 1).toISOString();
 
-      try {
-        const result = await calendar.events.list({
-          calendarId,
-          timeMin,
-          timeMax,
-          showDeleted: false,
-          singleEvents: true,
-          orderBy: "startTime",
-        });
+      const result = await calendar.events.list({
+        calendarId,
+        timeMin,
+        timeMax,
+        singleEvents: false,
+        showDeleted: false,
+        maxResults: 2500,
+        orderBy: "startTime",
+      });
 
-        return res.status(200).json({ items: result.data.items || [] });
-      } catch (apiErr) {
-        console.error("Google API Error:", apiErr);
-        return res.status(502).json({
-          error: "Failed to fetch events from Google Calendar",
-          detail: apiErr.message,
-        });
+      return res.status(200).json({ items: result.data.items || [] });
+    }
+
+    if (req.method === "POST") {
+      const { summary, description, start, end, recurrence } = req.body;
+
+      const newEvent = {
+        summary,
+        description,
+        start: { date: start },
+        end: { date: end },
+        recurrence,
+      };
+
+      const result = await calendar.events.insert({
+        calendarId,
+        requestBody: newEvent,
+      });
+
+      return res.status(201).json({ event: result.data });
+    }
+
+    if (req.method === "DELETE") {
+      const { eventId } = req.body;
+
+      if (!eventId) {
+        return res.status(400).json({ error: "Missing eventId" });
       }
 
-    } else {
-      return res.status(405).json({ error: "Method not allowed" });
+      await calendar.events.delete({
+        calendarId,
+        eventId,
+      });
+
+      return res.status(204).end();
     }
 
+    return res.status(405).json({ error: "Method not allowed" });
+
   } catch (err) {
-    console.error("Internal Server Error:", err.stack || err);
-    return res.status(500).json({
-      error: "Unexpected server error",
-      detail: err.message || "No error message provided"
-    });
+    console.error("API Error:", err);
+    return res.status(500).json({ error: "Server error", detail: err.message });
   }
 }
 
 async function getOrCreatePlan365Calendar(calendar) {
-  try {
-    const calendarList = await calendar.calendarList.list();
-    const existing = calendarList.data.items.find(
-      c => c.summary === "Plan365"
-    );
+  const calendars = await calendar.calendarList.list();
+  const existing = calendars.data.items.find(c => c.summary === "Plan365");
+  if (existing) return existing.id;
 
-    if (existing) return existing.id;
+  const newCal = await calendar.calendars.insert({
+    requestBody: { summary: "Plan365" },
+  });
 
-    const newCalendar = await calendar.calendars.insert({
-      requestBody: { summary: "Plan365" }
-    });
-
-    return newCalendar.data.id;
-  } catch (err) {
-    console.error("Calendar creation/listing failed:", err);
-    throw err;
-  }
+  return newCal.data.id;
 }
