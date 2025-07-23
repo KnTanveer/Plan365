@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import cookie from 'cookie'; 
 
 export default async function handler(req, res) {
   try {
@@ -11,11 +12,6 @@ export default async function handler(req, res) {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const client_secret = process.env.GOOGLE_CLIENT_SECRET;
     const redirect_uri = 'https://plan365.vercel.app/api/auth/callback';
-
-    if (!client_id || !client_secret) {
-      console.error("Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET");
-      return res.status(500).json({ error: 'Missing Google credentials' });
-    }
 
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -36,10 +32,20 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to fetch access token' });
     }
 
-    console.log("OAuth Token Response:", tokenData);
-    // You could store tokenData in a session here...
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 3600, 
+    };
 
-    res.status(200).json({ message: 'OAuth callback success', tokenData });
+    res.setHeader('Set-Cookie', [
+      cookie.serialize('access_token', tokenData.access_token, cookieOptions),
+      cookie.serialize('refresh_token', tokenData.refresh_token || '', cookieOptions),
+    ]);
+
+    res.redirect('/');
 
   } catch (err) {
     console.error("OAuth callback error:", err);
