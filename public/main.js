@@ -99,6 +99,7 @@ async function updateAuthButtons() {
 
 async function fetchEvents() {
   const out = document.getElementById("output");
+  if (!out) return console.warn("No #output element found");
 
   try {
     const response = await fetch("/api/events", {
@@ -124,7 +125,7 @@ async function fetchEvents() {
 
     data.items.forEach(event => {
       const li = document.createElement("li");
-      const start = event.start?.dateTime || event.start?.date || "No start date";
+      const start = event.start?.dateTime || event.start?.date || "No start";
       const end = event.end?.dateTime || event.end?.date || "";
       li.textContent = `${event.summary || "Untitled"} — ${start}${end ? " → " + end : ""}`;
       list.appendChild(li);
