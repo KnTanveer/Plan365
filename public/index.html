@@ -600,7 +600,7 @@
 
   <!-- Event Modal -->
   <div id="modal" class="popup-overlay" onclick="closeModal()">
-    <div id="modal-content" class="popup-content" onclick="event.stopPropagation()">
+    <div id="modal-content" class="popup-content" data-event-id="" onclick="event.stopPropagation()">
       <label><strong>Start:</strong> <input type="date" id="start-date"></label>
       <label><strong>End:</strong> <input type="date" id="end-date"></label>
       <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
