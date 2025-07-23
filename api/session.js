@@ -9,23 +9,18 @@ export function getTokensFromCookies(req, res) {
     }
 
     const parsed = cookie.parse(cookies);
-    const tokenString = parsed.tokens;
+    const access_token = parsed.access_token;
+    const refresh_token = parsed.refresh_token || null;
 
-    if (!tokenString) {
-      console.warn("No 'tokens' cookie found");
+    if (!access_token) {
+      console.warn("No access_token found in cookies");
       return null;
     }
 
-    const tokens = JSON.parse(tokenString);
-
-    if (!tokens.access_token) {
-      console.warn("No access_token found in tokens cookie");
-      return null;
-    }
-
-    return tokens;
+    return { access_token, refresh_token };
   } catch (err) {
-    console.error("Failed to parse tokens from cookies:", err);
+    console.error("Failed to parse access token from cookies:", err);
     return null;
   }
 }
+
