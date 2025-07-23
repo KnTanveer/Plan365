@@ -6,14 +6,19 @@ export default async function handler(req, res) {
   const tokens = getTokensFromCookies(req, res);
 
   if (!tokens?.access_token) {
-    return res.status(401).json({ error: "Not authenticated" });
+    return res.status(401).json({ error: "No access_token found" });
   }
 
-  const auth = getSessionClient(tokens);
+  let auth;
+  try {
+    auth = getSessionClient(tokens);
+  } catch (err) {
+    return res.status(500).json({ error: "Failed to initialize OAuth client", detail: err.message });
+  }
+
   const calendar = google.calendar({ version: "v3", auth });
 
   let calendarId;
-
   try {
     calendarId = await getOrCreatePlan365Calendar(calendar);
   } catch (err) {
@@ -41,7 +46,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const { summary, description, start, end, recurrence } = req.body;
+      const { summary, description, start, end, recurrence, color } = req.body;
 
       const newEvent = {
         summary,
@@ -49,6 +54,7 @@ export default async function handler(req, res) {
         start: { date: start },
         end: { date: end },
         recurrence,
+        description: JSON.stringify({ color, recurrence }), // Store metadata here
       };
 
       const result = await calendar.events.insert({
@@ -59,12 +65,30 @@ export default async function handler(req, res) {
       return res.status(201).json({ event: result.data });
     }
 
+    if (req.method === "PUT") {
+      const { eventId, updates } = req.body;
+      if (!eventId) return res.status(400).json({ error: "Missing eventId for update" });
+
+      const updatedEvent = {
+        ...updates,
+        start: { date: updates.start },
+        end: { date: updates.end },
+        recurrence: updates.recurrence,
+        description: JSON.stringify({ color: updates.color, recurrence: updates.recurrence }),
+      };
+
+      const result = await calendar.events.patch({
+        calendarId,
+        eventId,
+        requestBody: updatedEvent,
+      });
+
+      return res.status(200).json({ updated: result.data });
+    }
+
     if (req.method === "DELETE") {
       const { eventId } = req.body;
-
-      if (!eventId) {
-        return res.status(400).json({ error: "Missing eventId" });
-      }
+      if (!eventId) return res.status(400).json({ error: "Missing eventId" });
 
       await calendar.events.delete({
         calendarId,
@@ -78,7 +102,7 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error("API Error:", err);
-    return res.status(500).json({ error: "Server error", detail: err.message });
+    return res.status(500).json({ error: "Google API error", detail: err.message });
   }
 }
 
