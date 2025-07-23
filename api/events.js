@@ -1,6 +1,6 @@
 import { google } from "googleapis";
-import { getSessionClient } from "./_google";
-import { getTokensFromCookies } from "./_session";
+import { getSessionClient } from "./google";
+import { getTokensFromCookies } from "./session";
 
 export default async function handler(req, res) {
   try {
