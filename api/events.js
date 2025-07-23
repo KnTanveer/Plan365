@@ -69,20 +69,32 @@ export default async function handler(req, res) {
       const { eventId, updates } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId for update" });
 
-      const updatedEvent = {
+      // 2. When updating a recurring event's type, delete all events with the same base event ID
+      const baseId = eventId.split('_repeat_')[0];
+      // Delete all matching events (faked recurrences)
+      const listResult = await calendar.events.list({
+        calendarId,
+        showDeleted: false,
+        maxResults: 2500,
+        orderBy: "startTime",
+      });
+      const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+      for (const ev of toDelete) {
+        await calendar.events.delete({ calendarId, eventId: ev.id });
+      }
+
+      // Now create the new event (series or single)
+      const newEvent = {
         ...updates,
         start: { date: updates.start },
         end: { date: updates.end },
         recurrence: updates.recurrence,
         description: JSON.stringify({ color: updates.color, recurrence: updates.recurrence }),
       };
-
-      const result = await calendar.events.patch({
+      const result = await calendar.events.insert({
         calendarId,
-        eventId,
-        requestBody: updatedEvent,
+        requestBody: newEvent,
       });
-
       return res.status(200).json({ updated: result.data });
     }
 
@@ -90,11 +102,28 @@ export default async function handler(req, res) {
       const { eventId } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId" });
 
+      // 1. When deleting a recurring event (series), delete all events with the same base event ID
+      const baseId = eventId.split('_repeat_')[0];
+      // List all events and delete all matching
+      const listResult = await calendar.events.list({
+        calendarId,
+        showDeleted: false,
+        maxResults: 2500,
+        orderBy: "startTime",
+      });
+      const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+      if (toDelete.length > 1) {
+        for (const ev of toDelete) {
+          await calendar.events.delete({ calendarId, eventId: ev.id });
+        }
+        return res.status(204).end();
+      }
+
+      // If not a series, just delete the single event
       await calendar.events.delete({
         calendarId,
         eventId,
       });
-
       return res.status(204).end();
     }
 
