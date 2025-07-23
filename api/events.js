@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         calendarId,
         timeMin,
         timeMax,
-        singleEvents: false,
+        singleEvents: true,
         showDeleted: false,
         maxResults: 2500,
         orderBy: "startTime",
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         start: { date: start },
         end: { date: end },
         recurrence,
-        description: JSON.stringify({ color, recurrence }), // Store metadata here
+        description: JSON.stringify({ color, recurrence }), 
       };
 
       const result = await calendar.events.insert({
