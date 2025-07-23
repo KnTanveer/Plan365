@@ -386,12 +386,20 @@ async function saveNote() {
   }
 }
 
-// Remove custom delete modal logic and always delete only the selected instance
+// Restore custom delete modal logic for recurring events
 async function deleteCurrentEvent() {
   const modal = document.getElementById("modal-content");
   if (!modal) return;
-  // Always use the full eventId (including _repeat_ if present)
-  const eventId = modal.dataset.fullEventId || modal.dataset.eventId;
+  const recurrenceType = modal.dataset.recurrenceType;
+  let eventId = modal.dataset.fullEventId || modal.dataset.eventId;
+  if (recurrenceType) {
+    // Show custom modal for delete type
+    const userChoice = await showDeleteChoiceModal();
+    if (userChoice) {
+      // Delete all occurrences: use base event ID (series)
+      eventId = eventId.split('_repeat_')[0];
+    } // else: delete only this instance (full eventId)
+  }
   if (!eventId) return;
   try {
     const response = await fetch("/api/events", {
@@ -402,11 +410,34 @@ async function deleteCurrentEvent() {
     });
     if (!response.ok) throw new Error("Failed to delete");
     closeModal();
-    await initData(); // Use initData to refresh calendar
+    await initData();
   } catch (err) {
     console.error("Delete failed:", err);
     alert("Failed to delete the event");
   }
+}
+
+// Custom delete modal logic
+function showDeleteChoiceModal() {
+  return new Promise(resolve => {
+    const modal = document.getElementById("delete-modal");
+    const deleteAllBtn = document.getElementById("delete-all-btn");
+    const deleteInstanceBtn = document.getElementById("delete-instance-btn");
+    modal.style.display = "flex";
+    const cleanup = () => {
+      modal.style.display = "none";
+      deleteAllBtn.removeEventListener("click", handleAll);
+      deleteInstanceBtn.removeEventListener("click", handleInstance);
+    };
+    const handleAll = () => { cleanup(); resolve(true); };
+    const handleInstance = () => { cleanup(); resolve(false); };
+    deleteAllBtn.addEventListener("click", handleAll);
+    deleteInstanceBtn.addEventListener("click", handleInstance);
+  });
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'none';
 }
 
 function createCalendar() {
@@ -445,6 +476,7 @@ function createCalendar() {
           n.textContent = e.text;
           n.onclick = event => {
             event.stopPropagation();
+            // Always edit only the selected instance
             openModal(dateStr, e);
           };
           cell.appendChild(n);
@@ -667,6 +699,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Ensure all modal/button functions are accessible from HTML
 window.saveNote = saveNote;
 window.deleteCurrentEvent = deleteCurrentEvent;
 window.closeModal = closeModal;
