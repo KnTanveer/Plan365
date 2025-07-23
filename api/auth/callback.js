@@ -32,17 +32,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to fetch access token' });
     }
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true,
-      path: '/',
-      sameSite: 'lax',
-      maxAge: tokenData.expires_in || 3600,
-    };
+    const tokenPayload = JSON.stringify({
+      access_token: tokenData.access_token,
+      refresh_token: tokenData.refresh_token || '',
+    });
 
     res.setHeader('Set-Cookie', [
-      cookie.serialize('access_token', tokenData.access_token, cookieOptions),
-      cookie.serialize('refresh_token', tokenData.refresh_token || '', cookieOptions),
+      cookie.serialize('tokens', tokenPayload, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      }),
     ]);
 
     res.redirect('/');
