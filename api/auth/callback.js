@@ -5,7 +5,6 @@ export default async function handler(req, res) {
   try {
     const { code } = req.query;
     if (!code) {
-      console.error("No `code` found in query string");
       return res.status(400).json({ error: 'Missing code in callback' });
     }
 
@@ -32,19 +31,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to fetch access token' });
     }
 
-    const tokenPayload = JSON.stringify({
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token || '',
-    });
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      path: '/',
+      sameSite: 'lax',
+      maxAge: tokenData.expires_in || 3600,
+    };
 
     res.setHeader('Set-Cookie', [
-      cookie.serialize('tokens', tokenPayload, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      }),
+      cookie.serialize('tokens', JSON.stringify({
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token || null
+      }), cookieOptions),
     ]);
 
     res.redirect('/');
