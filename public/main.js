@@ -59,6 +59,8 @@ function smoothScrollCalendar(delta) {
 
 // --- Auth and Startup ---
 function handleLogin() {
+  // Set flag before redirecting to login
+  localStorage.setItem('hasSignedInBefore', 'true');
   window.location.href = "/api/auth";
 }
 
@@ -648,10 +650,12 @@ async function initData() {
     console.error("Failed to fetch events:", e);
 
     const alreadyRedirecting = window.location.pathname.includes("/api/auth");
-    if (!alreadyRedirecting) {
+    // Only show session expired if user has signed in before
+    if (!alreadyRedirecting && localStorage.getItem('hasSignedInBefore') === 'true') {
       alert("Session expired. Please sign in again.");
       window.location.href = "/api/auth"; 
     }
+    // Otherwise, do nothing (show UI with Sign In button)
   } finally {
     showSpinner(false); 
   }
