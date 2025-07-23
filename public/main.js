@@ -640,15 +640,17 @@ async function initData() {
 
     createCalendar();
   } catch (e) {
-  console.error("Failed to fetch events:", e);
+    console.error("Failed to fetch events:", e);
 
-  const alreadyRedirecting = window.location.pathname.includes("/api/auth");
-  if (!alreadyRedirecting) {
-    alert("Session expired. Please sign in again.");
-    window.location.href = "/api/auth"; 
+    const alreadyRedirecting = window.location.pathname.includes("/api/auth");
+    if (!alreadyRedirecting) {
+      alert("Session expired. Please sign in again.");
+      window.location.href = "/api/auth"; 
+    }
+  } finally {
+    showSpinner(false); 
   }
 }
-
 
 async function deleteEventById(id, recurrenceType) {
   try {
