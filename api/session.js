@@ -1,6 +1,6 @@
 import cookie from 'cookie';
 
-export function getTokensFromCookies(req, res) {
+export function getTokensFromCookies(req) {
   try {
     const cookies = req.headers.cookie;
     if (!cookies) {
@@ -23,4 +23,3 @@ export function getTokensFromCookies(req, res) {
     return null;
   }
 }
-
