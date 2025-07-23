@@ -76,6 +76,8 @@ async function handleLogout() {
 }
 
 async function fetchEvents() {
+  const out = document.getElementById("output");
+
   try {
     const response = await fetch("/api/events", {
       method: "GET",
@@ -83,7 +85,6 @@ async function fetchEvents() {
     });
 
     if (response.status === 401) {
-      const out = document.getElementById("output");
       out.textContent = "Session expired. Please sign in again.";
       return;
     }
@@ -91,11 +92,27 @@ async function fetchEvents() {
     const data = await response.json();
     console.log(data);
 
-    const out = document.getElementById("output");
-    out.textContent = JSON.stringify(data.items, null, 2);
+    if (!data.items || data.items.length === 0) {
+      out.innerHTML = "<p>No upcoming events found.</p>";
+      return;
+    }
+
+    const list = document.createElement("ul");
+    list.style.paddingLeft = "1.2rem";
+
+    data.items.forEach(event => {
+      const li = document.createElement("li");
+      const start = event.start?.dateTime || event.start?.date || "No start date";
+      const end = event.end?.dateTime || event.end?.date || "";
+      li.textContent = `${event.summary || "Untitled"} — ${start}${end ? " → " + end : ""}`;
+      list.appendChild(li);
+    });
+
+    out.innerHTML = "<strong>Upcoming Google Calendar Events:</strong>";
+    out.appendChild(list);
+
   } catch (err) {
     console.error(err);
-    const out = document.getElementById("output");
     out.textContent = "Something went wrong while fetching events.";
   }
 }
