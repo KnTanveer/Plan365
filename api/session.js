@@ -9,33 +9,23 @@ export function getTokensFromCookies(req, res) {
     }
 
     const parsed = cookie.parse(cookies);
-    const raw = parsed.tokens;
+    const tokenString = parsed.tokens;
 
-    if (!raw) {
+    if (!tokenString) {
       console.warn("No 'tokens' cookie found");
       return null;
     }
 
-    const tokens = JSON.parse(raw);
+    const tokens = JSON.parse(tokenString);
+
+    if (!tokens.access_token) {
+      console.warn("No access_token found in tokens cookie");
+      return null;
+    }
+
     return tokens;
   } catch (err) {
     console.error("Failed to parse tokens from cookies:", err);
     return null;
-  }
-}
-
-export function setTokensAsCookies(res, tokens) {
-  try {
-    const serialized = cookie.serialize('tokens', JSON.stringify(tokens), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, 
-      sameSite: 'Lax',
-    });
-
-    res.setHeader('Set-Cookie', serialized);
-  } catch (err) {
-    console.error("Failed to serialize tokens to cookie:", err);
   }
 }
