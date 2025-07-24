@@ -115,9 +115,17 @@ export default async function handler(req, res) {
       });
       const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
       console.log('DELETE DEBUG:', { eventId, baseId, toDelete: toDelete.map(ev => ev.id) });
-      if (toDelete.length > 1) {
+      if (toDelete.length > 0) {
         for (const ev of toDelete) {
           await calendar.events.delete({ calendarId, eventId: ev.id });
+        }
+        // Always attempt to delete the base event ID directly as well
+        if (!toDelete.some(ev => ev.id === baseId)) {
+          try {
+            await calendar.events.delete({ calendarId, eventId: baseId });
+          } catch (e) {
+            // Ignore if not found
+          }
         }
         return res.status(204).end();
       }
