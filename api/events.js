@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         start: { date: start },
         end: { date: end },
         recurrence,
-        description: JSON.stringify({ color, recurrence }), // Store metadata here
+        description: JSON.stringify({ color, recurrence }), 
       };
 
       const result = await calendar.events.insert({
@@ -69,9 +69,7 @@ export default async function handler(req, res) {
       const { eventId, updates } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId for update" });
 
-      // 2. When updating a recurring event's type, delete all events with the same base event ID
       const baseId = eventId.split('_repeat_')[0];
-      // Delete all matching events (faked recurrences)
       const listResult = await calendar.events.list({
         calendarId,
         showDeleted: false,
@@ -84,7 +82,6 @@ export default async function handler(req, res) {
         await calendar.events.delete({ calendarId, eventId: ev.id });
       }
 
-      // Now create the new event (series or single)
       const newEvent = {
         ...updates,
         start: { date: updates.start },
@@ -103,9 +100,8 @@ export default async function handler(req, res) {
       const { eventId, deleteAll } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId" });
 
-      // If deleteAll is set, delete all events in the series
       if (deleteAll) {
-        const baseId = eventId.split('_repeat_')[0];
+        const baseId = eventId.split('_')[0];
         const listResult = await calendar.events.list({
           calendarId,
           showDeleted: false,
@@ -113,7 +109,8 @@ export default async function handler(req, res) {
           orderBy: "startTime",
           singleEvents: true,
         });
-        const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+        // Match all events whose id starts with baseId
+        const toDelete = (listResult.data.items || []).filter(ev => ev.id.startsWith(baseId));
         console.log('DELETE DEBUG:', { eventId, baseId, toDelete: toDelete.map(ev => ev.id) });
         for (const ev of toDelete) {
           await calendar.events.delete({ calendarId, eventId: ev.id });
@@ -121,7 +118,6 @@ export default async function handler(req, res) {
         return res.status(204).end();
       }
 
-      // Otherwise, just delete the single event
       await calendar.events.delete({
         calendarId,
         eventId,
