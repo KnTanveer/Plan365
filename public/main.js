@@ -606,6 +606,14 @@ async function initData() {
 
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
+      let recurrenceType = null;
+      if (rrule.startsWith("RRULE:FREQ=")) {
+        recurrenceType = rrule.replace("RRULE:FREQ=", "").split(";")[0];
+      }
+      // fallback to metadata.recurrence if present and not already set
+      if (!recurrenceType && metadata.recurrence) {
+        recurrenceType = metadata.recurrence;
+      }
 
       const staticize = (count, adjustFunc) => {
         for (let i = 0; i < count; i++) {
@@ -622,7 +630,7 @@ async function initData() {
               end: endDate.toISOString().split("T")[0]
             },
             googleId: ev.id + `_repeat_${i}`,
-            recurrenceType: metadata.recurrence || null
+            recurrenceType
           };
           addToRange(eventCopy);
         }
@@ -640,7 +648,7 @@ async function initData() {
         color,
         range: { start, end: endDateObj.toISOString().split("T")[0] },
         googleId: ev.id,
-        recurrenceType: metadata.recurrence || null
+        recurrenceType
       };
       addToRange(newEvent);
     });
@@ -715,6 +723,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Ensure all modal/button functions are accessible from HTML
 window.saveNote = saveNote;
 window.deleteCurrentEvent = deleteCurrentEvent;
 window.closeModal = closeModal;
