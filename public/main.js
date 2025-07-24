@@ -411,8 +411,8 @@ async function deleteCurrentEvent() {
     // Show custom modal for delete type
     const userChoice = await showDeleteChoiceModal();
     if (userChoice) {
-      // Delete all occurrences: use base event ID (series, no _repeat_)
-      eventId = (modal.dataset.fullEventId || '').split('_repeat_')[0];
+      // Delete all occurrences: always use base event ID (series, no _repeat_)
+      eventId = (modal.dataset.eventId || modal.dataset.fullEventId || '').split('_repeat_')[0];
     }
   }
   if (!eventId) return;
