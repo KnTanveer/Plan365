@@ -684,6 +684,39 @@ async function initData() {
   }
 }
 
+function populateEventModal(event) {
+  document.getElementById('start-date').value = event.start.date || event.start.dateTime.split('T')[0];
+  document.getElementById('end-date').value = event.end.date || event.end.dateTime.split('T')[0];
+  document.getElementById('note-text').value = event.summary || '';
+  
+  const eventData = JSON.parse(event.description || '{}');
+  document.getElementById('event-color').value = eventData.color || '#000000';
+
+  // Populate the repeat select
+  const repeatSelect = document.getElementById('repeat-select');
+  
+  if (event.recurrence) {
+    const recurrenceRule = event.recurrence[0];
+    if (recurrenceRule.includes('RRULE:FREQ=DAILY')) {
+      repeatSelect.value = 'DAILY';
+    } else if (recurrenceRule.includes('RRULE:FREQ=WEEKLY')) {
+      repeatSelect.value = 'WEEKLY';
+    } else if (recurrenceRule.includes('RRULE:FREQ=MONTHLY')) {
+      repeatSelect.value = 'MONTHLY';
+    } else if (recurrenceRule.includes('RRULE:FREQ=YEARLY')) {
+      repeatSelect.value = 'YEARLY';
+    } else {
+      repeatSelect.value = '';
+    }
+  } else {
+    repeatSelect.value = '';
+  }
+
+  document.getElementById('modal-content').dataset.eventId = event.id;
+  document.getElementById('delete-btn').style.display = 'inline-block';
+  document.getElementById('modal').style.display = 'flex';
+}
+
 async function deleteEventById(id, recurrenceType) {
   try {
     let realId = id;
