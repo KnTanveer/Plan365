@@ -306,7 +306,16 @@ function openModal(dateStr, event = null) {
   document.getElementById("note-text").value = event ? event.text.replace(/\u21bb$/, '').trim() : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
   // Preselect repeat option
-  document.getElementById("repeat-select").value = event?.recurrenceType || "";
+  // Ensure recurrenceType is always set
+  let recurrenceType = event?.recurrenceType;
+  if (!recurrenceType && event?.recurrence) {
+    // Try to extract from recurrence rule if not set
+    const rrule = event.recurrence[0] || "";
+    if (rrule.startsWith("RRULE:FREQ=")) {
+      recurrenceType = rrule.replace("RRULE:FREQ=", "").split(";")[0];
+    }
+  }
+  document.getElementById("repeat-select").value = recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
@@ -316,7 +325,7 @@ function openModal(dateStr, event = null) {
     if (event && event.googleId) {
       modal.dataset.eventId = event.googleId.includes('_repeat_') ? event.googleId.split('_repeat_')[0] : event.googleId;
       modal.dataset.fullEventId = event.googleId;
-      modal.dataset.recurrenceType = event.recurrenceType || '';
+      modal.dataset.recurrenceType = recurrenceType || '';
     } else {
       delete modal.dataset.eventId;
       delete modal.dataset.fullEventId;
@@ -411,8 +420,11 @@ async function deleteCurrentEvent() {
     // Show custom modal for delete type
     const userChoice = await showDeleteChoiceModal();
     if (userChoice) {
-      // Delete all occurrences: always use base event ID (series, no _repeat_)
+      // Delete all occurrences: use base event ID (series, no _repeat_)
       eventId = (modal.dataset.eventId || modal.dataset.fullEventId || '').split('_repeat_')[0];
+    } else {
+      // Delete only this instance: use full event ID (with _repeat_)
+      eventId = modal.dataset.fullEventId || modal.dataset.eventId;
     }
   }
   if (!eventId) return;
