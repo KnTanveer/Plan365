@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         start: { date: start },
         end: { date: end },
         recurrence,
-        description: JSON.stringify({ color, recurrence }), 
+        description: JSON.stringify({ color, recurrence }), // Store metadata here
       };
 
       const result = await calendar.events.insert({
@@ -69,7 +69,9 @@ export default async function handler(req, res) {
       const { eventId, updates } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId for update" });
 
+      // 2. When updating a recurring event's type, delete all events with the same base event ID
       const baseId = eventId.split('_repeat_')[0];
+      // Delete all matching events (faked recurrences)
       const listResult = await calendar.events.list({
         calendarId,
         showDeleted: false,
@@ -82,6 +84,7 @@ export default async function handler(req, res) {
         await calendar.events.delete({ calendarId, eventId: ev.id });
       }
 
+      // Now create the new event (series or single)
       const newEvent = {
         ...updates,
         start: { date: updates.start },
@@ -96,33 +99,49 @@ export default async function handler(req, res) {
       return res.status(200).json({ updated: result.data });
     }
 
-    if (req.method === "DELETE") {
+      if (req.method === "DELETE") {
       const { eventId, deleteAll } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId" });
 
-      if (deleteAll) {
-        const baseId = eventId.split('_')[0];
-        const listResult = await calendar.events.list({
-          calendarId,
-          showDeleted: false,
-          maxResults: 2500,
-          orderBy: "startTime",
-          singleEvents: true,
-        });
-        // Match all events whose id starts with baseId
-        const toDelete = (listResult.data.items || []).filter(ev => ev.id.startsWith(baseId));
-        console.log('DELETE DEBUG:', { eventId, baseId, toDelete: toDelete.map(ev => ev.id) });
-        for (const ev of toDelete) {
-          await calendar.events.delete({ calendarId, eventId: ev.id });
+      try {
+        if (deleteAll) {
+          // Get the event to check if it's recurring
+          const event = await calendar.events.get({ calendarId, eventId });
+          
+          if (event.data.recurrence) {
+            // If it's a recurring event, delete the entire series
+            await calendar.events.delete({
+              calendarId,
+              eventId,
+              sendUpdates: 'all',
+            });
+          } else {
+            // If it's not recurring, fall back to deleting all instances
+            const baseId = eventId.split('_')[0];
+            const listResult = await calendar.events.list({
+              calendarId,
+              showDeleted: false,
+              maxResults: 2500,
+              orderBy: "startTime",
+              singleEvents: true,
+            });
+            const toDelete = (listResult.data.items || []).filter(ev => ev.id.startsWith(baseId));
+            for (const ev of toDelete) {
+              await calendar.events.delete({ calendarId, eventId: ev.id });
+            }
+          }
+        } else {
+          // Delete the single event
+          await calendar.events.delete({
+            calendarId,
+            eventId,
+          });
         }
         return res.status(204).end();
+      } catch (err) {
+        console.error("Delete event error:", err);
+        return res.status(500).json({ error: "Failed to delete event", detail: err.message });
       }
-
-      await calendar.events.delete({
-        calendarId,
-        eventId,
-      });
-      return res.status(204).end();
     }
 
     return res.status(405).json({ error: "Method not allowed" });
