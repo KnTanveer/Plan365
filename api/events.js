@@ -1,7 +1,3 @@
-import { google } from "googleapis";
-import { getSessionClient } from "./google.js";
-import { getTokensFromCookies } from "./session.js";
-
 export default async function handler(req, res) {
   const tokens = getTokensFromCookies(req, res);
 
@@ -99,43 +95,49 @@ export default async function handler(req, res) {
       return res.status(200).json({ updated: result.data });
     }
 
-      if (req.method === "DELETE") {
+    if (req.method === "DELETE") {
       const { eventId, deleteAll } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId" });
 
       try {
         if (deleteAll) {
-          // Get the event to check if it's recurring
-          const event = await calendar.events.get({ calendarId, eventId });
-          
-          if (event.data.recurrence) {
-            // If it's a recurring event, delete the entire series
-            await calendar.events.delete({
-              calendarId,
-              eventId,
-              sendUpdates: 'all',
-            });
-          } else {
-            // If it's not recurring, fall back to deleting all instances
-            const baseId = eventId.split('_')[0];
-            const listResult = await calendar.events.list({
-              calendarId,
-              showDeleted: false,
-              maxResults: 2500,
-              orderBy: "startTime",
-              singleEvents: true,
-            });
-            const toDelete = (listResult.data.items || []).filter(ev => ev.id.startsWith(baseId));
-            for (const ev of toDelete) {
+          // Always delete all events with the base event ID and all _repeat_ variants
+          const baseId = eventId.split('_repeat_')[0];
+          const listResult = await calendar.events.list({
+            calendarId,
+            showDeleted: false,
+            maxResults: 2500,
+            orderBy: "startTime",
+            singleEvents: true,
+          });
+          const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+          for (const ev of toDelete) {
+            try {
               await calendar.events.delete({ calendarId, eventId: ev.id });
+            } catch (deleteError) {
+              if (deleteError.code === 410) {
+                // Event already deleted, ignore
+                console.log(`Event ${ev.id} already deleted`);
+              } else {
+                throw deleteError;
+              }
             }
           }
         } else {
           // Delete the single event
-          await calendar.events.delete({
-            calendarId,
-            eventId,
-          });
+          try {
+            await calendar.events.delete({
+              calendarId,
+              eventId,
+            });
+          } catch (deleteError) {
+            if (deleteError.code === 410) {
+              // Event already deleted, ignore the error
+              console.log(`Event ${eventId} already deleted`);
+            } else {
+              throw deleteError;
+            }
+          }
         }
         return res.status(204).end();
       } catch (err) {
@@ -145,21 +147,8 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).json({ error: "Method not allowed" });
-
   } catch (err) {
-    console.error("API Error:", err);
-    return res.status(500).json({ error: "Google API error", detail: err.message });
+    console.error("Calendar operation error:", err);
+    return res.status(500).json({ error: "Calendar operation failed", detail: err.message });
   }
-}
-
-async function getOrCreatePlan365Calendar(calendar) {
-  const calendars = await calendar.calendarList.list();
-  const existing = calendars.data.items.find(c => c.summary === "Plan365");
-  if (existing) return existing.id;
-
-  const newCal = await calendar.calendars.insert({
-    requestBody: { summary: "Plan365" },
-  });
-
-  return newCal.data.id;
 }
