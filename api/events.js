@@ -1,4 +1,3 @@
-
 import { google } from "googleapis";
 import { getSessionClient } from "./google.js";
 import { getTokensFromCookies } from "./session.js";
@@ -106,30 +105,18 @@ export default async function handler(req, res) {
 
       try {
         if (deleteAll) {
-          // Get the event to check if it's recurring
-          const event = await calendar.events.get({ calendarId, eventId });
-          
-          if (event.data.recurrence) {
-            // If it's a recurring event, delete the entire series
-            await calendar.events.delete({
-              calendarId,
-              eventId,
-              sendUpdates: 'all',
-            });
-          } else {
-            // If it's not recurring, fall back to deleting all instances
-            const baseId = eventId.split('_')[0];
-            const listResult = await calendar.events.list({
-              calendarId,
-              showDeleted: false,
-              maxResults: 2500,
-              orderBy: "startTime",
-              singleEvents: true,
-            });
-            const toDelete = (listResult.data.items || []).filter(ev => ev.id.startsWith(baseId));
-            for (const ev of toDelete) {
-              await calendar.events.delete({ calendarId, eventId: ev.id });
-            }
+          // Always delete all events with the same base ID (before _repeat_)
+          const baseId = eventId.split('_')[0];
+          const listResult = await calendar.events.list({
+            calendarId,
+            showDeleted: false,
+            maxResults: 2500,
+            orderBy: "startTime",
+            singleEvents: true,
+          });
+          const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+          for (const ev of toDelete) {
+            await calendar.events.delete({ calendarId, eventId: ev.id });
           }
         } else {
           // Delete the single event
