@@ -428,7 +428,17 @@ async function deleteCurrentEvent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ eventId, deleteAll }),
     });
-    if (!response.ok) throw new Error("Failed to delete");
+    if (response.status === 401) {
+      alert("Session expired. Please sign in again.");
+      window.location.href = "/api/auth";
+      return;
+    }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Delete failed:", errorText);
+      alert("Failed to delete the event: " + errorText);
+      return;
+    }
     closeModal();
     await initData();
   } catch (err) {
