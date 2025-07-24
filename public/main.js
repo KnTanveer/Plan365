@@ -627,7 +627,20 @@ async function initData() {
       }
       // fallback to metadata.recurrence if present and not already set
       if (!recurrenceType && metadata.recurrence) {
-        recurrenceType = metadata.recurrence;
+        // If metadata.recurrence is an RRULE, extract type, else use as is
+        if (typeof metadata.recurrence === 'string' && metadata.recurrence.startsWith('RRULE:FREQ=')) {
+          recurrenceType = metadata.recurrence.replace('RRULE:FREQ=', '').split(';')[0];
+        } else {
+          recurrenceType = metadata.recurrence;
+        }
+      }
+      // fallback to ev.recurrenceType if present
+      if (!recurrenceType && ev.recurrenceType) {
+        recurrenceType = ev.recurrenceType;
+      }
+      // fallback to ev.repeat if present
+      if (!recurrenceType && ev.repeat) {
+        recurrenceType = ev.repeat;
       }
 
       const staticize = (count, adjustFunc) => {
@@ -645,7 +658,7 @@ async function initData() {
               end: endDate.toISOString().split("T")[0]
             },
             googleId: ev.id + `_repeat_${i}`,
-            recurrenceType
+            recurrenceType // always set
           };
           addToRange(eventCopy);
         }
@@ -663,7 +676,7 @@ async function initData() {
         color,
         range: { start, end: endDateObj.toISOString().split("T")[0] },
         googleId: ev.id,
-        recurrenceType
+        recurrenceType // always set
       };
       addToRange(newEvent);
     });
