@@ -715,7 +715,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Ensure all modal/button functions are accessible from HTML
 window.saveNote = saveNote;
 window.deleteCurrentEvent = deleteCurrentEvent;
 window.closeModal = closeModal;
