@@ -642,7 +642,7 @@ async function initData() {
               end: endDate.toISOString().split("T")[0]
             },
             googleId: ev.id + `_repeat_${i}`,
-            recurrenceType
+            recurrenceType: recurrenceType // Always set
           };
           addToRange(eventCopy);
         }
