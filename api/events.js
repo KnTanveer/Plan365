@@ -100,37 +100,28 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "DELETE") {
-      const { eventId } = req.body;
+      const { eventId, deleteAll } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId" });
 
-      // 1. When deleting a recurring event (series), delete all events with the same base event ID
-      const baseId = eventId.split('_repeat_')[0];
-      // List all events and delete all matching
-      const listResult = await calendar.events.list({
-        calendarId,
-        showDeleted: false,
-        maxResults: 2500,
-        orderBy: "startTime",
-        singleEvents: true,
-      });
-      const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
-      console.log('DELETE DEBUG:', { eventId, baseId, toDelete: toDelete.map(ev => ev.id) });
-      if (toDelete.length > 0) {
+      // If deleteAll is set, delete all events in the series
+      if (deleteAll) {
+        const baseId = eventId.split('_repeat_')[0];
+        const listResult = await calendar.events.list({
+          calendarId,
+          showDeleted: false,
+          maxResults: 2500,
+          orderBy: "startTime",
+          singleEvents: true,
+        });
+        const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+        console.log('DELETE DEBUG:', { eventId, baseId, toDelete: toDelete.map(ev => ev.id) });
         for (const ev of toDelete) {
           await calendar.events.delete({ calendarId, eventId: ev.id });
-        }
-        // Always attempt to delete the base event ID directly as well
-        if (!toDelete.some(ev => ev.id === baseId)) {
-          try {
-            await calendar.events.delete({ calendarId, eventId: baseId });
-          } catch (e) {
-            // Ignore if not found
-          }
         }
         return res.status(204).end();
       }
 
-      // If not a series, just delete the single event
+      // Otherwise, just delete the single event
       await calendar.events.delete({
         calendarId,
         eventId,
