@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Plan365</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" id="meta-theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="My Web App">
+  <link rel="apple-touch-icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: Roboto, Arial, sans-serif;
+      margin: 0;
+      overflow-x: auto;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: #121212;
+      color: white;
+    }
+
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #ddd;
+    }
+
+    body.dark button {
+      background-color: #333;
+      color: white;
+    }
+
+    body.dark button:hover {
+      background-color: #444;
+    }
+
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: #f0f0f0;
+      flex-wrap: wrap;
+    }
+
+    body.dark #header {
+      background: #1f1f1f;
+    }
+
+    #calendar {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 10px;
+      background: #f4f4f4;
+    }
+
+    body.dark #calendar {
+      background: #1a1a1a;
+    }
+    
+    .month-column {
+      flex: 0 0 auto;
+      width: 130px;
+      margin-right: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      padding: 5px;
+    }
+
+    body.dark .month-column {
+      background: #2c2c2c;
+    }
+
+    .month-column h3 {
+      text-align: center;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .day-cell {
+      border: 1px solid #ddd;
+      margin: 2px 0;
+      padding: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+      min-height: 45px;
+    }
+
+    body.dark .day-cell {
+      border: 1px solid #666;
+    }
+
+    .today {
+      border: 2px solid var(--today-color, red);
+    }
+
+    body.dark .today {
+      border: 2px solid var(--today-color, red);
+    }
+
+    .day-label {
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .note-text {
+      font-size: 12px;
+      border-radius: 4px;
+      padding: 2px 4px;
+      margin-top: 2px;
+      color: black;
+    }
+
+    #event-color {
+      width: 100%;
+      height: 35px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    /* Font selector*/
+    #font-select {
+      padding: 6px;
+      width: 100%;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    
+    body.dark #font-select {
+      background-color: #3a3a3a;
+      color: white;
+      border: 1px solid #555;
+    }
+
+    #font-input {
+      padding: 6px;
+      width: 100%;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    
+    body.dark #font-input {
+      background-color: #3a3a3a;
+      color: white;
+      border: 1px solid #555;
+    }
+
+    #font-picker-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin-top: 5px;
+    }
+    
+    #font-label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    #font-label input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .font-input-wrapper {
+      position: relative;
+      margin-top: 6px; 
+    }
+    
+    #font-dropdown.hidden {
+      display: none;
+    }
+    
+    #font-search {
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    #font-reset, restore-months-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      padding: 0 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    
+    #font-reset:hover, restore-months-btn:hover {
+      background: #ddd;
+    }
+    
+    #font-dropdown {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      width: 100%;
+      max-height: 220px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 0 0 4px 4px;
+      z-index: 2000; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    #font-dropdown div {
+      padding: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    #font-dropdown div:hover,
+    #font-dropdown .highlighted {
+      background-color: #f0f0f0;
+    }
+    
+    body.dark #font-search {
+      background-color: #3a3a3a;
+      color: white;
+      border: 1px solid #555;
+    }
+    
+    body.dark #font-reset, restore-months-btn {
+      background: #444;
+      color: white;
+      border-color: #666;
+    }
+    
+    body.dark #font-reset:hover, restore-months-btn:hover {
+      background: #333;
+    }
+    
+    body.dark #font-dropdown {
+      background: #2c2c2c;
+      border-color: #444;
+      color: white;
+    }
+    
+    body.dark #font-dropdown div:hover,
+    body.dark #font-dropdown .highlighted {
+      background: #444;
+    }
+
+    /* Hide months styling */
+    .hidden {
+      display: none;
+    }
+
+    .section-heading {
+      font-size: 15px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .month-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    #month-select {
+      flex: 1;
+      height: auto;
+      padding: 4px;
+      font-size: 14px;
+    }
+
+    .popup-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    
+    #month-popup {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 220px;
+      max-height: 300px;          
+      overflow-y: auto; 
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      z-index: 1002;
+    }
+
+    #month-popup::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    #month-popup::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+    
+    #month-popup.hidden {
+      display: none;
+    }
+    
+    .month-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    
+    .month-options label {
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    body.dark #month-popup {
+      background: #2c2c2c;
+      border-color: #444;
+      color: white;
+    }
+
+    /* Shared Modal Styles */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      animation: scaleUp 0.3s ease;
+    }
+
+    body.dark .popup-content {
+      background: #2c2c2c;
+      color: white;
+    }
+
+    @keyframes fadeIn {
+      from { background: rgba(0,0,0,0); }
+      to { background: rgba(0,0,0,0.5); }
+    }
+
+    @keyframes scaleUp {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    #modal-content label {
+      display: block;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    
+    #modal-content input,
+    #modal-content textarea,
+    #modal-content select {
+      width: 100%;
+      margin-top: 5px;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    #modal-content textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    
+    #modal-content .actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    body.dark #modal-content input,
+    body.dark #modal-content textarea,
+    body.dark #modal-content select {
+      background-color: #3a3a3a;
+      color: white;
+      border: 1px solid #555;
+    }
+
+    body.dark input[type="date"] {
+      background-color: #1e1e1e !important;
+      color: white !important;
+      border: 1px solid #888;
+    }
+
+    body.dark input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+
+    #delete-btn:hover {
+      background-color: #c2323250;
+    }
+
+    #save-btn:hover {
+      background-color: #28a74550;
+    }
+
+    #cancel-btn:hover {
+      background-color: #6c757d50;
+    }
+
+    /* Settings */
+    
+    #settings-overlay {
+      z-index: 1001;
+    }
+
+    #settings-panel {
+      max-width: 300px;
+      width: 100%;
+      overflow: visible; 
+      position: relative;
+    }
+
+    #settings-panel h3 {
+      margin: 0 0 15px;
+    }
+
+    #settings-panel button, #settings-panel label {
+      display: block;
+      margin-bottom: 15px;
+    }
+
+    #settings-panel .info {
+      font-size: 13px;
+      margin-top: 10px;
+      color: #666;
+    }
+
+    body.dark #settings-panel .info {
+      color: #aaa;
+    }
+
+    .close-settings {
+      float: right;
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .close-settings:hover {
+      color: red;
+    }
+
+    .fade-out {
+      animation: fadeOut 0.3s forwards;
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+    }
+
+    /* Delete Modal */
+    #delete-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
+
+    #delete-modal .popup-content {
+      text-align: center;
+    }
+
+    #delete-modal .button-row {
+      margin-top: 1em;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    #delete-modal .button-row button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background-color: #c23232;
+      color: white;
+      cursor: pointer;
+      flex: 1;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    #delete-modal .button-row button:hover {
+      background-color: #c2323290;
+      transform: scale(1.02);
+    }
+
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div>
+      <button onclick="changeYear(-1)"><i class="fas fa-backward"></i></button>
+      <button onclick="goToToday()"><i class="fas fa-calendar-day"></i></button>
+      <button onclick="changeYear(1)"><i class="fas fa-forward"></i></button>
+      <div class="popup-wrapper">
+        <button id="month-popup-toggle"><i class="fas fa-eye-slash"></i> Months</button>
+        <div id="month-popup" class="month-popup hidden">
+          <div class="month-options">
+            <label><input type="checkbox" value="0"> January</label>
+            <label><input type="checkbox" value="1"> February</label>
+            <label><input type="checkbox" value="2"> March</label>
+            <label><input type="checkbox" value="3"> April</label>
+            <label><input type="checkbox" value="4"> May</label>
+            <label><input type="checkbox" value="5"> June</label>
+            <label><input type="checkbox" value="6"> July</label>
+            <label><input type="checkbox" value="7"> August</label>
+            <label><input type="checkbox" value="8"> September</label>
+            <label><input type="checkbox" value="9"> October</label>
+            <label><input type="checkbox" value="10"> November</label>
+            <label><input type="checkbox" value="11"> December</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h2><i class="fas fa-calendar-alt"></i> Plan365 - <span id="year-label"></span></h2>
+    <div>
+      <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <button id="logoutBtn" style="display:none"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+      <button onclick="openSettings()"><i class="fas fa-gear"></i></button>
+    </div>
+  </div>
+  <!-- Removed <div id="output"> -->
+
+  <!-- Settings Modal -->
+  <div id="settings-overlay" class="popup-overlay" onclick="closeSettings(event)">
+    <div id="settings-panel" class="popup-content" onclick="event.stopPropagation()">
+      <button class="close-settings" onclick="closeSettings(event)">&times;</button>
+      <h3><i class="fas fa-cog"></i> Settings</h3>
+      <button onclick="toggleDarkMode()"><i id="theme-toggle-icon" class="fas fa-sun"></i> Toggle Theme</button>
+      <button id="toggle-recurring-btn" onclick="toggleRecurringEvents()"><i class="fas fa-sync-alt"></i> Show/Hide Recurring</button>
+      <button id="restore-months-btn"><i class="fas fa-undo-alt"></i> Restore All Months</button>
+      <label><i class="fas fa-palette"></i> Today Color:
+        <input type="color" onchange="changeTodayColor(this.value)" id="today-color-input" />
+      </label>
+      <label id="font-label">
+        <i class="fas fa-font"></i> Font:
+        <div class="font-input-wrapper">
+          <input type="text" id="font-search" placeholder="Search fonts..." autocomplete="off">
+          <button id="font-reset" title="Reset font"><i class="fas fa-undo-alt"></i></button>
+          <div id="font-dropdown" class="hidden"></div>
+        </div>
+      </label>
+      <p class="info"><i class="fas fa-info-circle"></i> Custom recurring events like "3x a week" are not supported by Plan365. Hence will not be synced from Google calendar.</p>
+    </div>
+  </div>
+
+  <div id="calendar"></div>
+
+  <!-- Event Modal -->
+  <div id="modal" class="popup-overlay" onclick="closeModal()">
+    <div id="modal-content" class="popup-content" data-event-id="" onclick="event.stopPropagation()">
+      <label><strong>Start:</strong> <input type="date" id="start-date"></label>
+      <label><strong>End:</strong> <input type="date" id="end-date"></label>
+      <label><strong>Note:</strong> <textarea id="note-text"></textarea></label>
+      <label><strong>Color:</strong> <input type="color" id="event-color"></label>
+      <label><strong>Repeat:</strong>
+        <select id="repeat-select">
+          <option value="">None</option>
+          <option value="DAILY">Daily</option>
+          <option value="WEEKLY">Weekly</option>
+          <option value="MONTHLY">Monthly</option>
+          <option value="YEARLY">Yearly</option>
+        </select>
+      </label>
+      <p id="duration-display"></p>
+      <div class="actions">
+        <button id="cancel-btn" onclick="closeModal()">Cancel</button>
+        <button id="delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
+        <button id="save-btn" onclick="saveNote()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="popup-overlay" onclick="closeDeleteModal()">
+    <div class="popup-content" onclick="event.stopPropagation()">
+      <p>Choose delete type:</p>
+      <div class="button-row">
+        <button id="delete-all-btn">All Occurrences</button>
+        <button id="delete-instance-btn">This Event</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openSettings() {
+      document.getElementById('settings-overlay').style.display = 'flex';
+    }
+
+    function closeSettings(e) {
+      e.stopPropagation();
+      document.getElementById('settings-overlay').style.display = 'none';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function toggleDarkMode() {
+      const dark = document.body.classList.toggle('dark');
+      document.getElementById('theme-icon').className = dark ? 'fas fa-moon' : 'fas fa-sun';
+      document.getElementById('theme-toggle-icon').className = dark ? 'fas fa-moon' : 'fas fa-sun';
+      localStorage.setItem('darkMode', dark);
+    }
+
+    function changeTodayColor(color) {
+      document.querySelectorAll('.today').forEach(el => {
+        el.style.borderColor = color;
+      });
+      localStorage.setItem('todayColor', color);
+    }
+
+    function toggleRecurringEvents() {
+      const btn = document.getElementById('toggle-recurring-btn');
+      const isHidden = btn.textContent.includes("Show");
+      btn.innerHTML = `<i class="fas fa-sync-alt"></i> ${isHidden ? "Hide" : "Show"} Recurring`;
+      localStorage.setItem('hideRecurring', isHidden ? "false" : "true");
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').style.display = 'none';
+    }
+
+    function openDeleteModal() {
+      document.getElementById('delete-modal').style.display = 'flex';
+    }
+
+    window.onload = () => {
+      const darkMode = localStorage.getItem('darkMode') === 'true';
+      if (darkMode) document.body.classList.add('dark');
+      const icon = darkMode ? 'fas fa-sun' : 'fas fa-moon';
+      
+      const themeIcon = document.getElementById('theme-icon');
+      if (themeIcon) themeIcon.className = icon;
+      
+      document.getElementById('theme-toggle-icon').className = icon;
+
+      const storedColor = localStorage.getItem('todayColor');
+      if (storedColor) {
+        changeTodayColor(storedColor);
+        document.getElementById('today-color-input').value = storedColor;
+      }
+
+      const hideRecurring = localStorage.getItem('hideRecurring');
+      if (hideRecurring === "true") {
+        document.getElementById('toggle-recurring-btn').innerHTML = `<i class="fas fa-sync-alt"></i> Show Recurring`;
+      }
+    };
+    
+  </script>
+
+  <script src="main.js"></script>
+</body>
+</html>
