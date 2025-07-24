@@ -155,7 +155,8 @@ function addToRange(event) {
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().split("T")[0];
     if (!calendarData.has(key)) calendarData.set(key, []);
-    calendarData.get(key).push(event);
+    // Always set recurrenceType, even for non-recurring events
+    calendarData.get(key).push({ ...event, recurrenceType: event.recurrenceType || "" });
   }
 }
 
@@ -305,10 +306,10 @@ function openModal(dateStr, event = null) {
   }
   document.getElementById("note-text").value = event ? event.text.replace(/\u21bb$/, '').trim() : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
-  // Preselect repeat option (support both recurrenceType and repeat property)
+  // Preselect repeat option using only recurrenceType
   const repeatSelect = document.getElementById("repeat-select");
   if (repeatSelect) {
-    repeatSelect.value = event?.recurrenceType || event?.repeat || "";
+    repeatSelect.value = event?.recurrenceType || "";
   }
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
