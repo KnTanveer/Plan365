@@ -1,3 +1,4 @@
+
 import { google } from "googleapis";
 import { getSessionClient } from "./google.js";
 import { getTokensFromCookies } from "./session.js";
@@ -115,6 +116,8 @@ export default async function handler(req, res) {
             singleEvents: true,
           });
           const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+          // Add logging for debugging
+          console.log('API DELETE: eventId', eventId, 'baseId', baseId, 'toDelete', toDelete.map(ev => ev.id));
           for (const ev of toDelete) {
             await calendar.events.delete({ calendarId, eventId: ev.id });
           }
