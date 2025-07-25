@@ -1,4 +1,3 @@
-
 import { google } from "googleapis";
 import { getSessionClient } from "./google.js";
 import { getTokensFromCookies } from "./session.js";
@@ -107,7 +106,7 @@ export default async function handler(req, res) {
       try {
         if (deleteAll) {
           // Always delete all events with the same base ID (before _repeat_)
-          const baseId = eventId.split('_')[0];
+          const baseId = eventId.split('_repeat_')[0];
           const listResult = await calendar.events.list({
             calendarId,
             showDeleted: false,
