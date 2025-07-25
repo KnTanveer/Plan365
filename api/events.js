@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     console.error("Calendar access error:", err);
     return res.status(500).json({ error: "Failed to access calendar", detail: err.message });
   }
+}
 
   try {
     if (req.method === "GET") {
