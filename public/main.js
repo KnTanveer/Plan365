@@ -431,19 +431,29 @@ async function deleteCurrentEvent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ eventId, deleteAll }),
     });
+  
     if (response.status === 401) {
       alert("Session expired. Please sign in again.");
       window.location.href = "/api/auth";
       return;
     }
+  
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Delete failed:", errorText);
       alert("Failed to delete the event: " + errorText);
       return;
     }
+  
     closeModal();
-    await initData();
+  
+    try {
+      await initData();
+    } catch (err) {
+      console.warn("Event deleted, but UI refresh failed:", err);
+      alert("Event was deleted, but UI did not refresh properly.");
+    }
+  
   } catch (err) {
     console.error("Delete failed:", err);
     alert("Failed to delete the event");
