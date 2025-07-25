@@ -603,6 +603,19 @@ function goToToday() {
   initData();
 }
 
+
+function extractRecurrenceType(ev) {
+  const rrule = ev.recurrence?.[0] || "";
+  const metadata = ev.description ? JSON.parse(ev.description) : {};
+  if (rrule.startsWith("RRULE:FREQ=")) {
+    return rrule.replace("RRULE:FREQ=", "").split(";")[0];
+  }
+  if (typeof metadata.recurrence === 'string' && metadata.recurrence.startsWith("RRULE:FREQ=")) {
+    return metadata.recurrence.replace("RRULE:FREQ=", "").split(";")[0];
+  }
+  return metadata.recurrence || ev.recurrenceType || "";
+}
+
 async function initData() {
   showSpinner(true);
   calendarData.clear();
@@ -624,8 +637,8 @@ async function initData() {
 
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
-      let recurrenceType = null;
-      if (rrule.startsWith("RRULE:FREQ=")) {
+      let recurrenceType = extractRecurrenceType(ev);
+      /* removed manual RRULE parsing */
         recurrenceType = rrule.replace("RRULE:FREQ=", "").split(";")[0];
       }
       // fallback to metadata.recurrence if present and not already set
