@@ -613,10 +613,17 @@ function goToToday() {
   initData();
 }
 
-
 function extractRecurrenceType(ev) {
   const rrule = ev.recurrence?.[0] || "";
-  const metadata = ev.description ? JSON.parse(ev.description) : {};
+  let metadata = {};
+  try {
+    if (ev.description?.startsWith('{')) {
+      metadata = JSON.parse(ev.description);
+    }
+  } catch (e) {
+    console.warn("Failed to parse event description as JSON:", ev.description);
+  }
+
   if (rrule.startsWith("RRULE:FREQ=")) {
     return rrule.replace("RRULE:FREQ=", "").split(";")[0];
   }
@@ -625,6 +632,7 @@ function extractRecurrenceType(ev) {
   }
   return metadata.recurrence || ev.recurrenceType || "";
 }
+
 
 async function initData() {
   showSpinner(true);
