@@ -25,7 +25,6 @@ export default async function handler(req, res) {
     console.error("Calendar access error:", err);
     return res.status(500).json({ error: "Failed to access calendar", detail: err.message });
   }
-}
 
   try {
     if (req.method === "GET") {
@@ -51,11 +50,10 @@ export default async function handler(req, res) {
 
       const newEvent = {
         summary,
-        description,
         start: { date: start },
         end: { date: end },
         recurrence,
-        description: JSON.stringify({ color, recurrence }), // Store metadata here
+        description: JSON.stringify({ color, recurrence }), // Store metadata
       };
 
       const result = await calendar.events.insert({
@@ -78,7 +76,11 @@ export default async function handler(req, res) {
         orderBy: "startTime",
         singleEvents: true,
       });
-      const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+
+      const toDelete = (listResult.data.items || []).filter(ev =>
+        ev.id === baseId || ev.id.startsWith(baseId + '_repeat_')
+      );
+
       for (const ev of toDelete) {
         await calendar.events.delete({ calendarId, eventId: ev.id });
       }
@@ -90,17 +92,19 @@ export default async function handler(req, res) {
         recurrence: updates.recurrence,
         description: JSON.stringify({ color: updates.color, recurrence: updates.recurrence }),
       };
+
       const result = await calendar.events.insert({
         calendarId,
         requestBody: newEvent,
       });
+
       return res.status(200).json({ updated: result.data });
     }
 
     if (req.method === "DELETE") {
       const { eventId, deleteAll } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId" });
-    
+
       try {
         if (deleteAll) {
           const baseId = eventId.includes('_repeat_') ? eventId.split('_repeat_')[0] : eventId;
@@ -111,23 +115,20 @@ export default async function handler(req, res) {
             orderBy: "startTime",
             singleEvents: true,
           });
-    
+
           const toDelete = (listResult.data.items || []).filter(ev =>
             ev.id === baseId || ev.id.startsWith(baseId + '_repeat_')
           );
-    
+
           console.log('API DELETE: eventId', eventId, 'baseId', baseId, 'toDelete', toDelete.map(ev => ev.id));
-    
+
           for (const ev of toDelete) {
             await calendar.events.delete({ calendarId, eventId: ev.id });
           }
         } else {
-          await calendar.events.delete({
-            calendarId,
-            eventId,
-          });
+          await calendar.events.delete({ calendarId, eventId });
         }
-    
+
         return res.status(204).end();
       } catch (err) {
         console.error("Delete event error:", err);
@@ -135,6 +136,15 @@ export default async function handler(req, res) {
       }
     }
 
+    return res.status(405).json({ error: "Method not allowed" });
+
+  } catch (err) {
+    console.error("API Error:", err);
+    return res.status(500).json({ error: "Google API error", detail: err.message });
+  }
+}
+
+// Outside the handler
 async function getOrCreatePlan365Calendar(calendar) {
   const calendars = await calendar.calendarList.list();
   const existing = calendars.data.items.find(c => c.summary === "Plan365");
