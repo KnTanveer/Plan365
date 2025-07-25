@@ -99,10 +99,10 @@ export default async function handler(req, res) {
     if (req.method === "DELETE") {
       const { eventId, deleteAll } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId" });
-
+    
       try {
         if (deleteAll) {
-          const baseId = eventId.split('_repeat_')[0];
+          const baseId = eventId.includes('_repeat_') ? eventId.split('_repeat_')[0] : eventId;
           const listResult = await calendar.events.list({
             calendarId,
             showDeleted: false,
@@ -110,8 +110,13 @@ export default async function handler(req, res) {
             orderBy: "startTime",
             singleEvents: true,
           });
-          const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId + '_repeat_'));
+    
+          const toDelete = (listResult.data.items || []).filter(ev =>
+            ev.id === baseId || ev.id.startsWith(baseId + '_repeat_')
+          );
+    
           console.log('API DELETE: eventId', eventId, 'baseId', baseId, 'toDelete', toDelete.map(ev => ev.id));
+    
           for (const ev of toDelete) {
             await calendar.events.delete({ calendarId, eventId: ev.id });
           }
@@ -121,20 +126,13 @@ export default async function handler(req, res) {
             eventId,
           });
         }
+    
         return res.status(204).end();
       } catch (err) {
         console.error("Delete event error:", err);
         return res.status(500).json({ error: "Failed to delete event", detail: err.message });
       }
     }
-
-    return res.status(405).json({ error: "Method not allowed" });
-
-  } catch (err) {
-    console.error("API Error:", err);
-    return res.status(500).json({ error: "Google API error", detail: err.message });
-  }
-}
 
 async function getOrCreatePlan365Calendar(calendar) {
   const calendars = await calendar.calendarList.list();
