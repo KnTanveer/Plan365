@@ -637,23 +637,7 @@ async function initData() {
 
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
-      let recurrenceType = extractRecurrenceType(ev);
-      /* removed manual RRULE parsing */
-        recurrenceType = rrule.replace("RRULE:FREQ=", "").split(";")[0];
-      }
-      // fallback to metadata.recurrence if present and not already set
-      if (!recurrenceType && metadata.recurrence) {
-        // If metadata.recurrence is an RRULE, extract type, else use as is
-        if (typeof metadata.recurrence === 'string' && metadata.recurrence.startsWith('RRULE:FREQ=')) {
-          recurrenceType = metadata.recurrence.replace('RRULE:FREQ=', '').split(';')[0];
-        } else {
-          recurrenceType = metadata.recurrence;
-        }
-      }
-      // fallback to ev.recurrenceType if present
-      if (!recurrenceType && ev.recurrenceType) {
-        recurrenceType = ev.recurrenceType;
-      }
+      const recurrenceType = extractRecurrenceType(ev);
 
       const staticize = (count, adjustFunc) => {
         for (let i = 0; i < count; i++) {
@@ -698,12 +682,10 @@ async function initData() {
     console.error("Failed to fetch events:", e);
 
     const alreadyRedirecting = window.location.pathname.includes("/api/auth");
-    // Only show session expired if user has signed in before
     if (!alreadyRedirecting && localStorage.getItem('hasSignedInBefore') === 'true') {
       alert("Session expired. Please sign in again.");
       window.location.href = "/api/auth"; 
     }
-    // Otherwise, do nothing (show UI with Sign In button)
   } finally {
     showSpinner(false); 
   }
