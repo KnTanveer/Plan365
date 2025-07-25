@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         start: { date: start },
         end: { date: end },
         recurrence,
-        description: JSON.stringify({ color, recurrence }), // Store metadata here
+        description: JSON.stringify({ color, recurrence }),
       };
 
       const result = await calendar.events.insert({
@@ -69,31 +69,25 @@ export default async function handler(req, res) {
       const { eventId, updates } = req.body;
       if (!eventId) return res.status(400).json({ error: "Missing eventId for update" });
 
-      const baseId = eventId.split('_')[0];
-      const listResult = await calendar.events.list({
-        calendarId,
-        showDeleted: false,
-        maxResults: 2500,
-        orderBy: "startTime",
-        singleEvents: true,
-      });
-      const toDelete = (listResult.data.items || []).filter(ev => ev.id === baseId || ev.id.startsWith(baseId));
-      for (const ev of toDelete) {
-        await calendar.events.delete({ calendarId, eventId: ev.id });
-      }
-
-      const newEvent = {
+      const updateEvent = {
         ...updates,
         start: { date: updates.start },
         end: { date: updates.end },
         recurrence: updates.recurrence,
         description: JSON.stringify({ color: updates.color, recurrence: updates.recurrence }),
       };
-      const result = await calendar.events.insert({
-        calendarId,
-        requestBody: newEvent,
-      });
-      return res.status(200).json({ updated: result.data });
+
+      try {
+        const result = await calendar.events.update({
+          calendarId,
+          eventId,
+          requestBody: updateEvent,
+        });
+        return res.status(200).json({ updated: result.data });
+      } catch (err) {
+        console.error("Update failed:", err);
+        return res.status(500).json({ error: "Failed to update event", detail: err.message });
+      }
     }
 
     if (req.method === "DELETE") {
