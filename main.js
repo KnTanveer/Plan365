@@ -634,11 +634,15 @@ function handleSignOut() {
 function gapiLoad() {
   return new Promise(resolve => {
     gapi.load("client", async () => {
-      await gapi.client.init({ discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"] });
+      await gapi.client.init({
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+      });
+      await gapi.client.load("oauth2", "v2"); 
       resolve();
     });
   });
 }
+
 
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") smoothScrollCalendar(100);
