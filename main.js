@@ -436,15 +436,14 @@ async function initData() {
   try {
     const response = await fetch(`/api/events?year=${currentYear}`);
     if (!response.ok) throw new Error("Failed to fetch events");
-    
+
     const contentType = response.headers.get("Content-Type");
     if (!contentType.includes("application/json")) {
       const text = await response.text();
       throw new Error("Expected JSON, got: " + text.slice(0, 100));
     }
-    
-    const events = await response.json();
 
+    const events = await response.json();
     calendarData.clear();
     events.forEach(ev => {
       const start = ev.start?.date;
@@ -494,9 +493,9 @@ async function initData() {
     });
 
     createCalendar();
-  } catch (err) {
-    console.error("Event fetch failed:", err);
-    alert("Session expired. Please sign in again.");
+  } catch (e) {
+    console.error("Event fetch failed:", e);
+    alert("Login session expired or server issue. Please sign in again.");
     showLoginPrompt();
   } finally {
     showSpinner(false);
