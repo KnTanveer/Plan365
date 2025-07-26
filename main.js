@@ -3,6 +3,8 @@ let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 const calendarData = new Map();
 let calendarId = null;
+let accessToken = null;
+let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
 
@@ -206,7 +208,7 @@ window.addEventListener("load", () => {
 function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
-  document.getElementById("note-text").value = event ? event.text.replace(/↻$/, '').trim() : "";
+  document.getElementById("note-text").value = event ? event.text.replace(/â»$/, '').trim() : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
@@ -256,21 +258,32 @@ async function saveNote() {
 
   if (!start || !end || !text) return alert("Please fill all fields");
 
-  const payload = {
-    summary: recurrence ? `${text.trim()} ↻` : text.trim(),
-    description: JSON.stringify({ color, recurrence }),
-    startDate: start,
-    endDate: end,
-    recurrence
-  };
+  const metadata = JSON.stringify({ color, recurrence });
+  const recurrenceRule = recurrence ? [`RRULE:FREQ=${recurrence}`] : undefined;
+  localStorage.setItem("lastColor", color);
 
-  const url = currentEditingEvent ? "/api/update-event" : "/api/create-event";
-  if (currentEditingEvent) payload.eventId = currentEditingEvent.googleId;
+  const cleanText = text.replace(/â»/g, "").trim();
+  const displayText = recurrence ? `${cleanText} â»` : cleanText;
 
-  await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+  if (currentEditingEvent) {
+    try {
+      const fullEvent = await gapi.client.calendar.events.get({ calendarId, eventId: currentEditingEvent.googleId });
+      const masterId = fullEvent.result.recurringEventId || fullEvent.result.id;
+      await gapi.client.calendar.events.delete({ calendarId, eventId: masterId });
+    } catch (e) {
+      console.error("Failed to delete previous event:", e);
+    }
+  }
+
+  await gapi.client.calendar.events.insert({
+    calendarId,
+    resource: {
+      summary: displayText,
+      description: metadata,
+      start: { date: start },
+      end: { date: new Date(new Date(end).getTime() + 86400000).toISOString().split("T")[0] },
+      recurrence: recurrenceRule || []
+    }
   });
 
   closeModal();
@@ -279,17 +292,42 @@ async function saveNote() {
 
 async function deleteCurrentEvent() {
   if (!currentEditingEvent) return;
+  const isRecurring = currentEditingEvent.recurrenceType != null;
+  const deleteWholeSeries = isRecurring ? await showDeleteChoiceModal() : false;
 
-  const deleteSeries = currentEditingEvent.recurrenceType ? await showDeleteChoiceModal() : false;
+  try {
+    let eventIdToDelete = currentEditingEvent.googleId;
 
-  await fetch("/api/delete-event", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      eventId: currentEditingEvent.googleId,
-      deleteSeries
-    })
-  });
+    if (deleteWholeSeries) {
+      try {
+        const fullEvent = await gapi.client.calendar.events.get({
+          calendarId,
+          eventId: eventIdToDelete
+        });
+
+        if (fullEvent.result.recurringEventId) {
+          eventIdToDelete = fullEvent.result.recurringEventId;
+        }
+      } catch (e) {
+        if (e.status !== 410) {
+          console.warn("Failed to fetch full event info:", e);
+        }
+      }
+    }
+
+    await gapi.client.calendar.events.delete({
+      calendarId,
+      eventId: eventIdToDelete
+    });
+
+  } catch (e) {
+    if (e.status === 410) {
+      console.info("Event already deleted, skipping.");
+    } else {
+      console.error("Failed to delete event:", e);
+      alert("Could not delete event.");
+    }
+  }
 
   closeModal();
   await initData();
@@ -432,27 +470,28 @@ async function initCalendarId() {
 }
 
 async function initData() {
+  if (!calendarId) return;
   showSpinner(true);
+  const timeMin = new Date(currentYear, 0, 1).toISOString();
+  const timeMax = new Date(currentYear + 1, 0, 1).toISOString();
+
   try {
-    const response = await fetch(`/api/events?year=${currentYear}`);
-    if (!response.ok) throw new Error("Failed to fetch events");
+    const response = await gapi.client.calendar.events.list({
+      calendarId, timeMin, timeMax, showDeleted: false,
+      singleEvents: true, orderBy: "startTime"
+    });
 
-    const contentType = response.headers.get("Content-Type");
-    if (!contentType.includes("application/json")) {
-      const text = await response.text();
-      throw new Error("Expected JSON, got: " + text.slice(0, 100));
-    }
-
-    const events = await response.json();
     calendarData.clear();
-    events.forEach(ev => {
+
+    response.result.items.forEach(ev => {
       const start = ev.start?.date;
       const endRaw = ev.end?.date;
       if (!start || !endRaw) return;
 
+      const rrule = ev.recurrence?.[0] || "";
+      if (!showRecurringEvents && rrule) return;
       const metadata = ev.description ? JSON.parse(ev.description) : {};
       const color = metadata.color || '#b6eeb6';
-      const rrule = ev.recurrence?.[0] || "";
 
       const staticize = (count, adjustFunc) => {
         for (let i = 0; i < count; i++) {
@@ -481,6 +520,7 @@ async function initData() {
       if (rrule) return;
 
       const endDateObj = new Date(endRaw);
+      if (isNaN(endDateObj.getTime())) return;
       endDateObj.setDate(endDateObj.getDate() - 1);
       const newEvent = {
         text: ev.summary,
@@ -494,9 +534,11 @@ async function initData() {
 
     createCalendar();
   } catch (e) {
-    console.error("Event fetch failed:", e);
-    alert("Login session expired or server issue. Please sign in again.");
-    showLoginPrompt();
+    console.error("Failed to fetch events:", e);
+    if (e.status === 401) {
+      alert("Session expired. Please sign in again.");
+      handleSignOut();
+    }
   } finally {
     showSpinner(false);
   }
@@ -526,11 +568,46 @@ function toggleRecurringEvents() {
 
 // --- Auth and Startup ---
 function handleSignIn() {
-  window.location.href = "/auth/google"; 
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    callback: async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      await gapiLoad();
+      gapi.client.setToken({ access_token: accessToken });
+      document.getElementById("signin-btn").style.display = "none";
+      document.getElementById("signout-btn").style.display = "inline-block";
+      setInterval(async () => {
+        try {
+          await tokenClient.requestAccessToken({ prompt: '' });
+        } catch (err) {
+          console.error("Token refresh failed:", err);
+          alert("Session expired. Please sign in again.");
+          handleSignOut();
+        }
+      }, 55 * 60 * 1000);
+
+      await initCalendarId();
+      await initData();
+    },
+  });
+  tokenClient.requestAccessToken();
 }
 
 function handleSignOut() {
-  fetch("/auth/logout").then(() => location.reload());
+  if (accessToken) {
+    gapi.client.setToken(null);
+    google.accounts.oauth2.revoke(accessToken, () => {
+      accessToken = null;
+      calendarId = null;
+      localStorage.removeItem("accessToken");
+      document.getElementById("signin-btn").style.display = "inline-block";
+      document.getElementById("signout-btn").style.display = "none";
+      calendarData.clear();
+      createCalendar();
+    });
+  }
 }
 
 function gapiLoad() {
@@ -608,9 +685,11 @@ function handleSignIn() {
   tokenClient.requestAccessToken({ prompt: 'consent' }); // interactive login
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") document.body.classList.add("dark");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+  }
 
   const themeIcon = document.getElementById("theme-toggle-icon");
   if (themeIcon) {
@@ -624,7 +703,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (picker) picker.value = storedColor;
   }
 
-  initData(); 
+  await initAuth();
 });
 
 function showDeleteChoiceModal() {
