@@ -568,32 +568,52 @@ function toggleRecurringEvents() {
 
 // --- Auth and Startup ---
 function handleSignIn() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
-    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
-    callback: async (tokenResponse) => {
-      accessToken = tokenResponse.access_token;
-      localStorage.setItem("accessToken", accessToken);
-      await gapiLoad();
-      gapi.client.setToken({ access_token: accessToken });
-      document.getElementById("signin-btn").style.display = "none";
-      document.getElementById("signout-btn").style.display = "inline-block";
-      setInterval(async () => {
-        try {
-          await tokenClient.requestAccessToken({ prompt: '' });
-        } catch (err) {
-          console.error("Token refresh failed:", err);
-          alert("Session expired. Please sign in again.");
-          handleSignOut();
-        }
-      }, 55 * 60 * 1000);
+  if (!tokenClient) {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+      scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+      callback: async (tokenResponse) => {
+        accessToken = tokenResponse.access_token;
+        localStorage.setItem("accessToken", accessToken);
+        await gapiLoad();
+        gapi.client.setToken({ access_token: accessToken });
 
-      await initCalendarId();
-      await initData();
-    },
+        try {
+          const userInfo = await gapi.client.oauth2.userinfo.get();
+          if (userInfo.result?.email) {
+            localStorage.setItem("userEmail", userInfo.result.email);
+          }
+        } catch (e) {
+          console.warn("Could not fetch user email:", e);
+        }
+
+        document.getElementById("signin-btn").style.display = "none";
+        document.getElementById("signout-btn").style.display = "inline-block";
+
+        setInterval(async () => {
+          try {
+            await tokenClient.requestAccessToken({ prompt: '' });
+          } catch (err) {
+            console.error("Token refresh failed:", err);
+            alert("Session expired. Please sign in again.");
+            handleSignOut();
+          }
+        }, 55 * 60 * 1000);
+
+        await initCalendarId();
+        await initData();
+      }
+    });
+  }
+
+  const loginHint = localStorage.getItem("userEmail");
+
+  tokenClient.requestAccessToken({
+    prompt: 'consent',
+    ...(loginHint ? { login_hint: loginHint } : {})
   });
-  tokenClient.requestAccessToken();
 }
+
 
 function handleSignOut() {
   if (accessToken) {
@@ -602,6 +622,7 @@ function handleSignOut() {
       accessToken = null;
       calendarId = null;
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("userEmail"); 
       document.getElementById("signin-btn").style.display = "inline-block";
       document.getElementById("signout-btn").style.display = "none";
       calendarData.clear();
@@ -632,7 +653,7 @@ if (storedColor) {
 }
 
 async function initAuth() {
-  await gapiLoad();
+  await gapiLoad(); // loads calendar + oauth2 APIs
 
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
@@ -642,16 +663,27 @@ async function initAuth() {
       localStorage.setItem("accessToken", accessToken);
       gapi.client.setToken({ access_token: accessToken });
 
+      // Fetch user email and store it
+      try {
+        const userInfo = await gapi.client.oauth2.userinfo.get();
+        if (userInfo.result?.email) {
+          localStorage.setItem("userEmail", userInfo.result.email);
+        }
+      } catch (e) {
+        console.warn("Could not fetch user email:", e);
+      }
+
       document.getElementById("signin-btn").style.display = "none";
       document.getElementById("signout-btn").style.display = "inline-block";
 
+      // Auto-refresh token
       setInterval(() => {
         try {
           tokenClient.requestAccessToken({ prompt: '' });
         } catch (err) {
           console.warn("Auto-refresh failed:", err);
         }
-      }, 30 * 60 * 1000); // refresh every 30 mins
+      }, 30 * 60 * 1000); // 30 minutes
 
       await initCalendarId();
       await initData();
