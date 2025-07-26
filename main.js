@@ -435,6 +435,14 @@ async function initData() {
   showSpinner(true);
   try {
     const response = await fetch(`/api/events?year=${currentYear}`);
+    if (!response.ok) throw new Error("Failed to fetch events");
+    
+    const contentType = response.headers.get("Content-Type");
+    if (!contentType.includes("application/json")) {
+      const text = await response.text();
+      throw new Error("Expected JSON, got: " + text.slice(0, 100));
+    }
+    
     const events = await response.json();
 
     calendarData.clear();
