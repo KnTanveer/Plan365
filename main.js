@@ -1,4 +1,3 @@
-// --- Constants and State ---
 let hiddenMonths = new Set(JSON.parse(localStorage.getItem("hiddenMonths") || "[]"));
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -35,6 +34,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const icon = document.getElementById("theme-toggle-icon");
   if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
 });
+
+function showLoginPrompt() {
+  document.getElementById("signin-btn").style.display = "inline-block";
+  document.getElementById("signout-btn").style.display = "none";
+}
 
 function changeTodayColor(color) {
   document.documentElement.style.setProperty('--today-color', color);
@@ -627,6 +631,60 @@ if (storedColor) {
   if (picker) picker.value = storedColor;
 }
 
+async function initAuth() {
+  await gapiLoad();
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    callback: async (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      localStorage.setItem("accessToken", accessToken);
+      gapi.client.setToken({ access_token: accessToken });
+
+      document.getElementById("signin-btn").style.display = "none";
+      document.getElementById("signout-btn").style.display = "inline-block";
+
+      setInterval(() => {
+        try {
+          tokenClient.requestAccessToken({ prompt: '' });
+        } catch (err) {
+          console.warn("Auto-refresh failed:", err);
+        }
+      }, 30 * 60 * 1000); // refresh every 30 mins
+
+      await initCalendarId();
+      await initData();
+    }
+  });
+
+  const savedToken = localStorage.getItem("accessToken");
+  if (savedToken) {
+    try {
+      tokenClient.requestAccessToken({ prompt: '' });
+    } catch (err) {
+      console.warn("Silent login failed:", err);
+      showLoginPrompt();
+    }
+  } else {
+    showLoginPrompt();
+  }
+}
+
+function showLoginPrompt() {
+  document.getElementById("signin-btn").style.display = "inline-block";
+  document.getElementById("signout-btn").style.display = "none";
+}
+
+function handleSignIn() {
+  if (!tokenClient) {
+    console.warn("Token client not initialized.");
+    return;
+  }
+
+  tokenClient.requestAccessToken({ prompt: 'consent' }); // interactive login
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") {
@@ -641,46 +699,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   const storedColor = localStorage.getItem("todayColor");
   if (storedColor) {
     changeTodayColor(storedColor);
-    document.getElementById("today-color-input").value = storedColor;
+    const picker = document.getElementById("today-color-input");
+    if (picker) picker.value = storedColor;
   }
 
-  await gapiLoad();
-
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: '943003293805-j19ek1k66uvh8s2q7dd4hsvtimf516jv.apps.googleusercontent.com',
-    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
-    callback: async (tokenResponse) => {
-      accessToken = tokenResponse.access_token;
-      localStorage.setItem("accessToken", accessToken);
-      gapi.client.setToken({ access_token: accessToken });
-
-      document.getElementById("signin-btn").style.display = "none";
-      document.getElementById("signout-btn").style.display = "inline-block";
-
-      setInterval(() => tokenClient?.requestAccessToken({ prompt: '' }), 55 * 60 * 1000);
-
-      await initCalendarId();
-      await initData();
-    }
-  });
-
-  const savedToken = localStorage.getItem("accessToken");
-  if (savedToken) {
-    try {
-      await tokenClient.requestAccessToken({ prompt: '' });
-    } catch (err) {
-      console.warn("Silent login failed:", err);
-      showLoginPrompt();
-    }
-  } else {
-    showLoginPrompt(); 
-  }
+  await initAuth();
 });
-
-function showLoginPrompt() {
-  document.getElementById("signin-btn").style.display = "inline-block";
-  document.getElementById("signout-btn").style.display = "none";
-}
 
 function showDeleteChoiceModal() {
   return new Promise(resolve => {
