@@ -146,12 +146,22 @@
       transition: opacity 0.3s ease;
     }
 
+    .footer-text {
+      font-size: 14px; 
+      color: gray; 
+      font-style: italic;
+    }
+
+    .footer-text.effect:hover {
+      color: #2b6ab1; 
+    }
+
     @media (max-width: 700px) {
       .nav-links {
         display: none;
         flex-direction: column;
         background: var(--light-bg);
-        padding: 10px;
+        padding: 12px;
         border-radius: 10px;
         position: absolute;
         top: 60px;
@@ -183,7 +193,7 @@
 
     <div class="nav-center">
       <div class="nav-links" id="navLinks">
-        <a href="#features" class="btn text">Features</a>
+        <a href="#features" class="btn text" style="margin-bottom: -12px;">Features</a>
         <a href="#" onclick="toggleDarkMode()" class="btn text">Toggle Theme</a>
       </div>
       <a href="https://plan365.vercel.app" class="btn secondary">Get Started</a>
@@ -216,9 +226,17 @@
     </div>
   </section>
 
-  <section id="demos" class="section demo-section" data-aos="fade-up">
-    <h2>Live Previews</h2>
+  <section class="section demo-section" data-aos="fade-up">
+    <h2>Hide Months</h2>
+    <img
+      class="themed-image"
+      src="/product/hideMonths-light.png"
+      data-light="/product/hideMonths-light.png"
+      data-dark="/product/hideMonths-dark.png"
+      alt="Hide Months UI"
+    />
 
+    <h3>Edit Events</h3>
     <img
       class="themed-image"
       src="/product/editing-light.png"
@@ -227,18 +245,11 @@
       alt="Editing View"
     />
 
-    <img
-      class="themed-image"
-      src="/product/hideMonths-light.png"
-      data-light="/product/hideMonths-light.png"
-      data-dark="/product/hideMonths-dark.png"
-      alt="Hide Months UI"
-    />
   </section>
 
   <footer>
-    <p style="font-size: 14px; color: gray; font-style: italic;">*Demo screenshots uses the JetBrains Mono font. </p>
-    <p style="color: inherit;"><a href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
+    <p class="footer-text">*Demo screenshots uses the JetBrains Mono font. </p>
+    <p><a  class="footer-text effect" href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
   </footer>
 
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
