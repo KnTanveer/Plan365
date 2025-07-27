@@ -36,14 +36,14 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 function toggleInfoSection() {
-  const infoSection = document.getElementById('settings-info');
+  const infoSection = document.querySelector('.settings-info');
   const toggleText = document.getElementById('info-toggle-text');
-  const icon = document.querySelector('.info-toggle i');
+  const toggleIcon = document.querySelector('.info-toggle i');
 
   const isHidden = infoSection.classList.toggle('hidden');
 
   toggleText.textContent = isHidden ? 'Show Info' : 'Hide Info';
-  icon.className = isHidden ? 'fas fa-chevron-right' : 'fas fa-chevron-down';
+  toggleIcon.className = isHidden ? 'fas fa-chevron-right' : 'fas fa-chevron-down';
 }
 
 function showLoginPrompt() {
