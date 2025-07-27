@@ -148,7 +148,6 @@
       <a href="#features">Features</a>
       <a href="#demos">Demos</a>
       <a href="#start">Get Started</a>
-      <a href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a>
       <a href="#" onclick="toggleDarkMode()">Toggle Theme</a>
     </div>
   </nav>
@@ -174,20 +173,26 @@
 
   <section id="demos" class="section demo-section" data-aos="fade-up">
     <h2>Live Previews</h2>
-    <p>Every part of the UI adapts perfectly to light or dark mode. The demo uses the <strong>JetBrains Mono</strong> font for a clean developer-friendly look.</p>
+    <p style="font-size: 14px; color: gray; font-style: italic;">
+      *Demo screenshots use the JetBrains Mono font
+    </p>
+  
     <picture>
-      <source srcset="calendar-dark.png" media="(prefers-color-scheme: dark)">
-      <img src="calendar-light.png" alt="Calendar View" />
+      <source srcset="/product/calendar-dark.png" media="(prefers-color-scheme: dark)">
+      <img src="/product/calendar-light.png" alt="Calendar View" />
     </picture>
+  
     <picture>
-      <source srcset="/assets/editing-dark.png" media="(prefers-color-scheme: dark)">
-      <img src="editing-light.png" alt="Event Editing" />
+      <source srcset="/product/editing-dark.png" media="(prefers-color-scheme: dark)">
+      <img src="/product/editing-light.png" alt="Event Editing" />
     </picture>
+  
     <picture>
-      <source srcset="/assets/hideMonths-dark.png" media="(prefers-color-scheme: dark)">
-      <img src="hideMonths-light.png" alt="Hide Months UI" />
+      <source srcset="/product/hideMonths-dark.png" media="(prefers-color-scheme: dark)">
+      <img src="/product/hideMonths-light.png" alt="Hide Months UI" />
     </picture>
   </section>
+
 
   <section id="start" class="section" data-aos="fade-up">
     <h2>Start Planning Smarter</h2>
@@ -196,7 +201,7 @@
   </section>
 
   <footer>
-    <p>Made with ❤️ using JetBrains Mono. <a href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
+    <p>Font used in live previews JetBrains Mono. <a href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
   </footer>
 
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
