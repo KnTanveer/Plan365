@@ -35,6 +35,17 @@ window.addEventListener("DOMContentLoaded", () => {
   if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
 });
 
+function toggleInfoSection() {
+  const infoSection = document.getElementById('settings-info');
+  const toggleText = document.getElementById('info-toggle-text');
+  const icon = document.querySelector('.info-toggle i');
+
+  const isHidden = infoSection.classList.toggle('hidden');
+
+  toggleText.textContent = isHidden ? 'Show Info' : 'Hide Info';
+  icon.className = isHidden ? 'fas fa-chevron-right' : 'fas fa-chevron-down';
+}
+
 function showLoginPrompt() {
   document.getElementById("signin-btn").style.display = "inline-block";
   document.getElementById("signout-btn").style.display = "none";
