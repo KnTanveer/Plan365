@@ -96,10 +96,19 @@
     body.dark .btn.effect { background: #444; color: white; }
 
     .btn-large {
-      margin: 100px 0px; 
-      font-size: 24px; 
+      padding: 4px 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 24px;
       font-weight: 700px;
+      margin: 100px 0px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      background: #eee; color: #333; 
     }  
+
+    body.dark .btn-large { background: #444; color: white; }
 
     .features {
       display: grid;
@@ -252,7 +261,7 @@
       alt="Editing View"
     />
     <div>
-      <a class="btn effect, btn-large" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Get Started</a>
+      <a class="btn-large" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Get Started</a>
     </div>
   </section>
   
