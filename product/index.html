@@ -6,7 +6,7 @@
   <title>Plan365 – Premium Year Planner</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
   <style>
     :root {
       --primary: #28a745;
@@ -18,7 +18,7 @@
     }
     body {
       margin: 0;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: Roboto, Arial, sans-serif;
       transition: background 0.3s, color 0.3s;
       line-height: 1.6;
     }
@@ -174,17 +174,17 @@
 
   <section id="demos" class="section demo-section" data-aos="fade-up">
     <h2>Live Previews</h2>
-    <p>Every part of the UI adapts perfectly to light or dark mode.</p>
+    <p>Every part of the UI adapts perfectly to light or dark mode. The demo uses the <strong>JetBrains Mono</strong> font for a clean developer-friendly look.</p>
     <picture>
       <source srcset="calendar-dark.png" media="(prefers-color-scheme: dark)">
       <img src="calendar-light.png" alt="Calendar View" />
     </picture>
     <picture>
-      <source srcset="editing-dark.png" media="(prefers-color-scheme: dark)">
+      <source srcset="/assets/editing-dark.png" media="(prefers-color-scheme: dark)">
       <img src="editing-light.png" alt="Event Editing" />
     </picture>
     <picture>
-      <source srcset="hideMonths-dark.png" media="(prefers-color-scheme: dark)">
+      <source srcset="/assets/hideMonths-dark.png" media="(prefers-color-scheme: dark)">
       <img src="hideMonths-light.png" alt="Hide Months UI" />
     </picture>
   </section>
