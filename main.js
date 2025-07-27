@@ -7,6 +7,7 @@ let accessToken = null;
 let tokenClient;
 let currentEditingEvent = null;
 let showRecurringEvents = true;
+let showInfoSection = false; 
 
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle("dark");
