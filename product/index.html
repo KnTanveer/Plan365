@@ -18,7 +18,8 @@
 
     body {
       margin: 0;
-      font-family: Roboto, Arial, sans-serif;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, Roboto;
+      font-weight: 500;
       transition: background 0.3s, color 0.3s;
       line-height: 1.6;
     }
@@ -42,6 +43,12 @@
 
     body.dark nav {
       background: #2c2c2c;
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
     .nav-links {
@@ -83,6 +90,7 @@
       transition: all 0.3s ease;
     }
 
+    .btn.text { margin: -5px -15px; }
     .btn.primary { background: var(--primary); color: white; }
     .btn.secondary { background: #eee; color: #333; }
     body.dark .btn.secondary { background: #444; color: white; }
@@ -168,12 +176,18 @@
 </head>
 <body>
   <nav>
-    <div><img alt="Logo" src="icons/icon-512.png" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"/><strong>Plan365</strong></div>
-    <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
-    <div class="nav-links" id="navLinks">
-      <a href="#features">Features</a>
-      <a href="#" onclick="toggleDarkMode()">Toggle Theme</a>
+    <div>
+      <img alt="Logo" src="icons/icon-512.png" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"/>
+      <strong>Plan365</strong>
+    </div>
+
+    <div class="nav-center">
+      <div class="nav-links" id="navLinks">
+        <a href="#features" class="btn text">Features</a>
+        <a href="#" onclick="toggleDarkMode()" class="btn text">Toggle Theme</a>
+      </div>
       <a href="https://plan365.vercel.app" class="btn secondary">Get Started</a>
+      <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
     </div>
   </nav>
 
