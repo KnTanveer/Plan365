@@ -47,6 +47,24 @@ function toggleInfoSection() {
   toggleIcon.className = isHidden ? 'fas fa-chevron-right' : 'fas fa-chevron-down';
 }
 
+
+document.addEventListener('DOMContentLoaded', () => {
+  const infoSection = document.querySelector('.settings-info');
+  const toggleText = document.getElementById('info-toggle-text');
+  const toggleIcon = document.querySelector('.info-toggle i');
+
+  if (!showInfoSection) {
+    infoSection.classList.add('hidden');
+    toggleText.textContent = 'Show Info';
+    toggleIcon.className = 'fas fa-chevron-right';
+  } else {
+    infoSection.classList.remove('hidden');
+    toggleText.textContent = 'Hide Info';
+    toggleIcon.className = 'fas fa-chevron-down';
+  }
+});
+
+
 function showLoginPrompt() {
   document.getElementById("signin-btn").style.display = "inline-block";
   document.getElementById("signout-btn").style.display = "none";
