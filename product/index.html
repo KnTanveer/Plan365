@@ -54,9 +54,18 @@
       margin: auto;
       padding: 16px 24px;
       text-align: center;
-      tex-color: inherit;
     }
     
+    .hero-text {
+      color: white; 
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    
+    .hero-text:hover { color: rgb(200, 200, 200); }
+
     .nav-center {
       display: flex;
       align-items: center;
@@ -88,7 +97,7 @@
     section {
       max-width: 1000px;
       margin: auto;
-      padding: 80px 20px;
+      padding: 50px 20px;
       text-align: center;
       display: flex;
       justify-content: space-around; width: 100%;
@@ -107,22 +116,23 @@
     }
 
     .btn.text { margin: 0px -12px; }
-    .btn.effect { background: #eee; color: #333; }
-    .btn.green{ background: #28a74550; color: #333; }  
+    .btn.effect { background: #eee; color: #333; } 
+    .btn.effect:hover { color: rgb(200, 200, 200); }
+    body.dark .btn.effect:hover { color: rgb(200, 200, 200); }
     body.dark .btn.effect { background: #444; color: white; }
+
+    .btn.text:hover { color: rgb(200, 200, 200); }
+    body.dark .btn.text:hover { color: rgb(200, 200, 200); }
 
     .header-text {
       font-size: 24px;
       font-weight: 600;
-
     }
 
-    body.dark .btn-large { color: white; }
-
     .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px; 
       margin-top: 50px;
       text-align: left;
     }
@@ -133,6 +143,8 @@
       border-radius: 12px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       font-size: 15px;
+      flex: 1 1 240px; 
+      max-width: 100%;  
     }
 
     body.dark .feature {
@@ -178,6 +190,15 @@
     .footer-text.effect:hover {
       color: #2b6ab1; 
     }
+
+    .footer-line {
+      max-width: 500px; 
+      border: none;
+      border-top: 2px solid rgba(0, 0, 0, 0.1); 
+      margin-top: 80px;
+    }
+
+    body.dark .footer-line { border-top: 2px solid rgba(255, 255, 255, 0.1); }
     
     @media (max-width: 700px) {
       .nav-links {
@@ -245,12 +266,12 @@
       <h2>Why Plan365?</h2>
       <p>Designed for clean, visual planning — with zero distractions.</p>
       <div class="features">
-        <div class="feature"><i class="fas fa-calendar-week"></i> Full-Year Calendar</div>
-        <div class="feature"><i class="fas fa-sync-alt"></i> Google Calendar Sync</div>
-        <div class="feature"><i class="fas fa-adjust"></i> Dark & Light Mode</div>
-        <div class="feature"><i class="fas fa-palette"></i> Custom Event Colors</div>
-        <div class="feature"><i class="fas fa-font"></i> Font Picker</div>
-        <div class="feature"><i class="fas fa-rotate-right"></i> Repeat Events</div>
+          <div class="feature"><i class="fas fa-calendar-week"></i> Full-Year Calendar</div>
+          <div class="feature"><i class="fas fa-sync-alt"></i> Google Calendar Sync</div>
+          <div class="feature"><i class="fas fa-adjust"></i> Dark & Light Mode</div>
+          <div class="feature"><i class="fas fa-palette"></i> Custom Event Colors</div>
+          <div class="feature"><i class="fas fa-font"></i> Font Picker</div>
+          <div class="feature"><i class="fas fa-rotate-right"></i> Repeat Events</div>
       </div>
     </div>  
   </section>
@@ -282,14 +303,15 @@
   </section>
   
   <section class="hero" data-aos="zoom-in">
-      <a class="btn-large, header-text" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Start Planning</a>
+      <a class="hero-text" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Start Planning</a>
   </section>
   
-  <hr style="max-width: 500px; border: none; border-top: 1px solid rgba(0, 0, 0, 0.1);">
+  <hr class="footer-line">
   <footer>
-    <a class="footer-text effect" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Download the app</a>
+    <p><a class="footer-text effect" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Download the app</a></p>
     <p><a  class="footer-text effect" href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
-    <p class="footer-text">*Demo screenshots uses JetBrains Mono font. </p>
+    <p class="footer-text" style="margin-bottom: 0px;">*Demo screenshots uses </p>
+    <p class="footer-text" style="margin-top: 0px;">Jetbrains mono font. </p>
   </footer>
 
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
