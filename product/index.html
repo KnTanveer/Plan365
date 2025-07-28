@@ -170,6 +170,14 @@
       color: #2b6ab1; 
     }
 
+    .footer-line {
+      max-width: 500px;
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark footer-line { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+    
     @media (max-width: 700px) {
       .nav-links {
         display: none;
@@ -265,7 +273,7 @@
     </div>
   </section>
   
-  <hr style="max-width: 500px; border: 1px;">
+  <hr class="footer-line">
   <footer>
     <a class="footer-text effect" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Download the app</a>
     <p><a  class="footer-text effect" href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
