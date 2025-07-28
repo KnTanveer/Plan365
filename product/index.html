@@ -154,6 +154,17 @@
       margin-right: 10px;
     }
 
+    .demo-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .demo-item {
+      flex: 1;
+    }
+
     .demo-section img {
       max-width: 100%;
       border-radius: 12px;
@@ -277,7 +288,7 @@
   </section>
 
   <section class="section demo-section" data-aos="fade-up">
-    <div>
+    <div class="demo-item">
       <p class="header-text">Hide Months</p>
       <img
         class="themed-image"
@@ -289,7 +300,7 @@
       />
     </div>
 
-    <div>
+    <div class="demo-item">
       <p class="header-text">Edit Events</p>
       <img
         class="themed-image"
@@ -339,6 +350,29 @@
       if (darkMode) document.body.classList.add('dark');
       updateThemedImages(darkMode);
     };
+
+    const navLinks = document.getElementById('navLinks');
+
+    function toggleMenu() {
+      navLinks.classList.toggle('open');
+    }
+
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const hamburger = document.querySelector('.hamburger');
+      if (
+        navLinks.classList.contains('open') &&
+        !navLinks.contains(e.target) &&
+        !hamburger.contains(e.target)
+      ) {
+        navLinks.classList.remove('open');
+      }
+    });
   </script>
 </body>
 </html>
