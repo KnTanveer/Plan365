@@ -46,6 +46,17 @@
       background: #2c2c2c;
     }
 
+    .hero {
+      background: linear-gradient(120deg, #007bff, #00c6ff);
+      color: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      max-width: 1000px;
+      margin: auto;
+      padding: 80px 20px;
+      text-align: center;
+    }
+    
     .nav-center {
       display: flex;
       align-items: center;
@@ -94,19 +105,14 @@
 
     .btn.text { margin: 0px -12px; }
     .btn.effect { background: #eee; color: #333; }
+    .btn.green{ background: #28a74550; color: #333; }  
     body.dark .btn.effect { background: #444; color: white; }
 
-    .btn-large {
-      padding: 4px 14px;
-      border: none;
-      border-radius: 10px;
+    .header-text {
       font-size: 24px;
       font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      background: #28a74550; color: #333; 
-    }  
+
+    }
 
     body.dark .btn-large { color: white; }
 
@@ -241,28 +247,33 @@
   </section>
 
   <section class="section demo-section" data-aos="fade-up">
-    <h2>Hide Months</h2>
-    <img
-      class="themed-image"
-      style="max-width: 300px;"
-      src="/product/hideMonths-light.png"
-      data-light="/product/hideMonths-light.png"
-      data-dark="/product/hideMonths-dark.png"
-      alt="Hide Months UI"
-    />
-
-    <h2>Edit Events</h2>
-    <img
-      class="themed-image"
-      style="max-width: 300px; margin-bottom: 40px;"
-      src="/product/editing-light.png"
-      data-light="/product/editing-light.png"
-      data-dark="/product/editing-dark.png"
-      alt="Editing View"
-    />
     <div>
-      <a class="btn-large" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Start Planning</a>
+      <p class="header-text">Hide Months</p>
+      <img
+        class="themed-image"
+        style="max-width: 300px;"
+        src="/product/hideMonths-light.png"
+        data-light="/product/hideMonths-light.png"
+        data-dark="/product/hideMonths-dark.png"
+        alt="Hide Months UI"
+      />
     </div>
+
+    <div>
+      <p class="header-text">Edit Events</p>
+      <img
+        class="themed-image"
+        style="max-width: 300px; margin-bottom: 40px;"
+        src="/product/editing-light.png"
+        data-light="/product/editing-light.png"
+        data-dark="/product/editing-dark.png"
+        alt="Editing View"
+      />
+    </div>  
+  </section>
+  
+  <section class="hero" data-aos="zoom-in">
+      <a class="btn-large, header-text" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Start Planning</a>
   </section>
   
   <hr style="max-width: 500px; border: none; border-top: 1px solid rgba(0, 0, 0, 0.1);">
