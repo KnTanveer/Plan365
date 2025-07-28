@@ -93,22 +93,9 @@
     }
 
     .btn.text { margin: 0px -12px; }
-    .btn.effect { background: #eee; color: #333; }
-    body.dark .btn.effect { background: #444; color: white; }
-
-    .btn-large {
-      padding: 4px 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 24px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      background: #eee; color: #333; 
-    }  
-
-    body.dark .btn-large { background: #444; color: white; }
+    .btn.primary { background: var(--primary); color: white; }
+    .btn.secondary { background: #eee; color: #333; }
+    body.dark .btn.secondary { background: #444; color: white; }  
 
     .features {
       display: grid;
@@ -210,7 +197,7 @@
         <a href="#features" class="btn text" style="margin-bottom: -12px;">Features</a>
         <a href="#" onclick="toggleDarkMode()" class="btn text">Toggle Theme</a>
       </div>
-      <a href="https://plan365.vercel.app" class="btn effect">Get Started</a>
+      <a href="https://plan365.vercel.app" class="btn secondary">Get Started</a>
       <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
     </div>
   </nav>
@@ -261,7 +248,7 @@
       alt="Editing View"
     />
     <div>
-      <a class="btn-large" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Start Planning</a>
+      <a class="btn primary" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Start Planning</a>
     </div>
   </section>
   
