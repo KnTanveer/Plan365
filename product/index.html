@@ -92,8 +92,7 @@
       padding: 80px 20px;
       text-align: center;
       display: flex;
-      gap: 2rem;
-      justify-content: center;
+      justify-content: space-around; width: 100%;
       flex-wrap: wrap;
     }
 
@@ -227,20 +226,26 @@
   </nav>
 
   <section data-aos="zoom-in">
-    <img alt="Logo" src="icons/icon-512.png" style="width: 150px; height: 150px; vertical-align: middle;"/>
-    <h1><i class="fas fa-calendar-alt"></i> Plan365</h1>
-    <img
+    <div>
+      <img alt="Logo" src="icons/icon-512.png" style="width: 150px; height: 150px; vertical-align: middle;"/>
+      <h1><i class="fas fa-calendar-alt"></i> Plan365</h1>
+    </div>
+    <div>
+      <img
       class="themed-image"
       src="/product/calendar-light.png"
       data-light="/product/calendar-light.png"
       data-dark="/product/calendar-dark.png"
       alt="Calendar View"
-    />
+      />
+    </div>  
   </section>
 
   <section id="features" data-aos="fade-up">
-    <h2>Why Plan365?</h2>
-    <p>Designed for clean, visual planning — with zero distractions.</p>
+    <div>
+      <h2>Why Plan365?</h2>
+      <p>Designed for clean, visual planning — with zero distractions.</p>
+    </div>  
     <div class="features">
       <div class="feature"><i class="fas fa-calendar-week"></i> Full-Year Calendar</div>
       <div class="feature"><i class="fas fa-sync-alt"></i> Google Calendar Sync</div>
