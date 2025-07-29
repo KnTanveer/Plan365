@@ -669,7 +669,11 @@ async function initAuth() {
     scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
     callback: async (tokenResponse) => {
       accessToken = tokenResponse.access_token;
+      const expiresIn = tokenResponse.expires_in || 3600; 
+      const expiryTimestamp = Date.now() + expiresIn * 1000;
+      
       localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("tokenExpiry", expiryTimestamp.toString());
       gapi.client.setToken({ access_token: accessToken });
 
       document.getElementById("signin-btn").style.display = "none";
@@ -689,13 +693,24 @@ async function initAuth() {
   });
 
   const savedToken = localStorage.getItem("accessToken");
-  if (savedToken) {
-    try {
-      tokenClient.requestAccessToken({ prompt: '' });
-    } catch (err) {
-      console.warn("Silent login failed:", err);
-      showLoginPrompt();
-    }
+  const tokenExpiry = parseInt(localStorage.getItem("tokenExpiry") || "0", 10);
+  
+  if (savedToken && Date.now() < tokenExpiry) {
+    accessToken = savedToken;
+    gapi.client.setToken({ access_token: accessToken });
+    document.getElementById("signin-btn").style.display = "none";
+    document.getElementById("signout-btn").style.display = "inline-block";
+  
+    await initCalendarId();
+    await initData();
+  
+    setInterval(() => {
+      try {
+        tokenClient.requestAccessToken({ prompt: '' });
+      } catch (err) {
+        console.warn("Auto-refresh failed:", err);
+      }
+    }, 30 * 60 * 1000); 
   } else {
     showLoginPrompt();
   }
