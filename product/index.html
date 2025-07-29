@@ -80,15 +80,21 @@
     }
 
     body.dark .hero {
-      background: linear-gradient(45deg, #123b6f, #1f4d8d);
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
-      animation: glowPulse 3s ease-in-out infinite;
+      background: linear-gradient(45deg, #123b6f, #1f4d8d); /* darker blue tones */
+      box-shadow: 0 0 10px rgba(89, 170, 242, 0.15);
+      animation: glowPulseDark 3s ease-in-out infinite;
     }
     
     @keyframes glowPulse {
       0% { box-shadow: 0 0 20px rgba(89, 170, 242, 0.4); }
       50% { box-shadow: 0 0 40px rgba(89, 170, 242, 0.8); }
       100% { box-shadow: 0 0 20px rgba(89, 170, 242, 0.4); }
+    }
+    
+    @keyframes glowPulseDark {
+      0% { box-shadow: 0 0 10px rgba(89, 170, 242, 0.15); }
+      50% { box-shadow: 0 0 20px rgba(89, 170, 242, 0.3); }
+      100% { box-shadow: 0 0 10px rgba(89, 170, 242, 0.15); }
     }
 
     .hero-text {
