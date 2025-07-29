@@ -209,6 +209,17 @@
       100% { transform: translateY(0px); }
     }
 
+    .tilt-container {
+      perspective: 1000px;
+      display: inline-block;
+    }
+    
+    .tilt-img {
+      transform-style: preserve-3d;
+      transition: transform 0.2s ease;
+      will-change: transform;
+    }
+
     .demo-section {
       display: flex;
       flex-wrap: wrap;
@@ -320,8 +331,12 @@
       <img alt="Logo" src="/icons/icon-512.png" style="width: 150px; height: 150px;" />
       <h1 style="margin: 10px 0px 50px 0px;"><i class="fas fa-calendar-alt"></i> Plan365</h1>
     </div>
-    <div>
-      <img class="themed-image" src="/product/calendar-light.png" data-light="/product/calendar-light.png" data-dark="/product/calendar-dark.png" alt="Calendar View" />
+    <div class="tilt-container">
+      <img class="themed-image tilt-img"
+           src="/product/calendar-light.png"
+           data-light="/product/calendar-light.png"
+           data-dark="/product/calendar-dark.png"
+           alt="Calendar View" />
     </div>
   </section>
 
@@ -409,6 +424,22 @@
         navLinks.classList.remove('open');
       }
     });
+
+      const tilt = document.querySelector('.tilt-container');
+    
+      tilt.addEventListener('mousemove', (e) => {
+        const rect = tilt.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const rotateX = ((y / rect.height) - 0.5) * -10;
+        const rotateY = ((x / rect.width) - 0.5) * 10;
+    
+        tilt.querySelector('.tilt-img').style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      });
+    
+      tilt.addEventListener('mouseleave', () => {
+        tilt.querySelector('.tilt-img').style.transform = `rotateX(0) rotateY(0)`;
+      });
   </script>
 </body>
 </html>
