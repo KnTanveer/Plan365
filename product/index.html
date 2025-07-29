@@ -180,20 +180,20 @@
       background: white;
       padding: 24px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       font-size: 15px;
       flex: 1 1 240px;
       max-width: 100%;
       position: relative;
       transform-style: preserve-3d;
-      transition: transform 0.12s ease-out, box-shadow 0.15s ease;
+      transition: transform 0.15s ease-out, box-shadow 0.2s ease;
       cursor: pointer;
       will-change: transform;
     }
 
     .feature:hover {
       transform: translateY(-5px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
     }
 
     body.dark .feature {
@@ -411,16 +411,17 @@
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
     
-        const rotateX = ((y / rect.height) - 0.5) * -5;
-        const rotateY = ((x / rect.width) - 0.5) * 5;
+        const rotateX = ((y / rect.height) - 0.5) * -8;
+        const rotateY = ((x / rect.width) - 0.5) * 8;
     
-        feature.style.transform = `scale(1.015) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        feature.style.transform = `scale(1.05) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       });
     
       feature.addEventListener('mouseleave', () => {
         feature.style.transform = 'scale(1) rotateX(0deg) rotateY(0deg)';
       });
     });
+
     
     function toggleMenu() {
       document.getElementById('navLinks').classList.toggle('open');
