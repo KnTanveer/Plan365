@@ -180,11 +180,11 @@
       background: white;
       padding: 24px;
       border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       font-size: 15px;
       flex: 1 1 240px;
       max-width: 100%;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.12s ease, box-shadow 0.15s ease;
       position: relative;
       transform-style: preserve-3d;
       transition: transform 0.2s ease;
@@ -194,7 +194,7 @@
 
     .feature:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0, 123, 255, 0.15);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
     }
 
     body.dark .feature {
@@ -407,22 +407,21 @@
     AOS.init({ duration: 800 });
 
     document.querySelectorAll('.feature').forEach(feature => {
-    feature.addEventListener('mousemove', (e) => {
-      const rect = feature.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-  
-      const rotateX = ((y / rect.height) - 0.5) * -6;
-      const rotateY = ((x / rect.width) - 0.5) * 6;
-  
-      feature.style.transform = `scale(1.03) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      feature.addEventListener('mousemove', (e) => {
+        const rect = feature.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+    
+        const rotateX = ((y / rect.height) - 0.5) * -5;
+        const rotateY = ((x / rect.width) - 0.5) * 5;
+    
+        feature.style.transform = `scale(1.015) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      });
+    
+      feature.addEventListener('mouseleave', () => {
+        feature.style.transform = 'scale(1) rotateX(0deg) rotateY(0deg)';
+      });
     });
-  
-    feature.addEventListener('mouseleave', () => {
-      feature.style.transform = 'scale(1) rotateX(0deg) rotateY(0deg)';
-    });
-  });
-
     
     function toggleMenu() {
       document.getElementById('navLinks').classList.toggle('open');
