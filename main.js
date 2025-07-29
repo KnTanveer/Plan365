@@ -1,11 +1,3 @@
-function debounce(fn, delay) {
-  let timer;
-  return function (...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
-
 let hiddenMonths = new Set(JSON.parse(localStorage.getItem("hiddenMonths") || "[]"));
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -74,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function showLoginPrompt() {
-  document.getElementById("signin-btn").classList.remove("hidden");
-  document.getElementById("signout-btn").classList.add("hidden");
+  document.getElementById("signin-btn").style.display = "inline-block";
+  document.getElementById("signout-btn").style.display = "none";
 }
 
 function changeTodayColor(color) {
@@ -184,7 +176,7 @@ function clearHighlights() {
 }
 
 function updateDropdown(query = "") {
-  while (fontDropdown.firstChild) fontDropdown.removeChild(fontDropdown.firstChild);
+  fontDropdown.innerHTML = "";
   currentFontList = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
   currentFontList.forEach((font) => {
     const item = document.createElement("div");
@@ -201,9 +193,9 @@ function updateDropdown(query = "") {
   fontDropdown.classList.toggle("hidden", currentFontList.length === 0);
 }
 
-fontSearchInput.addEventListener("input", debounce(() => {
+fontSearchInput.addEventListener("input", () => {
   updateDropdown(fontSearchInput.value);
-}, 200));
+});
 
 fontSearchInput.addEventListener("focus", () => {
   updateDropdown(fontSearchInput.value);
@@ -252,23 +244,23 @@ function openModal(dateStr, event = null) {
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
-  document.getElementById("modal").classList.remove("hidden");
+  document.getElementById("modal").style.display = "flex";
 }
 
 function closeModal() {
   const modal = document.getElementById("modal");
-  const content = document.getElementById("modal-content"); // Ensure modal-content exists
+  const content = document.getElementById("modal-content"); 
   if (modal && content) {
     content.classList.add("fade-out");
     modal.classList.add("fade-out");
     content.addEventListener("animationend", () => {
       content.classList.remove("fade-out");
       modal.classList.remove("fade-out");
-      modal.classList.add("hidden");
+      modal.style.display = "none";
       currentEditingEvent = null;
     }, { once: true });
   } else {
-    modal.classList.add("hidden");
+    modal.style.display = "none";
     currentEditingEvent = null;
   }
 }
@@ -282,7 +274,7 @@ function closeSettings() {
     panel.addEventListener("animationend", () => {
       panel.classList.remove("fade-out");
       overlay.classList.remove("fade-out");
-      overlay.classList.add("hidden");
+      overlay.style.display = "none";
     }, { once: true });
   }
 }
@@ -620,8 +612,8 @@ function handleSignIn() {
       await gapiLoad();
       gapi.client.setToken({ access_token: accessToken });
 
-      document.getElementById("signin-btn").classList.add("hidden");
-      document.getElementById("signout-btn").classList.remove("hidden");
+      document.getElementById("signin-btn").style.display = "none";
+      document.getElementById("signout-btn").style.display = "inline-block";
 
       setInterval(async () => {
         try {
@@ -653,8 +645,8 @@ function handleSignOut() {
       calendarId = null;
       localStorage.removeItem("accessToken");
       localStorage.removeItem("tokenExpiry"); 
-      document.getElementById("signin-btn").classList.remove("hidden");
-      document.getElementById("signout-btn").classList.add("hidden");
+      document.getElementById("signin-btn").style.display = "inline-block";
+      document.getElementById("signout-btn").style.display = "none";
       calendarData.clear();
       createCalendar();
     });
@@ -698,8 +690,8 @@ async function initAuth() {
       localStorage.setItem("tokenExpiry", expiryTimestamp.toString());
 
       gapi.client.setToken({ access_token: accessToken });
-      document.getElementById("signin-btn").classList.add("hidden");
-      document.getElementById("signout-btn").classList.remove("hidden");
+      document.getElementById("signin-btn").style.display = "none";
+      document.getElementById("signout-btn").style.display = "inline-block";
 
       setInterval(() => {
         try {
@@ -722,8 +714,8 @@ async function initAuth() {
     accessToken = savedToken;
     gapi.client.setToken({ access_token: accessToken });
 
-    document.getElementById("signin-btn").classList.add("hidden");
-    document.getElementById("signout-btn").classList.remove("hidden");
+    document.getElementById("signin-btn").style.display = "none";
+    document.getElementById("signout-btn").style.display = "inline-block";
 
     await initCalendarId();
     await initData();
@@ -733,8 +725,8 @@ async function initAuth() {
 }
 
 function showLoginPrompt() {
-  document.getElementById("signin-btn").classList.remove("hidden");
-  document.getElementById("signout-btn").classList.add("hidden");
+  document.getElementById("signin-btn").style.display = "inline-block";
+  document.getElementById("signout-btn").style.display = "none";
 }
 
 function handleSignIn() {
@@ -743,7 +735,7 @@ function handleSignIn() {
     return;
   }
 
-  tokenClient.requestAccessToken({ prompt: 'consent' }); // interactive login
+  tokenClient.requestAccessToken({ prompt: 'consent' }); 
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -773,10 +765,10 @@ function showDeleteChoiceModal() {
     const deleteAllBtn = document.getElementById("delete-all-btn");
     const deleteInstanceBtn = document.getElementById("delete-instance-btn");
 
-    modal.classList.remove("hidden");
+    modal.style.display = "flex";
 
     const cleanup = () => {
-      modal.classList.add("hidden");
+      modal.style.display = "none";
       deleteAllBtn.removeEventListener("click", handleAll);
       deleteInstanceBtn.removeEventListener("click", handleInstance);
     };
