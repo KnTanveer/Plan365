@@ -189,6 +189,7 @@
       transform-style: preserve-3d;
       transition: transform 0.2s ease;
       cursor: pointer;
+      will-change: transform;
     }
 
     .feature:hover {
@@ -410,17 +411,18 @@
       const rect = feature.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-
+  
       const rotateX = ((y / rect.height) - 0.5) * -6;
       const rotateY = ((x / rect.width) - 0.5) * 6;
-
-      feature.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  
+      feature.style.transform = `scale(1.03) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
     });
-
+  
     feature.addEventListener('mouseleave', () => {
-      feature.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      feature.style.transform = 'scale(1) rotateX(0deg) rotateY(0deg)';
     });
   });
+
     
     function toggleMenu() {
       document.getElementById('navLinks').classList.toggle('open');
