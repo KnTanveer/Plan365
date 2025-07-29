@@ -1,3 +1,11 @@
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
 let hiddenMonths = new Set(JSON.parse(localStorage.getItem("hiddenMonths") || "[]"));
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -66,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function showLoginPrompt() {
-  document.getElementById("signin-btn").style.display = "inline-block";
-  document.getElementById("signout-btn").style.display = "none";
+  document.getElementById("signin-btn").classList.remove("hidden");
+  document.getElementById("signout-btn").classList.add("hidden");
 }
 
 function changeTodayColor(color) {
@@ -176,7 +184,7 @@ function clearHighlights() {
 }
 
 function updateDropdown(query = "") {
-  fontDropdown.innerHTML = "";
+  while (fontDropdown.firstChild) fontDropdown.removeChild(fontDropdown.firstChild);
   currentFontList = fontList.filter(f => f.toLowerCase().includes(query.toLowerCase()));
   currentFontList.forEach((font) => {
     const item = document.createElement("div");
@@ -193,9 +201,9 @@ function updateDropdown(query = "") {
   fontDropdown.classList.toggle("hidden", currentFontList.length === 0);
 }
 
-fontSearchInput.addEventListener("input", () => {
+fontSearchInput.addEventListener("input", debounce(() => {
   updateDropdown(fontSearchInput.value);
-});
+}, 200));
 
 fontSearchInput.addEventListener("focus", () => {
   updateDropdown(fontSearchInput.value);
@@ -244,7 +252,7 @@ function openModal(dateStr, event = null) {
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
   currentEditingEvent = event;
-  document.getElementById("modal").style.display = "flex";
+  document.getElementById("modal").classList.remove("hidden");
 }
 
 function closeModal() {
@@ -256,11 +264,11 @@ function closeModal() {
     content.addEventListener("animationend", () => {
       content.classList.remove("fade-out");
       modal.classList.remove("fade-out");
-      modal.style.display = "none";
+      modal.classList.add("hidden");
       currentEditingEvent = null;
     }, { once: true });
   } else {
-    modal.style.display = "none";
+    modal.classList.add("hidden");
     currentEditingEvent = null;
   }
 }
@@ -274,7 +282,7 @@ function closeSettings() {
     panel.addEventListener("animationend", () => {
       panel.classList.remove("fade-out");
       overlay.classList.remove("fade-out");
-      overlay.style.display = "none";
+      overlay.classList.add("hidden");
     }, { once: true });
   }
 }
@@ -612,8 +620,8 @@ function handleSignIn() {
       await gapiLoad();
       gapi.client.setToken({ access_token: accessToken });
 
-      document.getElementById("signin-btn").style.display = "none";
-      document.getElementById("signout-btn").style.display = "inline-block";
+      document.getElementById("signin-btn").classList.add("hidden");
+      document.getElementById("signout-btn").classList.remove("hidden");
 
       setInterval(async () => {
         try {
@@ -645,8 +653,8 @@ function handleSignOut() {
       calendarId = null;
       localStorage.removeItem("accessToken");
       localStorage.removeItem("tokenExpiry"); 
-      document.getElementById("signin-btn").style.display = "inline-block";
-      document.getElementById("signout-btn").style.display = "none";
+      document.getElementById("signin-btn").classList.remove("hidden");
+      document.getElementById("signout-btn").classList.add("hidden");
       calendarData.clear();
       createCalendar();
     });
@@ -690,8 +698,8 @@ async function initAuth() {
       localStorage.setItem("tokenExpiry", expiryTimestamp.toString());
 
       gapi.client.setToken({ access_token: accessToken });
-      document.getElementById("signin-btn").style.display = "none";
-      document.getElementById("signout-btn").style.display = "inline-block";
+      document.getElementById("signin-btn").classList.add("hidden");
+      document.getElementById("signout-btn").classList.remove("hidden");
 
       setInterval(() => {
         try {
@@ -714,8 +722,8 @@ async function initAuth() {
     accessToken = savedToken;
     gapi.client.setToken({ access_token: accessToken });
 
-    document.getElementById("signin-btn").style.display = "none";
-    document.getElementById("signout-btn").style.display = "inline-block";
+    document.getElementById("signin-btn").classList.add("hidden");
+    document.getElementById("signout-btn").classList.remove("hidden");
 
     await initCalendarId();
     await initData();
@@ -725,8 +733,8 @@ async function initAuth() {
 }
 
 function showLoginPrompt() {
-  document.getElementById("signin-btn").style.display = "inline-block";
-  document.getElementById("signout-btn").style.display = "none";
+  document.getElementById("signin-btn").classList.remove("hidden");
+  document.getElementById("signout-btn").classList.add("hidden");
 }
 
 function handleSignIn() {
@@ -765,10 +773,10 @@ function showDeleteChoiceModal() {
     const deleteAllBtn = document.getElementById("delete-all-btn");
     const deleteInstanceBtn = document.getElementById("delete-instance-btn");
 
-    modal.style.display = "flex";
+    modal.classList.remove("hidden");
 
     const cleanup = () => {
-      modal.style.display = "none";
+      modal.classList.add("hidden");
       deleteAllBtn.removeEventListener("click", handleAll);
       deleteInstanceBtn.removeEventListener("click", handleInstance);
     };
