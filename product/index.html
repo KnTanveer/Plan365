@@ -220,6 +220,21 @@
       will-change: transform;
     }
 
+    .hero-tilt-sensor {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      perspective: 1200px;
+    }
+    
+    .tilt-wrapper {
+      transition: transform 0.25s ease;
+      transform-style: preserve-3d;
+      will-change: transform;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      border-radius: 16px;
+    }
+
     .demo-section {
       display: flex;
       flex-wrap: wrap;
@@ -326,17 +341,19 @@
     </div>
   </nav>
 
-  <section data-aos="zoom-in">
-    <div>
-      <img alt="Logo" src="/icons/icon-512.png" style="width: 150px; height: 150px;" />
-      <h1 style="margin: 10px 0px 50px 0px;"><i class="fas fa-calendar-alt"></i> Plan365</h1>
-    </div>
-    <div class="tilt-container">
-      <img class="themed-image tilt-img"
-           src="/product/calendar-light.png"
-           data-light="/product/calendar-light.png"
-           data-dark="/product/calendar-dark.png"
-           alt="Calendar View" />
+  <section id="hero-section" data-aos="zoom-in">
+    <div class="hero-tilt-sensor">
+      <div>
+        <img alt="Logo" src="/icons/icon-512.png" style="width: 150px; height: 150px;" />
+        <h1 style="margin: 10px 0px 50px 0px;"><i class="fas fa-calendar-alt"></i> Plan365</h1>
+      </div>
+      <div class="tilt-wrapper">
+        <img class="themed-image tilt-img"
+             src="/product/calendar-light.png"
+             data-light="/product/calendar-light.png"
+             data-dark="/product/calendar-dark.png"
+             alt="Calendar View" />
+      </div>
     </div>
   </section>
 
@@ -440,6 +457,25 @@
       tilt.addEventListener('mouseleave', () => {
         tilt.querySelector('.tilt-img').style.transform = `rotateX(0) rotateY(0)`;
       });
+
+      const heroSensor = document.getElementById('hero-section');
+      const tiltWrapper = document.querySelector('.tilt-wrapper');
+    
+      heroSensor.addEventListener('mousemove', (e) => {
+        const bounds = heroSensor.getBoundingClientRect();
+        const x = e.clientX - bounds.left;
+        const y = e.clientY - bounds.top;
+    
+        const rotateX = ((y / bounds.height) - 0.5) * -10;
+        const rotateY = ((x / bounds.width) - 0.5) * 10;
+    
+        tiltWrapper.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      });
+    
+      heroSensor.addEventListener('mouseleave', () => {
+        tiltWrapper.style.transform = `rotateX(0deg) rotateY(0deg)`;
+      });
+
   </script>
 </body>
 </html>
