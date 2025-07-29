@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
     :root {
       --primary: #28a745;
       --secondary: #007bff;
@@ -16,18 +18,35 @@
       --text-dark: #222;
       --text-light: #f0f0f0;
     }
-    
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, Roboto;
+      font-family: 'Inter', sans-serif;
       font-weight: 500;
       transition: background 0.3s, color 0.3s;
       line-height: 1.6;
+      background: linear-gradient(to bottom right, #fdfdfd, #f3f3f3);
     }
 
     body.dark {
-      background: var(--dark-bg);
+      background: linear-gradient(to bottom right, #1f1f1f, #111);
       color: var(--text-light);
+    }
+
+    .parallax-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 150%;
+      height: 150%;
+      background: radial-gradient(circle, rgba(60,90,190,0.1) 0%, rgba(255,255,255,0) 70%);
+      transform: translate3d(0, 0, 0);
+      z-index: -1;
+      pointer-events: none;
     }
 
     nav {
@@ -47,24 +66,33 @@
     }
 
     .hero {
-      background: #2d6db4;
+      background: linear-gradient(45deg, #2d6db4, #59aaf2);
       border-radius: 16px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.2);
       max-width: 300px;
       margin: auto;
-      padding: 6px 0px;
+      padding: 10px 0;
       text-align: center;
+      animation: glowPulse 3s ease-in-out infinite;
     }
-    
+
+    @keyframes glowPulse {
+      0% { box-shadow: 0 0 20px rgba(89, 170, 242, 0.4); }
+      50% { box-shadow: 0 0 40px rgba(89, 170, 242, 0.8); }
+      100% { box-shadow: 0 0 20px rgba(89, 170, 242, 0.4); }
+    }
+
     .hero-text {
-      color: white; 
+      color: white;
       text-decoration: none;
       font-size: 24px;
       font-weight: 600;
       transition: 0.3s;
     }
-    
-    .hero-text:hover { color: rgb(200, 200, 200); }
+
+    .hero-text:hover {
+      color: rgb(200, 200, 200);
+    }
 
     .nav-center {
       display: flex;
@@ -99,6 +127,14 @@
       margin: auto;
       padding: 80px 20px;
       text-align: center;
+      background: rgba(255,255,255,0.6);
+      border-radius: 20px;
+      margin-bottom: 40px;
+      transition: background 0.3s ease;
+    }
+
+    body.dark section {
+      background: rgba(30,30,30,0.5);
     }
 
     .btn {
@@ -112,24 +148,27 @@
       text-decoration: none;
     }
 
-    .btn.text { margin: 0px -12px; }
-    .btn.effect { background: #eee; color: #333; } 
-    .btn.effect:hover { color: rgb(200, 200, 200); }
-    body.dark .btn.effect:hover { color: rgb(200, 200, 200); }
-    body.dark .btn.effect { background: #444; color: white; }
+    .btn.effect {
+      background: var(--secondary);
+      color: white;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    }
 
-    .btn.text:hover { color: rgb(200, 200, 200); }
-    body.dark .btn.text:hover { color: rgb(200, 200, 200); }
+    .btn.effect:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
 
     .header-text {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 600;
+      margin-bottom: 10px;
     }
 
     .features {
       display: flex;
       flex-wrap: wrap;
-      gap: 25px; 
+      gap: 25px;
       margin-top: 50px;
       text-align: left;
     }
@@ -140,8 +179,14 @@
       border-radius: 12px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       font-size: 15px;
-      flex: 1 1 240px; 
-      max-width: 100%;  
+      flex: 1 1 240px;
+      max-width: 100%;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
     }
 
     body.dark .feature {
@@ -152,6 +197,13 @@
     .feature i {
       color: var(--secondary);
       margin-right: 10px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0px); }
     }
 
     .demo-section {
@@ -178,7 +230,7 @@
       margin-bottom: 30px;
       transition: opacity 0.3s ease;
     }
-    
+
     footer {
       text-align: center;
       font-size: 14px;
@@ -190,24 +242,28 @@
       color: #aaa;
     }
 
-    .footer-text {
-      font-size: 14px; 
-      color: gray; 
+    .footer-text.effect {
+      font-size: 14px;
+      color: gray;
+      transition: color 0.3s, transform 0.3s;
     }
 
     .footer-text.effect:hover {
-      color: #2b6ab1; 
+      color: var(--secondary);
+      transform: translateY(-2px);
     }
 
     .footer-line {
-      max-width: 500px; 
+      max-width: 500px;
       border: none;
-      border-top: 2px solid rgba(0, 0, 0, 0.1); 
+      border-top: 2px solid rgba(0, 0, 0, 0.1);
       margin-top: 80px;
     }
 
-    body.dark .footer-line { border-top: 2px solid rgba(255, 255, 255, 0.1); }
-    
+    body.dark .footer-line {
+      border-top: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
     @media (max-width: 700px) {
       .nav-links {
         display: none;
@@ -233,10 +289,11 @@
         display: block;
       }
     }
-
   </style>
 </head>
 <body>
+  <div class="parallax-bg"></div>
+
   <nav>
     <div>
       <a href="https://plan365.vercel.app/product/">
@@ -247,7 +304,7 @@
 
     <div class="nav-center">
       <div class="nav-links" id="navLinks">
-        <a href="#features" class="btn text" style="margin-bottom: -12px;">Features</a>
+        <a href="#features" class="btn text">Features</a>
         <a href="#" onclick="toggleDarkMode()" class="btn text">Toggle Theme</a>
       </div>
       <a href="https://plan365.vercel.app" class="btn effect">Get Started</a>
@@ -256,73 +313,48 @@
   </nav>
 
   <section data-aos="zoom-in">
-    <div style="text-align: center;">
-      <img alt="Logo" src="/icons/icon-512.png" style="width: 150px; height: 150px; vertical-align: middle;"/>
+    <div>
+      <img alt="Logo" src="/icons/icon-512.png" style="width: 150px; height: 150px;" />
       <h1 style="margin: 10px 0px 50px 0px;"><i class="fas fa-calendar-alt"></i> Plan365</h1>
     </div>
     <div>
-      <img
-      class="themed-image"
-      style="display: flex;"
-      src="/product/calendar-light.png"
-      data-light="/product/calendar-light.png"
-      data-dark="/product/calendar-dark.png"
-      alt="Calendar View"
-      />
-    </div>  
+      <img class="themed-image" src="/product/calendar-light.png" data-light="/product/calendar-light.png" data-dark="/product/calendar-dark.png" alt="Calendar View" />
+    </div>
   </section>
 
   <section id="features" data-aos="fade-up">
-    <div>
-      <h2>Why Plan365?</h2>
-      <p>Designed for clean, visual planning — with zero distractions.</p>
-      <div class="features">
-          <div class="feature"><i class="fas fa-calendar-week"></i> Full-Year Calendar</div>
-          <div class="feature"><i class="fas fa-sync-alt"></i> Google Calendar Sync</div>
-          <div class="feature"><i class="fas fa-adjust"></i> Dark & Light Mode</div>
-          <div class="feature"><i class="fas fa-palette"></i> Custom Event Colors</div>
-          <div class="feature"><i class="fas fa-font"></i> Font Picker</div>
-          <div class="feature"><i class="fas fa-rotate-right"></i> Repeat Events</div>
-      </div>
-    </div>  
+    <h2>Why Plan365?</h2>
+    <p>Designed for clean, visual planning — with zero distractions.</p>
+    <div class="features">
+      <div class="feature" data-aos="fade-up" data-aos-delay="100"><i class="fas fa-calendar-week"></i> Full-Year Calendar</div>
+      <div class="feature" data-aos="fade-up" data-aos-delay="200"><i class="fas fa-sync-alt"></i> Google Calendar Sync</div>
+      <div class="feature" data-aos="fade-up" data-aos-delay="300"><i class="fas fa-adjust"></i> Dark & Light Mode</div>
+      <div class="feature" data-aos="fade-up" data-aos-delay="400"><i class="fas fa-palette"></i> Custom Event Colors</div>
+      <div class="feature" data-aos="fade-up" data-aos-delay="500"><i class="fas fa-font"></i> Font Picker</div>
+      <div class="feature" data-aos="fade-up" data-aos-delay="600"><i class="fas fa-rotate-right"></i> Repeat Events</div>
+    </div>
   </section>
 
   <section class="section demo-section" data-aos="fade-up">
     <div class="demo-item">
       <p class="header-text">Hide Months</p>
-      <img
-        class="themed-image"
-        style="max-width: 300px;"
-        src="/product/hideMonths-light.png"
-        data-light="/product/hideMonths-light.png"
-        data-dark="/product/hideMonths-dark.png"
-        alt="Hide Months UI"
-      />
+      <img class="themed-image" src="/product/hideMonths-light.png" data-light="/product/hideMonths-light.png" data-dark="/product/hideMonths-dark.png" alt="Hide Months UI" />
     </div>
-
     <div class="demo-item">
       <p class="header-text">Edit Events</p>
-      <img
-        class="themed-image"
-        style="max-width: 300px; margin-bottom: 40px;"
-        src="/product/editing-light.png"
-        data-light="/product/editing-light.png"
-        data-dark="/product/editing-dark.png"
-        alt="Editing View"
-      />
-    </div>  
+      <img class="themed-image" src="/product/editing-light.png" data-light="/product/editing-light.png" data-dark="/product/editing-dark.png" alt="Editing View" />
+    </div>
   </section>
-  
+
   <section class="hero" data-aos="zoom-in">
-      <a class="hero-text" href="https://plan365.vercel.app">Start Planning</a>
+    <a class="hero-text" href="https://plan365.vercel.app">Start Planning</a>
   </section>
-  
+
   <hr class="footer-line">
   <footer>
     <p><a class="footer-text effect" href="https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DDesktop" target="_blank">Download the app</a></p>
-    <p><a  class="footer-text effect" href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
-    <p class="footer-text" style="margin-bottom: 0px;">*Demo screenshots uses </p>
-    <p class="footer-text" style="margin-top: 0px;">Jetbrains mono font. </p>
+    <p><a class="footer-text effect" href="https://plan365.vercel.app/privacy-policy" target="_blank">Privacy Policy</a></p>
+    <p class="footer-text" style="margin-bottom: 0px;">*Demo screenshots use Jetbrains Mono font.</p>
   </footer>
 
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
@@ -351,11 +383,14 @@
       updateThemedImages(darkMode);
     };
 
-    const navLinks = document.getElementById('navLinks');
+    // Parallax effect
+    document.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const bg = document.querySelector('.parallax-bg');
+      bg.style.transform = `translate3d(0, ${scrollY * 0.2}px, 0)`;
+    });
 
-    function toggleMenu() {
-      navLinks.classList.toggle('open');
-    }
+    const navLinks = document.getElementById('navLinks');
 
     document.querySelectorAll('.nav-links a').forEach(link => {
       link.addEventListener('click', () => {
@@ -365,11 +400,9 @@
 
     document.addEventListener('click', (e) => {
       const hamburger = document.querySelector('.hamburger');
-      if (
-        navLinks.classList.contains('open') &&
-        !navLinks.contains(e.target) &&
-        !hamburger.contains(e.target)
-      ) {
+      if (navLinks.classList.contains('open') &&
+          !navLinks.contains(e.target) &&
+          !hamburger.contains(e.target)) {
         navLinks.classList.remove('open');
       }
     });
