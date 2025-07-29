@@ -79,6 +79,12 @@
       animation: glowPulse 3s ease-in-out infinite;
     }
 
+    body.dark .hero {
+      background: linear-gradient(45deg, #2d6db4, #59aaf2); 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+      animation: glowPulseDark 3s ease-in-out infinite;
+    }
+    
     @keyframes glowPulse {
       0% { box-shadow: 0 0 20px rgba(89, 170, 242, 0.4); }
       50% { box-shadow: 0 0 40px rgba(89, 170, 242, 0.8); }
