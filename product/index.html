@@ -97,12 +97,35 @@
       100% { box-shadow: 0 0 10px rgba(89, 170, 242, 0.15); }
     }
 
-    .hero-text {
-      color: white;
-      text-decoration: none;
+    .hero-button {
+      background: transparent;
+      border: none;
+      width: 100%;
+      height: 100%;
       font-size: 24px;
       font-weight: 600;
-      transition: 0.3s;
+      color: white;
+      cursor: pointer;
+      text-align: center;
+      padding: 20px 0;
+      width: 100%;
+      max-width: 300px;
+      border-radius: 16px;
+      background: linear-gradient(45deg, #2d6db4, #59aaf2);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: glowPulse 3s ease-in-out infinite;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .hero-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    }
+    
+    body.dark .hero-button {
+      background: linear-gradient(45deg, #123b6f, #1f4d8d);
+      box-shadow: 0 0 10px rgba(89, 170, 242, 0.15);
+      animation: glowPulseDark 3s ease-in-out infinite;
     }
 
     .nav-center {
@@ -382,11 +405,11 @@
     </div>
   </section>
 
-  <a href="https://plan365.vercel.app">
-    <section class="hero" data-aos="zoom-in">
-      <a class="hero-text">Start Planning</a>
-    </section>
-  </a>  
+  <div class="hero" data-aos="zoom-in">
+    <button class="hero-button" onclick="window.location.href='https://plan365.vercel.app'">
+      Start Planning
+    </button>
+  </div> 
 
   <hr class="footer-line">
   <footer>
