@@ -197,10 +197,8 @@
       flex: 1 1 240px;
       max-width: 100%;
       position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.15s ease-out, box-shadow 0.2s ease;
+      transition: all 0.3s ease;
       cursor: pointer;
-      will-change: transform;
     }
 
     .feature:hover {
@@ -216,12 +214,6 @@
     .feature i {
       color: var(--secondary);
       margin-right: 10px;
-    }
-
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
-      100% { transform: translateY(0px); }
     }
 
     .tilt-container {
@@ -416,24 +408,6 @@
   <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
   <script>
     AOS.init({ duration: 800 });
-
-    document.querySelectorAll('.feature').forEach(feature => {
-      feature.addEventListener('mousemove', (e) => {
-        const rect = feature.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-    
-        const rotateX = ((y / rect.height) - 0.5) * -8;
-        const rotateY = ((x / rect.width) - 0.5) * 8;
-    
-        feature.style.transform = `scale(1.05) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      });
-    
-      feature.addEventListener('mouseleave', () => {
-        feature.style.transform = 'scale(1) rotateX(0deg) rotateY(0deg)';
-      });
-    });
-
     
     function toggleMenu() {
       document.getElementById('navLinks').classList.toggle('open');
