@@ -67,23 +67,6 @@
     body.dark nav {
       background: #2c2c2c;
     }
-
-    .hero {
-      background: linear-gradient(45deg, #2d6db4, #59aaf2);
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      max-width: 300px;
-      margin: auto;
-      padding: 10px 0;
-      text-align: center;
-      animation: glowPulse 3s ease-in-out infinite;
-    }
-
-    body.dark .hero {
-      background: linear-gradient(45deg, #123b6f, #1f4d8d); /* darker blue tones */
-      box-shadow: 0 0 10px rgba(89, 170, 242, 0.15);
-      animation: glowPulseDark 3s ease-in-out infinite;
-    }
     
     @keyframes glowPulse {
       0% { box-shadow: 0 0 20px rgba(89, 170, 242, 0.4); }
@@ -97,7 +80,7 @@
       100% { box-shadow: 0 0 10px rgba(89, 170, 242, 0.15); }
     }
 
-    .hero-button {
+    .footer-btn {
       background: transparent;
       border: none;
       width: 100%;
@@ -117,12 +100,12 @@
       transition: transform 0.3s, box-shadow 0.3s;
     }
     
-    .hero-button:hover {
+    .footer-btn:hover {
       transform: translateY(-3px);
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
     }
     
-    body.dark .hero-button {
+    body.dark .footer-btn {
       background: linear-gradient(45deg, #123b6f, #1f4d8d);
       box-shadow: 0 0 10px rgba(89, 170, 242, 0.15);
       animation: glowPulseDark 3s ease-in-out infinite;
@@ -405,11 +388,9 @@
     </div>
   </section>
 
-  <div class="hero" data-aos="zoom-in">
-    <button class="hero-button" onclick="window.location.href='https://plan365.vercel.app'">
-      Start Planning
-    </button>
-  </div> 
+  <div data-aos="zoom-in" style="text-align: center;">
+    <button class="footer-btn" onclick="window.location.href='https://plan365.vercel.app'">Start Planning</button>
+  </div>
 
   <hr class="footer-line">
   <footer>
