@@ -561,6 +561,23 @@
       transform: scale(1.02);
     }
 
+    #footer {
+      background: #f0f0f0;
+    }
+  
+    body.dark #footer {
+      background: #1f1f1f;
+    }
+  
+    #privacy-link {
+      color: #555;
+      text-decoration: none;
+    }
+  
+    body.dark #privacy-link {
+      color: #aaa;
+    }
+
   </style>
 </head>
 <body>
@@ -666,6 +683,10 @@
       </div>
     </div>
   </div>
+
+  <footer style="text-align:center; padding: 15px; font-size: 14px;" id="footer">
+    <a href="/privacy-policy" id="privacy-link">Privacy Policy</a>
+  </footer>
 
   <script>
     function openSettings() {
