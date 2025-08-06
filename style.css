@@ -38,6 +38,9 @@ body.dark button:hover {
     padding: 10px;
     background: #f0f0f0;
     flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 body.dark #header {
@@ -71,15 +74,17 @@ body.dark .month-column {
 }
 
 .month-column h3 {
-  text-align: center;
-  font-size: 16px;
-  margin-bottom: 5px;
   position: sticky;
   top: 0;
   background: inherit;
-  z-index: 5;
-  padding: 5px 0;
+  z-index: 10;
+  padding: 6px 0;
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
 }
+
 
 .day-cell {
     border: 1px solid #ddd;
@@ -150,14 +155,32 @@ body.dark #event-color-preset-container .color-option:hover {
 }
 
 .color-dropdown-trigger {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #666;
   cursor: pointer;
-  border: 2px solid #ccc;
-  background: #b6eeb6; /* fallback */
+  background-color: #2e2e2e;
+  color: white;
+  position: relative;
+  font-size: 14px;
+  min-width: 54px;
+}
+
+.color-dropdown-trigger::after {
+  content: "▼";
+  font-size: 10px;
+  margin-left: auto;
+  color: #aaa;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
   display: inline-block;
-  margin-top: 8px;
 }
 
 .color-dropdown {

@@ -112,30 +112,30 @@ function addToRange(event) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const trigger = document.getElementById('event-color-picker');
+  const picker = document.getElementById('event-color-picker');
   const dropdown = document.getElementById('event-color-dropdown');
   const input = document.getElementById('event-color');
+  const dot = document.getElementById('event-color-dot');
 
-  trigger.addEventListener('click', () => {
+  picker.addEventListener('click', () => {
     dropdown.classList.toggle('hidden');
-    const rect = trigger.getBoundingClientRect();
+    const rect = picker.getBoundingClientRect();
     dropdown.style.position = 'absolute';
     dropdown.style.left = rect.left + 'px';
-    dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+    dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
   });
 
   document.querySelectorAll('#event-color-dropdown .color-option').forEach(opt => {
     opt.addEventListener('click', () => {
       const color = opt.dataset.color;
-      trigger.style.background = color;
+      dot.style.backgroundColor = color;
       if (input) input.value = color;
       dropdown.classList.add('hidden');
     });
   });
 
-  // Hide on outside click
   document.addEventListener('click', (e) => {
-    if (!dropdown.contains(e.target) && e.target !== trigger) {
+    if (!dropdown.contains(e.target) && !picker.contains(e.target)) {
       dropdown.classList.add('hidden');
     }
   });
@@ -278,12 +278,9 @@ function openModal(dateStr, event = null) {
   document.getElementById("start-date").value = event ? event.range.start : dateStr;
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
   document.getElementById("note-text").value = event ? event.text.replace(/↻$/, '').trim() : "";
-  document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
-  const picker = document.getElementById("event-color-picker");
-    if (picker) {
-      picker.style.background = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
-    }
-
+  const color = event ? event.color : (localStorage.getItem("lastColor") || "#3B82F6");
+  document.getElementById("event-color").value = color;
+  document.getElementById("event-color-dot").style.backgroundColor = color;
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";
