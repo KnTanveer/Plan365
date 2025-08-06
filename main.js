@@ -111,6 +111,36 @@ function addToRange(event) {
   }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const trigger = document.getElementById('event-color-picker');
+  const dropdown = document.getElementById('event-color-dropdown');
+  const input = document.getElementById('event-color');
+
+  trigger.addEventListener('click', () => {
+    dropdown.classList.toggle('hidden');
+    const rect = trigger.getBoundingClientRect();
+    dropdown.style.position = 'absolute';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+  });
+
+  document.querySelectorAll('#event-color-dropdown .color-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const color = opt.dataset.color;
+      trigger.style.background = color;
+      if (input) input.value = color;
+      dropdown.classList.add('hidden');
+    });
+  });
+
+  // Hide on outside click
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && e.target !== trigger) {
+      dropdown.classList.add('hidden');
+    }
+  });
+});
+
 //font selector 
 const fontSearchInput = document.getElementById("font-search");
 const fontDropdown = document.getElementById("font-dropdown");
@@ -249,6 +279,11 @@ function openModal(dateStr, event = null) {
   document.getElementById("end-date").value = event ? event.range.end : dateStr;
   document.getElementById("note-text").value = event ? event.text.replace(/↻$/, '').trim() : "";
   document.getElementById("event-color").value = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
+  const picker = document.getElementById("event-color-picker");
+    if (picker) {
+      picker.style.background = event ? event.color : (localStorage.getItem("lastColor") || "#b6eeb6");
+    }
+
   document.getElementById("repeat-select").value = event?.recurrenceType || "";
   document.getElementById("duration-display").textContent = "";
   document.getElementById("delete-btn").style.display = event ? "inline-block" : "none";

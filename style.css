@@ -149,6 +149,57 @@ body.dark #event-color-preset-container .color-option:hover {
   border-color: white;
 }
 
+.color-dropdown-trigger {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #ccc;
+  background: #b6eeb6; /* fallback */
+  display: inline-block;
+  margin-top: 8px;
+}
+
+.color-dropdown {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background: white;
+  position: absolute;
+  z-index: 1005;
+  margin-top: 5px;
+}
+
+.color-dropdown.hidden {
+  display: none;
+}
+
+#event-color-dropdown .color-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border 0.2s ease;
+}
+
+#event-color-dropdown .color-option:hover {
+  border-color: black;
+}
+
+body.dark .color-dropdown {
+  background: #2c2c2c;
+  border-color: #444;
+}
+
+body.dark #event-color-dropdown .color-option:hover {
+  border-color: white;
+}
+
 /* Sticky month name */
 
 .month-column h3 {
