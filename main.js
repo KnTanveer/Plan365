@@ -64,6 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('#event-color-preset-container .color-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const color = option.dataset.color;
+      const input = document.getElementById('event-color');
+      if (input) input.value = color;
+    });
+  });
+});
 
 function showLoginPrompt() {
   document.getElementById("signin-btn").style.display = "inline-block";
@@ -381,7 +390,6 @@ function createCalendar() {
     header.style.cursor = "pointer";
 
     const daysWrapper = document.createElement("div");
-    daysWrapper.className = "days-wrapper";
 
     const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
@@ -410,7 +418,7 @@ function createCalendar() {
     }
 
     col.appendChild(header);
-    col.appendChild(daysWrapper);
+    col.appendChild(daysWrapper); 
     container.appendChild(col);
   }
 }

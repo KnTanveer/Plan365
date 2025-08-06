@@ -125,14 +125,14 @@ body.dark .today {
     padding: 0;
 }
 
-#color-preset-container {
+#event-color-preset-container {
   display: flex;
   gap: 8px;
   margin-top: 8px;
   flex-wrap: wrap;
 }
 
-.color-option {
+#event-color-preset-container .color-option {
   width: 25px;
   height: 25px;
   border-radius: 50%;
@@ -141,19 +141,15 @@ body.dark .today {
   transition: border 0.2s ease;
 }
 
-.color-option:hover {
+#event-color-preset-container .color-option:hover {
   border: 2px solid #000;
 }
 
-body.dark .color-option:hover {
+body.dark #event-color-preset-container .color-option:hover {
   border-color: white;
 }
 
 /* Sticky month name */
-.month-scroll {
-  max-height: calc(100vh - 150px); /* Adjust as needed for your header/footer */
-  overflow-y: auto;
-}
 
 .month-column h3 {
   position: sticky;
